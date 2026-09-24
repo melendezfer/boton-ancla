@@ -2,7 +2,7 @@
 
 Cada tarea es pequeña, termina en **un commit** y no empieza hasta que la anterior esté verde.
 Formato: **Cubre** (IDs de `spec.md`) · **Hacer** · **Prueba automática** · **Prueba manual** (cuando hay UI) · **Commit**.
-"Bloqueada por C-xx" = necesita tu decisión sobre ese punto de `design.md` §9.
+"Bloqueada por C-xx" = necesita tu decisión sobre ese punto (hoy no hay ninguna bloqueada; todo está decidido en `design.md` §0).
 
 Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 
@@ -24,14 +24,14 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 
 ### [ ] T-03 · Geometría y posición del abanico
 - **Cubre:** D-03, D-17, RF-12, HU-11 (espejo), §6 `ARCO`/`MARGEN_LATERAL`/`MARGEN_INFERIOR`/radio adaptativo · C-01 y L-02 decididos
-- **Hacer:** `geometry.ts` (ángulo, distancia, espejo), `computeAnchorPosition`, `computeFanLayout` con radio efectivo.
-- **Prueba (Vitest):** para viewports de 320, 375, 412 y 430 px de ancho × mano derecha/izquierda × 1–5 opciones × áreas seguras (0 y 34 px abajo): ninguna opción escalada queda fuera; ángulos entre 90° y 180° (o su espejo); sin solape entre opciones a tamaño normal (radio 113 px con 5, 100 px con ≤4) y el radio crece al subir `SEPARACION_MIN`; la mano izquierda es el espejo exacto de la derecha.
+- **Hacer:** `geometry.ts` (ángulo, distancia, espejo), `computeAnchorPosition`, `computeFanLayout` → `FanLayout` con radio adaptativo, sectores y `fueraDePantalla` (`design.md` §4.2–§4.3).
+- **Prueba (Vitest):** para viewports de 320, 375, 412 y 430 px de ancho × mano derecha/izquierda × 1–5 opciones × áreas seguras (0 y 34 px abajo): ninguna opción escalada queda fuera (`fueraDePantalla = false`) y en un viewport diminuto sí se marca; ángulos entre 90° y 180° (o su espejo); sin solape entre opciones a tamaño normal (radio 113 px con 5, 100 px con ≤4) y el radio crece al subir `SEPARACION_MIN`; la mano izquierda es el espejo exacto de la derecha; sectores contiguos de 70° a 200°; ancla a 56 px del borde lateral y 48 px del inferior (más el área segura).
 - **Commit:** `feat: posición del ancla y cálculo del abanico`
 
 ### [ ] T-04 · Asignación de acciones por prioridad
-- **Cubre:** §6 "Distribución", D-10 ("Atrás" fijo) · **Bloqueada por C-10**
-- **Hacer:** `orderActions`, `assignActions`.
-- **Prueba (Vitest):** "Atrás" siempre en 90°; prioridad 1 en el slot más cercano a 135° con 1–5 opciones; empate resuelto según C-10; acciones sin prioridad al final en orden de declaración; ejemplo de perfil visitante de `design.md` §4.4.
+- **Cubre:** §6 "Distribución" y `DESEMPATE`, D-10 ("Atrás" fijo), RF-08 ("Deshacer" en prioridad 1) · C-10, C-11, C-21 decididos
+- **Hacer:** `orderActions` (con la opción `deshacer`), `assignActions` (`design.md` §4.4).
+- **Prueba (Vitest):** "Atrás" siempre en 90°; prioridad 1 en el slot más cercano a 135° con 1–5 opciones; empate hacia la horizontal por defecto y hacia arriba con `DESEMPATE = "vertical"`; acciones sin prioridad al final en orden de declaración; los 4 ejemplos de `design.md` §4.4 (incluido "Deshacer" reemplazando a Editar sin mover nada); espejo con la mano izquierda; error si no coinciden acciones y slots.
 - **Commit:** `feat: asignación de acciones a posiciones del abanico`
 
 ### [ ] T-05 · Selección por ángulo
@@ -52,12 +52,12 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Commit:** `feat: confirmación deslizando más allá para irreversibles`
 
 ### [ ] T-08 · Máquina: modo toque
-- **Cubre:** D-07, D-13, HU-05, RF-11 (lógica), §3 filas 20–30 · **Bloqueada por C-06**
+- **Cubre:** D-07, D-13, HU-05, RF-11 (lógica), §3 filas 20–30 · C-06 decidido
 - **Prueba (Vitest):** tocar opción normal → ejecuta; irreversible → `confirmacion_toque` → `CONFIRMAR` ejecuta; tocar centro/fuera → cancela; 4 s sin actividad → cancela y cualquier actividad reinicia la cuenta; presionar el centro y deslizar → `abierto_gesto`.
 - **Commit:** `feat: modo toque en la máquina de estados`
 
 ### [ ] T-09 · Máquina: cancelaciones globales, teclado y activación
-- **Cubre:** RF-09, RF-10, RNF-05 (lógica), §3 filas 2, 3, 31–33, 35, 36 · **Bloqueada por C-12**
+- **Cubre:** RF-09, RF-10, RNF-05 (lógica), §3 filas 2, 3, 31–33, 35, 36 · C-12 decidido
 - **Prueba (Vitest):** desde cada estado activo, segundo `pointerId`, `POINTER_CANCEL`, `ORIENTACION` y `CAMBIO_SECCION` → `cancelado` con su motivo; en reposo se ignoran; navegación con flechas, Home/End, Enter, Escape; `abierto_teclado` no tiene plazo.
 - **Commit:** `feat: cancelaciones del entorno y navegación por teclado`
 
@@ -79,13 +79,13 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 
 ### [ ] T-12 · App demo vacía en el puerto 3002
 - **Cubre:** §0 (demo), L-09, L-12
-- **Hacer:** `apps/demo` con Next 16.3.4, React 19.2.8, TS 5, Tailwind v4 (`@import "tailwindcss"` + tokens de RUTEANDO en `:root` + `@theme inline`), `@phosphor-icons/react`; `viewport` con `viewportFit: "cover"`; `next.config.ts` con `transpilePackages`, `devIndicators: false` y `allowedDevOrigins`; script `dev` = `next dev -H 0.0.0.0 -p 3002`.
+- **Hacer:** `apps/demo` con Next 16.3.4, React 19.2.8, TS 5, Tailwind v4 (`@import "tailwindcss"` + tokens de RUTEANDO en `:root` + `@theme inline`), `@phosphor-icons/react`; `viewport` con `viewportFit: "cover"`; `next.config.ts` con `transpilePackages`, `devIndicators: false` y `allowedDevOrigins`; script `dev` = `next dev -H 0.0.0.0 -p 3002`; `scripts/lan-3002.sh`, que detecta la IP actual de WSL y la del Wi-Fi, revisa el `portproxy` del 3002 y, si falta o apunta a una IP vieja, **genera** el `.ps1` con los comandos de administrador (portproxy + firewall) y te dice cómo ejecutarlo. No lo ejecuta ni toca RUTEANDO.
 - **Prueba:** `npm run build -w demo` compila.
 - **Manual:** abrir `http://<IP>:3002` en PC **y** en el celular (aquí se resuelve la red de WSL, L-09).
 - **Commit:** `chore: app demo con Next.js y Tailwind en el puerto 3002`
 
 ### [ ] T-13 · Pantallas simuladas sin ancla
-- **Cubre:** §8, RNF-09, D-06 · **Bloqueada por C-14, C-15, C-16**
+- **Cubre:** §8, RNF-09, D-06 · C-14, C-15, C-16 decididos (incluye `MinusCircle` y `ArrowCounterClockwise` en el registro)
 - **Hacer:** `semantic-icons.ts` de la demo, `demo-store.tsx`, mapa falso arrastrable con 3 fondos, rutas de `design.md` §8, hojas inferiores `z-[1000]`, barra superior con Ajustes y Métricas.
 - **Prueba:** `npm run build`; prueba unitaria de que ningún ícono aparece dos veces en el registro.
 - **Manual:** navegar todas las pantallas en PC y celular; el mapa se arrastra con un dedo.
@@ -104,7 +104,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; las demás se conectan en T-24.
 
 ### [ ] T-15 · Provider y ancla en reposo
-- **Cubre:** D-04, D-09, D-17, D-19, RF-12, RF-14, RNF-05 (nombre), RNF-06 · **Bloqueada por C-02**
+- **Cubre:** D-04, D-09, D-17, D-19, RF-12, RF-14, RNF-05 (nombre), RNF-06 · C-02 decidido
 - **Hacer:** `AnchorProvider`, `useAnchorScreen` (cambio por `screen.id`), portal, `anchor.css` con `--ba-*`, sonda de área segura, botón translúcido con ícono de sección.
 - **E2E:** el botón tiene nombre "Menú, sección Mapa", `aria-haspopup="menu"`, `aria-expanded="false"`; queda dentro del viewport en ambos dispositivos; está por encima de una hoja `z-[1000]` abierta.
 - **Manual:** legibilidad del ancla sobre mapa claro, foto y oscuro (§10.3).
@@ -130,7 +130,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Commit:** `feat: modo toque con cierre por inactividad`
 
 ### [ ] T-19 · Acciones sensibles
-- **Cubre:** D-14, RF-07, RF-08, HU-07, HU-08, RNF-01 · C-03 decidido · **Bloqueada por C-21 y C-19**
+- **Cubre:** D-14, RF-07, RF-08, HU-07, HU-08, RNF-01 · C-03, C-19 y C-21 decididos (el aviso sigue aunque cambie la sección)
 - **Hacer:** anillo exterior, aviso "Desliza más allá para confirmar", aviso con deshacer (5 s, `role="status"`), "Confirmar" en modo toque, "Deshacer" en la posición de prioridad 1 del abanico mientras dura el aviso (C-03).
 - **E2E:** HU-07 (se aplica al instante, aviso 5 s; deshacer deslizando hasta la posición de prioridad 1 **y** tocando el aviso revierte y registra `undo`), HU-08 (soltar sobre Eliminar no elimina; más allá sí), confirmación en modo toque.
 - **Commit:** `feat: deshacer y confirmación de acciones sensibles`
@@ -163,7 +163,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 ## Bloque D — Integración, métricas y cierre
 
 ### [ ] T-24 · Ancla en todas las pantallas de §8
-- **Cubre:** D-06, HU-10, §8 · **Bloqueada por C-14, C-15**
+- **Cubre:** D-06, HU-10, §8 · C-14, C-15 decididos
 - **E2E:** HU-10 (Carta desde el perfil cambia el ícono a Carta; Compartir no lo cambia); cada pantalla muestra exactamente sus acciones.
 - **Manual:** ejecutar las 4–5 opciones de cada pantalla con una sola mano.
 - **Commit:** `feat: ancla integrada en todas las pantallas de la demo`

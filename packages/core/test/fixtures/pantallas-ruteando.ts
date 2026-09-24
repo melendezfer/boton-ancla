@@ -1,6 +1,6 @@
 import type { AnchorAction, AnchorScreen } from "../../src/types";
 
-// Las 4 pantallas de ejemplo de spec §8. En el núcleo los íconos son solo
+// Las 5 pantallas de ejemplo de spec §8 (v0.3). En el núcleo los íconos son solo
 // texto (AnchorIcon = unknown); la demo usará los componentes de Phosphor.
 
 const nada = () => {};
@@ -39,16 +39,15 @@ export const perfilDueno: AnchorScreen = {
   sectionIcon: "IdentificationCard",
   sectionLabel: "Perfil de negocio",
   back: { onSelect: nada },
-  actions: [
-    accion("agregar-plato", "Agregar plato", { priority: 1 }),
-    accion("marcar-no-disponible", "Marcar no disponible", {
-      priority: 2,
-      kind: "reversible",
-      onUndo: nada,
-      undoMessage: "Marcado no disponible",
-    }),
-    accion("editar", "Editar", { priority: 3 }),
-  ],
+  actions: [accion("agregar-plato", "Agregar plato", { priority: 1 }), accion("editar", "Editar", { priority: 2 })],
+};
+
+export const carta: AnchorScreen = {
+  id: "carta",
+  sectionIcon: "BookOpen",
+  sectionLabel: "Carta",
+  back: { onSelect: nada },
+  actions: [accion("compartir", "Compartir", { priority: 1 }), accion("favorito", "Favorito", { priority: 2 })],
 };
 
 export const productoDueno: AnchorScreen = {
@@ -58,10 +57,16 @@ export const productoDueno: AnchorScreen = {
   back: { onSelect: nada },
   actions: [
     accion("editar", "Editar", { priority: 1 }),
-    accion("eliminar", "Eliminar", { priority: 2, kind: "irreversible" }),
+    accion("marcar-no-disponible", "Marcar no disponible", {
+      priority: 2,
+      kind: "reversible",
+      onUndo: nada,
+      undoMessage: "Marcado no disponible",
+    }),
+    accion("eliminar", "Eliminar", { priority: 3, kind: "irreversible" }),
   ],
 };
 
-export const pantallasSpec8 = [mapa, perfilVisitante, perfilDueno, productoDueno];
+export const pantallasSpec8 = [mapa, perfilVisitante, perfilDueno, carta, productoDueno];
 
 export { accion };

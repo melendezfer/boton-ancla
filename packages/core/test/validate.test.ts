@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_PARAMS } from "../src/params";
 import type { AnchorScreen } from "../src/types";
 import { ID_ATRAS, ID_DESHACER, validateScreen } from "../src/validate";
-import { accion, mapa, pantallasSpec8, perfilDueno, perfilVisitante } from "./fixtures/pantallas-ruteando";
+import { accion, mapa, pantallasSpec8, perfilVisitante, productoDueno } from "./fixtures/pantallas-ruteando";
 
 const P = DEFAULT_PARAMS;
 
@@ -91,7 +91,7 @@ describe("validateScreen", () => {
   describe("acciones reversibles (C-13)", () => {
     it("rechaza una reversible sin onUndo", () => {
       const sinUndo: AnchorScreen = {
-        ...perfilDueno,
+        ...productoDueno,
         actions: [accion("marcar-no-disponible", "Marcar no disponible", { kind: "reversible" })],
       };
       expect(validateScreen(sinUndo, P)).toEqual([

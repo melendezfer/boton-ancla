@@ -6,7 +6,8 @@ Deriva de `spec.md` v0.1, que sigue siendo la fuente de verdad. Aquí se decide 
 - `§n` = sección de `spec.md`. `HU/RF/RNF/D-xx` = IDs de `spec.md`.
 - **C-xx** = contradicción o ambigüedad de la spec (lista en §9). Cuando el diseño necesita una respuesta para avanzar, pone una **Propuesta** marcada con su C-xx. Las propuestas **no se implementan hasta que las apruebes**; si las cambias, se actualizan aquí y en `tasks.md`.
 - **L-xx** = límite de la plataforma web (sobre todo iOS Safari), lista en §10.
-- Los puntos que siguen abiertos y necesitan explicación larga están en `decisiones-pendientes.md`.
+- Los puntos que se abran y necesiten explicación larga van a `decisiones-pendientes.md`.
+- Toda decisión se registra **a la vez** en `spec.md` y en este documento.
 
 ---
 
@@ -18,11 +19,28 @@ Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en 
 |---|---|---|
 | C-01 | Radio adaptativo según el número de opciones (113 px con 5), ajustable con parámetros para la prueba manual: `R_ARCO` (mínimo, 100) y `SEPARACION_MIN` (0). | spec §6; aquí §2, §4.3 |
 | C-02 | Ícono oscuro (`text`) en reposo; `terracota` (`accent`) solo cuando el ancla está activa. | spec D-04; aquí §6 |
-| C-03 | Mientras el aviso de deshacer está visible, "Deshacer" ocupa la posición de prioridad 1 del abanico (se hace solo deslizando). Tocar el aviso también deshace. Qué pasa con la acción desplazada queda en **C-21**. | spec D-14, RF-08, HU-07, §6; aquí §4.4, §6 |
-| C-16 | `Heart` = marcar favorito; `ListHeart` = ver la lista de Favoritos. Solo en la demo; RUTEANDO no se toca. | aquí §8 |
+| C-03 | Mientras el aviso de deshacer está visible, "Deshacer" ocupa la posición de prioridad 1 del abanico (se hace solo deslizando). Tocar el aviso también deshace. | spec D-14, RF-08, HU-07, §6; aquí §4.4, §6 |
+| C-04 | `open {mode}` solo puede ser `gesto`, `toque` o `teclado`; "experto" se registra al soltar en `execute.expert`. | spec §9; aquí §3.5 |
+| C-05 | Soltar en `armado` con movimiento ≥ `UMBRAL_MOV` sin `pointermove` previo = moverse y soltar en `abierto_gesto`. | spec §3; aquí §3.3 fila 7 |
+| C-06 | Modo toque con la regla del botón clásico: ejecuta solo si baja y sube sobre la misma opción moviéndose < 10 px, sin límite de tiempo; tocar el centro cierra a cualquier tiempo; con el dedo apoyado no corre el cierre por inactividad. | spec §3; aquí §3.3 filas 20–28 |
+| C-07 | En descanso, el movimiento se mide desde donde empezó el descanso. | spec §3; aquí §3.3 fila 10 |
+| C-08 | Soltar fuera del arco (fuera de 70°–200°) cancela con motivo `fuera_de_arco`. | spec §3; aquí §3.3 fila 14, §4.5 |
+| C-09 | Una opción deshabilitada se ve atenuada, conserva su posición, se puede preseleccionar ("… · no disponible") y soltar sobre ella cancela. | spec §3, §7; aquí §3.3 fila 15 |
+| C-10 | Prioridad por cercanía a la diagonal; empate según el parámetro `DESEMPATE` (`"horizontal"` por defecto). | spec §6; aquí §2, §4.4 |
+| C-11 | `computeFanLayout` devuelve la geometría (`FanLayout`); `orderActions` + `assignActions` ponen los ids; `resolveSelection` recibe `hand`; se agrega `computeAnchorPosition`. | spec §7; aquí §4, §5 |
+| C-12 | Estado `abierto_teclado` y evento `ACTIVAR` (lector de pantalla), ambos sin cierre por tiempo. | spec §3, RNF-05; aquí §3 |
+| C-13 | El tipo de §7 no cambia; `validateScreen` exige `onUndo` en las reversibles (y el resto de reglas). | spec §7; aquí §5.1 |
+| C-14 | Carta: Compartir (1), Favorito (2), Atrás. | spec §8; aquí §8 |
+| C-15 | "Marcar no disponible" es de un plato: pasa al detalle de producto (dueño). RUTEANDO no tiene ícono para eso (solo la insignia de texto); se usa `MinusCircle` (libre; `Prohibit` = suspendido y `XCircle` = rechazado ya están tomados). Prioridades del producto: Editar (1), Marcar no disponible (2), Eliminar (3). | spec §8; aquí §8 |
+| C-17 | "Uso" de una opción = ejecutarla. | spec HU-12 |
+| C-18 | Fase 1 guarda solo la mano, con una clave que incluye la orientación. | spec §7 |
+| C-19 | Si `onSelect` de una reversible falla, no hay deshacer y se muestra un aviso de error. | spec RF-08 |
+| C-20 | Los campos de exportación son los de spec §9 hasta tener el Documento 8. | spec §9 |
+| C-21 | "Deshacer" **reemplaza** a la acción de prioridad 1 en su posición; nada más se mueve. Aviso y "Deshacer" siguen hasta vencer los 5 s aunque cambie la sección. Ícono `ArrowCounterClockwise`, registrado en `semantic-icons.ts` de la demo. | spec RF-08, §6, §8; aquí §4.4 |
+| C-16 | `Heart` = marcar favorito; `ListHeart` = ver la lista de Favoritos. Secciones: `IdentificationCard` (perfil) y `Cube` (producto). `Storefront` nunca para secciones (= local fijo en RUTEANDO). Solo en la demo; RUTEANDO no se toca. | spec §8; aquí §8 |
 | L-02 | Margen lateral de 24 px (`MARGEN_LATERAL`); el inferior sigue en 16 px (`MARGEN_INFERIOR`). | spec §6, RF-12; aquí §2, §4.2 |
 | L-04 | La acción se ejecuta de forma **síncrona al soltar**, sin esperar la animación. | aquí §6 ("Ejecutar") |
-| L-09 | Se expone el 3002 igual que RUTEANDO expone el 3001: `portproxy` + regla del firewall, con comandos que ejecutas tú como administrador. | aquí §10 |
+| L-09 | Se expone el 3002 igual que RUTEANDO expone el 3001: `portproxy` + regla del firewall. En T-12 se crea un script que genera el comando con la IP actual de WSL; los comandos de administrador los ejecutas tú. | aquí §10, tasks T-12 |
 
 ---
 
@@ -122,6 +140,7 @@ export type Params = {
   VIB_MS: number;          // 10
   USOS_ETIQUETA: number;   // 5
   MAX_OPCIONES: number;    // 5
+  DESEMPATE: "horizontal" | "vertical";  // "horizontal" (C-10)
 };
 export const DEFAULT_PARAMS: Params = { /* valores de §6 */ };
 ```
@@ -291,33 +310,50 @@ Se usa `D_ACTIVO` (no `D_REPOSO`) para que al crecer no se salga del margen.
 
 ### 4.3 Abanico — `computeFanLayout` (firma de §7)
 ```ts
-type Slot = {
-  index: number;
-  angulo: number;          // grados, ya reflejado según la mano
+type FanSlot = {
+  index: number;           // 0 = extremo "arriba" … n−1 = extremo lateral
+  anguloBase: number;      // en espacio de mano derecha: 90° … 180°
+  angulo: number;          // el real en pantalla (reflejado con la mano izquierda: 180° − anguloBase)
   punto: Point;            // centro de la opción en pantalla
   sector: { desde: number; hasta: number };  // en espacio de mano derecha, incluye EXT_EXTREMOS
-  id?: string;             // lo rellena assignActions
 };
-computeFanLayout({ anchor, viewport, safeArea, count, hand, params }): Slot[]
+type FanLayout = {
+  radio: number;           // radio adaptativo (C-01)
+  rExterior: number;       // radio + EXTRA_EXTERIOR
+  slots: FanSlot[];
+  fueraDePantalla: boolean;  // true si alguna opción escalada se sale de la zona útil (RF-12)
+};
+computeFanLayout({ anchor, viewport, safeArea, count, hand, params }): FanLayout
 ```
 **Decidido (C-01):**
-- Las opciones se reparten **en los extremos del arco**: con `n` opciones, ángulos `90° + i·90°/(n−1)` (con 1 opción: 135°).
-- **Radio adaptativo** `R = max(R_ARCO, (D_OPCION + SEPARACION_MIN) / (2·sin(Δ/2)))`, con `Δ = 90°/(n−1)`. Con los valores por defecto da 100 px con 2–4 opciones y 113 px con 5. `R_EXTERIOR = R + EXTRA_EXTERIOR`. Para la prueba manual se ajusta `R_ARCO` o `SEPARACION_MIN` desde `params` del Provider.
-- Sectores: bisectrices entre ángulos vecinos; el primero empieza en `90° − EXT_EXTREMOS` (70°) y el último termina en `180° + EXT_EXTREMOS` (200°).
-- Verificación RF-12: cada opción, con `ESCALA_PRESEL`, debe quedar dentro de `viewport − safeArea − MARGEN_BORDE`. En vertical siempre cabe (ancla a 48 px del borde, alcance máximo ~113+28 px). Si no cabe, la función lo indica (`fueraDePantalla`) en lugar de mover opciones en silencio; los tests lo prueban en 320/375/412/430 px.
+- Las opciones se reparten **en los extremos del arco**: con `n` opciones, ángulos `ARCO_DESDE + i·(ARCO_HASTA − ARCO_DESDE)/(n−1)`; con 1 opción, la diagonal (135°); con 0, ninguna.
+- **Radio adaptativo** `R = max(R_ARCO, (D_OPCION + SEPARACION_MIN) / (2·sin(Δ/2)))`, con `Δ` = separación angular entre vecinas. Con los valores por defecto da 100 px con 2–4 opciones y 113 px con 5. `R_EXTERIOR = R + EXTRA_EXTERIOR`. Para la prueba manual se ajusta `R_ARCO` o `SEPARACION_MIN` desde `params` del Provider.
+- Punto en pantalla: `x = anchor.x + R·cos(angulo)`, `y = anchor.y − R·sin(angulo)` (la `y` de la pantalla crece hacia abajo).
+- Sectores: bisectrices entre ángulos vecinos; el primero empieza en `ARCO_DESDE − EXT_EXTREMOS` (70°) y el último termina en `ARCO_HASTA + EXT_EXTREMOS` (200°). Con 1 opción, su sector es todo ese rango.
+- **Zona útil (RF-12):** el viewport menos el área segura, menos `MARGEN_LATERAL` a izquierda y derecha y `MARGEN_INFERIOR` abajo (arriba solo el área segura: el abanico nunca llega cerca). Cada opción a tamaño `D_OPCION·ESCALA_PRESEL` debe caber entera. En vertical siempre cabe (ancla a 56 px del borde lateral y 48 px del inferior; alcance máximo 113 + 27,5 px). Si no cabe, se marca `fueraDePantalla` en lugar de mover opciones en silencio; las pruebas lo verifican en 320, 375, 412 y 430 px.
 
-### 4.4 Asignación por prioridad — `assignActions` (C-10, C-11)
+### 4.4 Asignación por prioridad — `orderActions` y `assignActions` (C-10, C-11, C-21)
 ```ts
-orderActions(screen: AnchorScreen): Array<{ id: string; kind: ActionKind; disabled: boolean }>
-assignActions(slots: Slot[], ordered): Slot[]   // devuelve slots con id
+type OrderedAction = { id: string; kind: ActionKind; disabled: boolean };
+type Slot = FanSlot & OrderedAction;
+
+orderActions(screen: AnchorScreen, opciones?: { deshacer?: boolean }): OrderedAction[]
+assignActions(layout: FanLayout, ordered: OrderedAction[], params: Params): Slot[]  // en orden de index
 ```
-1. Si hay `back`, se agrega la opción fija `id: "atras"` y va **siempre** al slot de 90° (arriba, pegado al borde).
-2. El resto se ordena por `priority` (sin prioridad = al final, en orden de declaración).
-3. Los slots libres se ordenan por cercanía a 135° (diagonal). Empate (número par de slots): **Propuesta:** gana el más cercano a 180° (más horizontal). Prioridad 1 → slot más cercano, prioridad 2 → siguiente, etc.
+**Decidido (C-10, C-21):**
+1. `orderActions`: si la pantalla trae `back`, la primera es la opción fija `"atras"`. Después, las acciones ordenadas por `priority` de menor a mayor; las que no tienen `priority` van al final en el orden en que se declararon (orden estable). `kind` por defecto `"normal"`, `disabled` por defecto `false`.
+2. Con `opciones.deshacer`, la acción de **prioridad 1** (la primera después de "Atrás") se **reemplaza** por `{ id: "deshacer", kind: "normal", disabled: false }`; nada más cambia. Si la pantalla no tiene acciones propias, "Deshacer" se agrega como única.
+3. `assignActions`: "atras" va **siempre** al slot de `ARCO_DESDE` (arriba, pegado al borde).
+4. Los slots libres se ordenan por cercanía a la diagonal `(ARCO_DESDE + ARCO_HASTA)/2` = 135°. Empate: con `DESEMPATE = "horizontal"` (por defecto) gana el de ángulo mayor (más cerca de 180°); con `"vertical"`, el menor. La prioridad 1 toma el primero, la 2 el segundo, etc.
+5. Si el número de acciones no coincide con el de slots, `assignActions` lanza un error: es un error de programación, no del usuario.
 
-Ejemplo, perfil visitante (5): Atrás 90°, Carta 135°, Cómo llegar 157,5°, Favorito 112,5°, Compartir 180°.
+Ejemplos con la mano derecha:
+- Mapa (4): Buscar 150°, Mi ubicación 120°, Ofertas cerca 180°, Favoritos 90°.
+- Perfil visitante (4 + Atrás): Atrás 90°, Carta 135°, Cómo llegar 157,5°, Favorito 112,5°, Compartir 180°.
+- Producto dueño (3 + Atrás): Atrás 90°, Editar 150°, Marcar no disponible 120°, Eliminar 180°.
+- Producto dueño con aviso de deshacer: Atrás 90°, **Deshacer 150°**, Marcar no disponible 120°, Eliminar 180° (Editar queda oculta hasta que vence el aviso).
 
-**Deshacer en el abanico (C-03, decidido):** mientras hay un aviso de deshacer vivo, el adaptador pasa a `assignActions` una opción extra `{ id: "deshacer", kind: "normal" }` que toma **el slot de prioridad 1**. El resto de las posiciones depende de C-21 (propuesta: no se mueve nada; la acción de prioridad 1 queda oculta hasta que el aviso desaparece). Ejecutarla llama `onUndo` de la acción original y registra `undo {id}` (no `execute`). Ícono: `ArrowCounterClockwise`.
+Ejecutar "Deshacer" llama `onUndo` de la acción original y registra `undo {id}` (no `execute`). El aviso y "Deshacer" siguen hasta vencer `T_DESHACER` aunque cambie la sección. Ícono: `ArrowCounterClockwise`.
 
 ### 4.5 Selección — `resolveSelection` (firma de §7)
 ```ts
@@ -353,8 +389,9 @@ export type Machine = {
 };
 export function transition(estado: AnchorState, evento: AnchorEvent): AnchorState;
 export function computeAnchorPosition(...): Point;
-export function computeFanLayout(...): Slot[];
-export function orderActions(...); export function assignActions(...);
+export function computeFanLayout(...): FanLayout;
+export function orderActions(screen, opciones?): OrderedAction[];
+export function assignActions(layout, ordered, params): Slot[];
 export function resolveSelection(...);
 export function validateScreen(screen: AnchorScreen, params: Params): string[];  // lista de errores
 export function derivarMetricas(prev, next, evento): MetricEvent[];
@@ -428,10 +465,10 @@ Estado simulado en memoria (`demo-store.tsx`): rol (visitante/dueño), favoritos
 | Ruta | Sección (ícono centro) | Acciones del ancla (prioridad) → qué hace en la demo |
 |---|---|---|
 | `/mapa` | Mapa `MapTrifold` | Buscar `MagnifyingGlass` (1) → hoja inferior con campo enfocado y teclado · Mi ubicación `Crosshair` (2) → recentra el mapa falso · Ofertas cerca `Tag` (3) → hoja inferior con lista · Favoritos `ListHeart` (4) → hoja con favoritos (C-16) |
-| `/negocio` (visitante) | Perfil de negocio `IdentificationCard` (C-16) | Carta `BookOpen` (1) → `/negocio/carta` · Cómo llegar `NavigationArrow` (2) → aviso simulado · Favorito `Heart` (3) → alterna · Compartir `ShareNetwork` (4) → aviso "Enlace copiado (simulado)" (L-10) · Atrás `ArrowLeft` |
-| `/negocio?rol=dueno` | Perfil de negocio | Agregar plato `PlusCircle` (1) → hoja con formulario · Marcar no disponible (2, reversible, ícono por definir C-15) → cambia la insignia + aviso con deshacer · Editar `PencilSimple` (3) → hoja · Atrás |
-| `/negocio/carta` | Carta `BookOpen` | **C-14:** Atrás (+ propuesta: Compartir). Lista de productos; tocar uno → `/producto` |
-| `/producto?id=` (dueño) | Detalle de producto `Cube` (C-16) | Editar `PencilSimple` (1) · Eliminar `Trash` (2, irreversible) → quita el producto y vuelve a la carta · Atrás |
+| `/negocio` (visitante) | Perfil de negocio `IdentificationCard` | Carta `BookOpen` (1) → `/negocio/carta` · Cómo llegar `NavigationArrow` (2) → aviso simulado · Favorito `Heart` (3) → alterna · Compartir `ShareNetwork` (4) → aviso "Enlace copiado (simulado)" (L-10) · Atrás `ArrowLeft` |
+| `/negocio?rol=dueno` | Perfil de negocio `IdentificationCard` | Agregar plato `PlusCircle` (1) → hoja con formulario · Editar `PencilSimple` (2) → hoja · Atrás |
+| `/negocio/carta` | Carta `BookOpen` | Compartir `ShareNetwork` (1) → aviso simulado · Favorito `Heart` (2) → alterna · Atrás. Lista de productos; tocar uno → `/producto` |
+| `/producto?id=` (dueño) | Detalle de producto `Cube` | Editar `PencilSimple` (1) → hoja · Marcar no disponible `MinusCircle` (2, reversible) → insignia "No disponible" + aviso "Marcado no disponible · Deshacer" · Eliminar `Trash` (3, irreversible) → quita el producto y vuelve a la carta · Atrás |
 | `/ajustes` | Ajustes `GearSix` | Atrás. Pantalla: mano derecha/izquierda (HU-11), rol, fondo del mapa, reiniciar bienvenida |
 | `/metricas` | Métricas `ChartBar` | Atrás. Lista de eventos, formulario Doc 8 §13 y exportar JSON (§9, RNF-08) |
 
@@ -444,28 +481,31 @@ Estado simulado en memoria (`demo-store.tsx`): rol (visitante/dueño), favoritos
 
 ## 9. Contradicciones y ambigüedades de la spec
 
-| ID | Tema | Problema | Propuesta |
+Todas decididas; el detalle está en §0 y en `spec.md` v0.3. Se mantiene la lista para rastrear de dónde salió cada regla.
+
+| ID | Tema | Problema original (resumen) | Estado |
 |---|---|---|---|
-| **C-01** | Abanico (§6, D-03) | Con `R_ARCO` 100 px y 90° de arco, 5 opciones de 44 px **se solapan**: entre centros hay 31 px (reparto por sectores) o 39 px (en los extremos). Con 4 opciones por sectores, 39 px. Sin solape hacen falta 113 px (5 en extremos) o 141 px (5 por sectores); con la escala 1,25, 141 y 176 px. | ✅ **Decidido** (§0): radio adaptativo con `R_ARCO` y `SEPARACION_MIN` como parámetros. La preseleccionada se solapa un poco con sus vecinas y se dibuja encima. |
-| **C-02** | Contraste (D-04, RNF-06) | Con fondo `surface` al 60 %, el ícono `terracota` (#5B3DF5) queda en **2,15:1 sobre contenido negro** y 3,81:1 sobre gris; solo cumple sobre blanco (6,12). "Fondo real" arbitrario (fotos) no se puede garantizar. | ✅ **Decidido** (§0): ícono `text` en reposo (6,05:1 en el peor caso), `terracota` en activo. Se verifica a mano sobre mapa y foto. |
-| **C-03** | Deshacer (RF-08 vs D-15/RNF-01/HU-09) | "Deshacer" en el aviso es un **toque**, y todo debe poder hacerse solo deslizando. | ✅ **Decidido** (§0): "Deshacer" ocupa la posición de prioridad 1 del abanico mientras dura el aviso; tocar el aviso también deshace. Queda abierto C-21. |
-| **C-04** | Métrica `open {mode: experto}` (§9) | Al abrir no se sabe si será experto; se sabe al soltar. Tampoco existe el modo teclado. | `open {mode: gesto \| toque \| teclado}`; experto solo en `execute.expert` (experto = soltar menos de `T_ANIM` después de abrir). |
-| **C-05** | Deslizamiento rápido | §3 no cubre `armado` + soltar con movimiento ≥ `UMBRAL_MOV` sin `pointermove` intermedio (un deslizamiento rápido puede llegar así). Sin esto, HU-06 falla. | ⏳ Explicado en `decisiones-pendientes.md`. Propuesta: tratarlo como MOVE + UP (fila 7). |
-| **C-06** | `abierto_toque` | No se define: presionar el centro y quedarse quieto (¿descanso?), ni presionar una opción y arrastrar. | ⏳ Explicado en `decisiones-pendientes.md`. |
-| **C-07** | Descanso | El pulgar que descansa se desliza solo unos milímetros; medido desde `inicio`, puede superar 10 px y abrir el menú sin querer. | Medir desde el punto donde empezó el descanso. Revisar con las pruebas si hace falta un umbral mayor en descanso. |
-| **C-08** | Soltar fuera del arco | No se define qué pasa si el dedo apunta fuera de 70°–200° (abajo o a la derecha). | Cancelar con motivo `fuera_de_arco`. |
-| **C-09** | `disabled` | No se define cómo se ve ni qué pasa al soltar. | Atenuada, se puede preseleccionar (etiqueta "… · no disponible"), soltar = cancelar. Conserva su posición (memoria muscular). |
-| **C-10** | Prioridad 1 "en la diagonal" | Con número par de posiciones no hay ninguna a 135°. Tampoco se define el orden del resto. | ⏳ Explicado en `decisiones-pendientes.md`. |
-| **C-11** | API §7 | `computeFanLayout` recibe solo `count`, pero "Atrás" debe ir arriba; `resolveSelection` no recibe la mano; `Params`, `Machine`, `Slot`, `Point`, `Rect`, `Insets` no están definidos. | Separar geometría (`computeFanLayout`) de asignación (`assignActions`); añadir `hand` a `resolveSelection`; tipos definidos en §2–§5. |
-| **C-12** | Teclado y lectores de pantalla (RNF-05) | La máquina de §3 no tiene teclado. `T_INACTIVO` (4 s) cerraría el menú a quien navega con teclado o lector de pantalla (choca con WCAG 2.2.1). Con VoiceOver/TalkBack el ancla recibe un `click` sin secuencia de puntero. | Estado `abierto_teclado` **sin** cierre por tiempo; evento `ACTIVAR` → `abierto_toque`, también sin cierre por tiempo cuando viene de lector. Flechas: ↑/→ hacia "arriba", ↓/← hacia el extremo lateral, Home/End a los extremos. |
-| **C-13** | `onUndo` "obligatorio" | El tipo de §7 no lo obliga. | Mantener el tipo y validarlo con `validateScreen`. Alternativa (cambia la spec): unión discriminada por `kind`. |
-| **C-14** | Pantallas de §8 | "Carta" es una sección (HU-10) pero §8 no le da acciones; el detalle de producto solo existe para el dueño. | Carta: Compartir (1) + Atrás. Producto como visitante: fuera de la demo. |
-| **C-15** | "Marcar no disponible" | ¿Es el **negocio** ("hoy no estoy vendiendo", contrario a `confirmedSelling`/`SealCheck`) o un **plato**? Cambia el ícono y el texto. `Prohibit` ya se usa en RUTEANDO; hay que revisar su significado. | Decidir entidad e ícono antes de T-24. |
-| **C-16** | Íconos (RNF-09) | "Favoritos" (lista, Mapa) y "Favorito" (marcar, Perfil) son dos significados. **RUTEANDO ya usa `Heart` para ambos** (`main-floating-nav.tsx` y `favorite-button.tsx`). Los íconos de sección de Perfil y Producto no pueden ser `Storefront` (= local fijo) ni `Package` (= Combo). | ✅ **Decidido** (§0): `Heart` = marcar favorito; `ListHeart` = lista, solo en la demo. ⏳ Falta confirmar los íconos de sección: `IdentificationCard` (perfil) y `Cube` (producto). |
-| **C-17** | "Primeros 5 usos" (HU-12) | ¿Uso = ejecutar la opción o también preseleccionarla? | Contar ejecuciones. |
-| **C-18** | Preferencias por orientación | §0 dice que la posición se guarda por orientación, pero `AnchorPrefs` solo tiene `hand`. | Fase 1: solo `hand`; la clave de almacenamiento incluye la orientación para no migrar en la Fase 3. |
-| **C-19** | `onSelect` asíncrono | Si una acción reversible devuelve una promesa rechazada, ¿se muestra "Deshacer"? | El aviso con deshacer aparece al resolver; si falla, aviso de error y sin deshacer. |
-| **C-20** | Documentos 1, 7 y 8 | No están en el repo. No puedo verificar los campos del Doc 8 §13 más allá de la lista de §9. | Usar la lista de §9; si hay más campos, pásame el documento. |
+| C-01 | Abanico | 5 opciones de 44 px se enciman con R = 100 px en 90° | ✅ radio adaptativo |
+| C-02 | Contraste | `terracota` sobre fondo al 60 % da 2,15:1 sobre contenido oscuro | ✅ ícono `text` en reposo |
+| C-03 | Deshacer | "Deshacer" exigía un toque (choca con D-15) | ✅ en la posición de prioridad 1 |
+| C-04 | Métrica `open` | "experto" no se sabe al abrir | ✅ va en `execute.expert` |
+| C-05 | Deslizamiento rápido | soltar en `armado` con movimiento sin `pointermove` | ✅ como mover + soltar |
+| C-06 | Modo toque | centro quieto, arrastrar desde una opción | ✅ regla del botón clásico |
+| C-07 | Descanso | deriva del pulgar | ✅ se mide desde el inicio del descanso |
+| C-08 | Fuera del arco | soltar fuera de 70°–200° | ✅ cancela |
+| C-09 | `disabled` | aspecto y efecto no definidos | ✅ atenuada, soltar cancela |
+| C-10 | Prioridad | sin posición a 135° con número par | ✅ cercanía + `DESEMPATE` |
+| C-11 | API §7 | firmas incompletas | ✅ `FanLayout`, `orderActions`, `assignActions`, `hand` |
+| C-12 | Teclado / lector | no estaban en la máquina; `T_INACTIVO` los expulsaba | ✅ `abierto_teclado`, `ACTIVAR`, sin cierre por tiempo |
+| C-13 | `onUndo` | el tipo no lo obliga | ✅ `validateScreen` |
+| C-14 | Carta | sin acciones | ✅ Compartir, Favorito, Atrás |
+| C-15 | Marcar no disponible | ¿negocio o plato? | ✅ plato, en detalle de producto, `MinusCircle` |
+| C-16 | Íconos | `Heart` con dos significados; íconos de sección | ✅ `Heart`/`ListHeart`, `IdentificationCard`/`Cube` |
+| C-17 | Primeros usos | ¿qué es un uso? | ✅ ejecución |
+| C-18 | Orientación | `AnchorPrefs` sin orientación | ✅ solo mano; clave con orientación |
+| C-19 | `onSelect` asíncrono | ¿deshacer si falla? | ✅ no; aviso de error |
+| C-20 | Documentos 1, 7, 8 | no están en el repo | ✅ manda la lista de §9 |
+| C-21 | Deshacer desplaza | ¿qué pasa con la prioridad 1? | ✅ reemplazo temporal |
 
 ---
 

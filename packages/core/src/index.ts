@@ -11,5 +11,5 @@ export type {
   Point,
   Rect,
 } from "./types";
-export { DEFAULT_PARAMS, type Params } from "./params";
+export { DEFAULT_PARAMS, type Desempate, type Params } from "./params";
 export { ID_ATRAS, ID_DESHACER, validateScreen } from "./validate";

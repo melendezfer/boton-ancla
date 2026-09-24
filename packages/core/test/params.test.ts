@@ -53,8 +53,14 @@ describe("DEFAULT_PARAMS (spec §6)", () => {
       const derivar = DERIVADOS[nombre];
       const valorSpec = derivar ? derivar(filas) : filas.get(nombre);
       expect(valorSpec, `${nombre} no aparece en la tabla de §6`).toBeDefined();
+      const actual = DEFAULT_PARAMS[nombre];
+      if (typeof actual === "string") {
+        // Parámetros de texto (DESEMPATE): la primera palabra de la celda.
+        expect(actual).toBe(String(valorSpec).split(/\s/)[0]);
+        return;
+      }
       const esperado = typeof valorSpec === "number" ? valorSpec : aNumero(valorSpec!);
-      expect(DEFAULT_PARAMS[nombre]).toBe(esperado);
+      expect(actual).toBe(esperado);
     });
   }
 

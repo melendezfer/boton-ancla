@@ -1,6 +1,6 @@
 # Botón-ancla — Especificación Fase 1: núcleo del gesto
 
-Versión 0.2 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
+Versión 0.3 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
 
 > Esta spec es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
 
@@ -9,6 +9,13 @@ Versión 0.2 · Primera app base: RUTEANDO · Destino: componente integrable en 
 - C-02: en reposo el ícono usa el color `text`; `terracota` solo cuando el ancla está activa (D-04).
 - C-03: "Deshacer" también se puede hacer solo deslizando (D-14, RF-08, HU-07, §6 "Distribución").
 - L-02: el margen lateral sube a 24 px; el inferior sigue en 16 px (§6, RF-12).
+
+**Cambios en 0.3** (segunda revisión; detalle en `design.md` §0):
+- §3: deslizamiento rápido sin `pointermove` (C-05), reglas del modo toque (C-06), descanso medido desde donde empezó (C-07), soltar fuera del arco o sobre una opción deshabilitada (C-08, C-09), teclado y lector de pantalla (C-12).
+- §6: parámetro `DESEMPATE` y reglas de reparto (C-10); "Deshacer" reemplaza temporalmente a la prioridad 1 (C-21).
+- §7: firmas completas (C-11), validación de pantallas (C-13), `onSelect` asíncrono (C-19).
+- §8: Carta con acciones (C-14); "Marcar no disponible" pasa al detalle de producto (C-15); íconos de sección y de favoritos (C-16).
+- §9: modos de `open` (C-04) y campos de exportación (C-20). HU-12: "uso" = ejecución (C-17). Preferencias por orientación (C-18).
 
 ---
 
@@ -86,20 +93,29 @@ armado ──se mueve > UMBRAL_MOV antes de T_DESCANSO──▶ abierto_gesto
 armado ──suelta con movimiento < UMBRAL_MOV y antes de T_TOQUE──▶ abierto_toque
 armado ──quieto durante T_DESCANSO──▶ descanso
 armado ──suelta entre T_TOQUE y T_DESCANSO sin moverse──▶ reposo (sin efecto)
+armado ──suelta con movimiento ≥ UMBRAL_MOV sin pointermove previo──▶ como si se moviera y soltara en abierto_gesto   (C-05)
 descanso ──suelta──▶ reposo (sin efecto)
-descanso ──se mueve > UMBRAL_MOV──▶ abierto_gesto        (Fase 1; en 2-exp podría ser desplazamiento)
+descanso ──se mueve > UMBRAL_MOV desde donde empezó el descanso──▶ abierto_gesto   (C-07; en 2-exp podría ser desplazamiento)
 abierto_gesto ──se mueve──▶ abierto_gesto (actualiza la preselección)
 abierto_gesto ──suelta en zona muerta──▶ cancelado
+abierto_gesto ──suelta fuera del arco (sin sector)──▶ cancelado                    (C-08)
+abierto_gesto ──suelta sobre una opción deshabilitada──▶ cancelado                 (C-09)
 abierto_gesto ──suelta sobre una opción normal o reversible──▶ ejecutando
 abierto_gesto ──suelta sobre irreversible sin pasar el anillo exterior──▶ bloqueado_sensible
 abierto_gesto ──irreversible y cruza el anillo exterior──▶ confirmacion_armada
 confirmacion_armada ──suelta──▶ ejecutando
-confirmacion_armada ──vuelve dentro del anillo──▶ abierto_gesto
-abierto_toque ──toca una opción──▶ ejecutando | confirmacion_toque (si es irreversible)
+confirmacion_armada ──vuelve dentro del anillo o cambia de sector──▶ abierto_gesto
+abierto_toque ──baja y sube sobre la MISMA opción moviéndose < UMBRAL_MOV (sin límite de tiempo)──▶ ejecutando | confirmacion_toque (si es irreversible)   (C-06)
+abierto_toque ──sobre una opción se mueve ≥ UMBRAL_MOV o suelta en otra──▶ abierto_toque (sin efecto)   (C-06)
 abierto_toque ──pointerdown en el centro y desliza──▶ abierto_gesto
-abierto_toque ──toca el centro, toca fuera o pasa T_INACTIVO──▶ cancelado
+abierto_toque ──toca el centro (a cualquier tiempo), toca fuera o pasa T_INACTIVO sin dedo apoyado──▶ cancelado   (C-06)
 confirmacion_toque ──toca "Confirmar"──▶ ejecutando
-confirmacion_toque ──toca fuera o pasa T_INACTIVO──▶ cancelado
+confirmacion_toque ──toca fuera, Escape o pasa T_INACTIVO──▶ cancelado
+reposo ──click sin secuencia de puntero (lector de pantalla)──▶ abierto_toque, sin cierre por tiempo   (C-12)
+reposo ──Enter / Espacio / ↑ con foco en el ancla──▶ abierto_teclado (foco en prioridad 1)           (C-12)
+abierto_teclado ──flechas, Inicio, Fin──▶ abierto_teclado (mueve el foco); sin cierre por tiempo       (C-12)
+abierto_teclado ──Enter / Espacio──▶ ejecutando | confirmacion_toque (si es irreversible)             (C-12)
+abierto_teclado ──Escape──▶ cancelado                                                                 (C-12)
 bloqueado_sensible ──▶ reposo + aviso "Desliza más allá para confirmar"
 ejecutando ──▶ reposo (+ aviso con deshacer si es reversible)
 cancelado ──▶ reposo
@@ -208,7 +224,7 @@ Y cada opción conserva su misma posición relativa al pulgar
 ```gherkin
 Dado que es la primera vez que abro la app
 Entonces el ancla hace una demostración breve (una opción sale y vuelve)
-Y cada opción muestra su etiqueta durante sus primeros 5 usos
+Y cada opción muestra su etiqueta durante sus primeros 5 usos (uso = ejecutar la opción)
 ```
 
 **HU-13 — No interferir con el mapa**
@@ -231,7 +247,7 @@ Entonces el ancla no se activa
 - **RF-05** Los sectores de los extremos deben extenderse hasta ±`EXT_EXTREMOS` grados fuera del arco, para tolerar movimientos imprecisos.
 - **RF-06** Cuando cambie la preselección, el sistema debe agrandar la opción (`ESCALA_PRESEL`), mostrar la etiqueta **por encima del dedo** y, si hay soporte, vibrar `VIB_MS`.
 - **RF-07** Si la opción preseleccionada es `irreversible`, el sistema debe dibujar el anillo exterior y exigir cruzarlo para confirmar.
-- **RF-08** Si la opción ejecutada es `reversible`, el sistema debe mostrar un aviso con "Deshacer" durante `T_DESHACER`. Mientras el aviso esté visible, "Deshacer" debe ocupar la posición de prioridad 1 del abanico (para cumplir D-15), y tocar el aviso también debe deshacer.
+- **RF-08** Si la opción ejecutada es `reversible`, el sistema debe mostrar un aviso con "Deshacer" durante `T_DESHACER`. Mientras el aviso esté visible, "Deshacer" debe ocupar la posición de prioridad 1 del abanico (para cumplir D-15), y tocar el aviso también debe deshacer. La acción de prioridad 1 queda oculta mientras tanto y ninguna otra opción se mueve (C-21). El aviso y "Deshacer" siguen hasta vencer `T_DESHACER` aunque cambie la sección. Si `onSelect` de una reversible devuelve una promesa que falla, no se ofrece deshacer y se muestra un aviso de error (C-19).
 - **RF-09** Mientras haya un segundo puntero, un `pointercancel` o un cambio de orientación, el sistema debe cancelar.
 - **RF-10** Cuando la app cambie de sección, el sistema debe actualizar el ícono central y cancelar cualquier interacción abierta.
 - **RF-11** Mientras el menú esté abierto, los toques dentro del área del menú no deben llegar al contenido. En modo toque, un toque fuera cierra el menú y tampoco llega al contenido.
@@ -244,7 +260,7 @@ Entonces el ancla no se activa
 - **RNF-02** Ancla y opciones con `touch-action:none`, `user-select:none`, `-webkit-touch-callout:none`, y `contextmenu` bloqueado sobre el ancla.
 - **RNF-03** Animaciones solo con `transform` y `opacity`, a 60 fps en gama baja. `backdrop-blur` solo en el ancla, nunca en las opciones que se mueven.
 - **RNF-04** Con `prefers-reduced-motion`, sin animaciones de movimiento; solo cambios de opacidad.
-- **RNF-05** El ancla es un `<button aria-haspopup="menu" aria-expanded>` cuyo nombre accesible es "Menú, sección {sección}". Las opciones son `role="menuitem"`, y con teclado se navega con flechas, Enter y Escape.
+- **RNF-05** El ancla es un `<button aria-haspopup="menu" aria-expanded>` cuyo nombre accesible es "Menú, sección {sección}". Las opciones son `role="menuitem"`, y con teclado se navega con flechas, Inicio, Fin, Enter y Escape. Abierto por teclado o por lector de pantalla, el menú no se cierra por tiempo (C-12).
 - **RNF-06** Contraste: ícono ≥ 3:1 sobre el fondo real en reposo, y texto de etiquetas ≥ 4.5:1.
 - **RNF-07** El núcleo no importa React ni el DOM; debe poder probarse en Node.
 - **RNF-08** Las métricas se guardan solo en el dispositivo, sin datos anatómicos. Solo la demo permite exportarlas.
@@ -280,8 +296,9 @@ Entonces el ancla no se activa
 | `VIB_MS` | 10 ms | Solo Android |
 | `USOS_ETIQUETA` | 5 por opción | Bienvenida |
 | `MAX_OPCIONES` | 5 | Fase 1 |
+| `DESEMPATE` | horizontal | Si dos posiciones quedan igual de cerca de la diagonal, gana la más horizontal (`vertical` = la más cercana a "arriba") (C-10) |
 
-Distribución: las opciones se reparten en el arco ordenadas por `priority`. La prioridad 1 va en la **diagonal**, que es la posición más cómoda. Si la app habilita "Atrás", ocupa siempre el extremo **"arriba"** del arco, pegado al borde, para que sea fácil de memorizar. Las opciones se ubican en los extremos y a intervalos iguales del arco. Mientras el aviso de deshacer está visible, "Deshacer" ocupa la posición de prioridad 1 (qué pasa con la acción desplazada: C-21 en `decisiones-pendientes.md`).
+Distribución: las opciones se reparten en el arco ordenadas por `priority`. La prioridad 1 va en la **diagonal**, que es la posición más cómoda. Si la app habilita "Atrás", ocupa siempre el extremo **"arriba"** del arco, pegado al borde, para que sea fácil de memorizar. Las opciones se ubican en los extremos y a intervalos iguales del arco. Las posiciones libres se ordenan de la más cercana a la diagonal (135° con la mano derecha) a la más lejana, desempatando según `DESEMPATE`; la prioridad 1 toma la primera, la 2 la segunda, y así. Las acciones sin `priority` van al final, en orden de declaración (C-10). Mientras el aviso de deshacer está visible, "Deshacer" reemplaza a la acción de prioridad 1 en su misma posición y nada más se mueve (C-21).
 
 ---
 
@@ -300,7 +317,8 @@ export type AnchorAction = {
   kind?: "normal" | "reversible" | "irreversible";
   onUndo?: () => void;                  // obligatorio si kind = "reversible"
   undoMessage?: string;                 // "Marcado no disponible"
-  disabled?: boolean;
+  disabled?: boolean;                   // se ve atenuada y conserva su posición; se puede preseleccionar
+                                        // (etiqueta "… · no disponible") y soltar sobre ella cancela (C-09)
 };
 
 export type AnchorScreen = {
@@ -311,14 +329,20 @@ export type AnchorScreen = {
   actions: AnchorAction[];              // máximo 5 en Fase 1, contando "Atrás"
 };
 
-export type AnchorPrefs = { hand: "right" | "left" };
+export type AnchorPrefs = { hand: "right" | "left" };   // Fase 1: solo la mano; se guarda con una clave que
+                                                        // incluye la orientación, para la Fase 3 (C-18)
 
 // núcleo
 createAnchorMachine(params?: Partial<Params>): Machine;
+computeAnchorPosition(input: { viewport: Rect; safeArea: Insets; hand: "right" | "left"; params: Params }): Point;
 computeFanLayout(input: { anchor: Point; viewport: Rect; safeArea: Insets;
-  count: number; hand: "right" | "left"; params: Params }): Slot[];
+  count: number; hand: "right" | "left"; params: Params }): FanLayout;   // geometría, sin ids (C-11)
+orderActions(screen: AnchorScreen): OrderedAction[];                 // "Atrás" + acciones por prioridad (C-11)
+assignActions(layout: FanLayout, ordered: OrderedAction[], params: Params): Slot[];  // pone un id en cada posición
 resolveSelection(input: { center: Point; pointer: Point; slots: Slot[];
-  previous?: string; params: Params }): { id?: string; beyondOuter: boolean };
+  previous?: string; hand: "right" | "left"; params: Params }): { id?: string; beyondOuter: boolean };  // + hand (C-11)
+validateScreen(screen: AnchorScreen, params: Params): string[];      // lo que el tipo no impone: máx. 5, ids, onUndo (C-13)
+// Params, Machine, FanLayout, Slot, Point, Rect, Insets: definidos en design.md §2–§5.
 
 // adaptador React
 <AnchorProvider prefs={...} theme={...} onEvent={logMetric}>…</AnchorProvider>
@@ -331,19 +355,25 @@ useAnchorScreen(screen: AnchorScreen): void;
 
 | Sección (centro) | Acciones (prioridad) | Tipo |
 |---|---|---|
-| Mapa | Buscar (1), Mi ubicación (2), Ofertas cerca `Tag` (3), Favoritos (4) | normal |
-| Perfil de negocio (visitante) | Carta `BookOpen` (1), Cómo llegar (2), Favorito (3), Compartir (4), Atrás | normal |
-| Perfil de negocio (dueño) | Agregar plato (1), Marcar no disponible (2, reversible), Editar (3), Atrás | mixto |
-| Detalle de producto (dueño) | Editar (1), Eliminar (2, irreversible), Atrás | mixto |
+| Mapa `MapTrifold` | Buscar (1), Mi ubicación (2), Ofertas cerca `Tag` (3), Favoritos `ListHeart` (4) | normal |
+| Perfil de negocio (visitante) `IdentificationCard` | Carta `BookOpen` (1), Cómo llegar (2), Favorito `Heart` (3), Compartir (4), Atrás | normal |
+| Perfil de negocio (dueño) `IdentificationCard` | Agregar plato (1), Editar (2), Atrás | normal |
+| Carta `BookOpen` | Compartir (1), Favorito `Heart` (2), Atrás | normal |
+| Detalle de producto (dueño) `Cube` | Editar (1), Marcar no disponible `MinusCircle` (2, reversible), Eliminar (3, irreversible), Atrás | mixto |
 
-`Tag` y `BookOpen` ya tienen significado en `semantic-icons.ts`. Los íconos nuevos (buscar, ubicación, favorito, compartir, editar, eliminar, atrás, cómo llegar) **deben registrarse antes de integrarse**, para respetar la regla de un significado por ícono.
+`Tag` y `BookOpen` ya tienen significado en `semantic-icons.ts`. Los íconos nuevos (buscar, ubicación, favorito, lista de favoritos, compartir, editar, eliminar, atrás, cómo llegar, no disponible, deshacer, y las secciones) **deben registrarse antes de integrarse**, para respetar la regla de un significado por ícono.
+
+- `Heart` = marcar un negocio como favorito; `ListHeart` = ver la lista de Favoritos (C-16). Hoy RUTEANDO usa `Heart` para las dos cosas; corregirlo es parte de la integración, no de la demo.
+- Íconos de sección: `IdentificationCard` para el perfil de negocio y `Cube` para el detalle de producto. `Storefront` no se usa para secciones: en RUTEANDO significa "local fijo"; `Package` significa "Combo" (C-16).
+- "Marcar no disponible" es de un **plato/producto**, no del negocio (C-15). RUTEANDO no usa ícono para eso (solo la insignia de texto "No disponible"); se usa `MinusCircle`, libre en RUTEANDO. No sirven `Prohibit` (= negocio suspendido) ni `XCircle` (= negocio rechazado).
+- "Deshacer" usa `ArrowCounterClockwise` (C-21).
 
 ---
 
 ## 9. Métricas locales (Documento 8)
 
-Eventos que se registran: `open {mode: gesto|toque|experto}`, `preselect {id}`, `execute {id, ms, pathPx, expert}`, `cancel {reason}`, `rest_enter`, `sensitive_blocked {id}`, `undo {id}`.
-La demo incluye una pantalla para exportar a JSON con los campos del Documento 8 §13: versión, dispositivo, mano, posición, número de opciones, acción, tiempo, errores y observaciones.
+Eventos que se registran: `open {mode: gesto|toque|teclado}`, `preselect {id}`, `execute {id, ms, pathPx, expert}`, `cancel {reason}`, `rest_enter`, `sensitive_blocked {id}`, `undo {id}`. "Experto" no se sabe al abrir, solo al soltar: se registra en `execute.expert` (soltar menos de `T_ANIM` después de abrir) (C-04).
+La demo incluye una pantalla para exportar a JSON con los campos del Documento 8 §13: versión, dispositivo, mano, posición, número de opciones, acción, tiempo, errores y observaciones. Como los Documentos 1, 7 y 8 no están en este repositorio, esta lista es la referencia; si el Documento 8 pide más campos, se agregan aquí primero (C-20).
 
 ---
 

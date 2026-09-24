@@ -51,7 +51,12 @@ export type Params = {
   USOS_ETIQUETA: number;
   /** Máximo de opciones, contando "Atrás". */
   MAX_OPCIONES: number;
+  /** Si dos posiciones quedan igual de cerca de la diagonal, cuál gana (C-10). */
+  DESEMPATE: Desempate;
 };
+
+/** "horizontal" = gana la más cercana al extremo lateral; "vertical" = la más cercana a "arriba". */
+export type Desempate = "horizontal" | "vertical";
 
 export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   D_REPOSO: 52,
@@ -78,4 +83,5 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   VIB_MS: 10,
   USOS_ETIQUETA: 5,
   MAX_OPCIONES: 5,
+  DESEMPATE: "horizontal",
 });
