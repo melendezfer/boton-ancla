@@ -260,6 +260,9 @@ Notación: `d` = distancia del puntero a `inicio` (movimiento); `r` = distancia 
 | 35 | **cualquiera salvo reposo y transitorios** | POINTER_DOWN con otro `pointerId` | — | cancelado(segundo_dedo) | RF-09 |
 | 36 | ídem | POINTER_CANCEL / ORIENTACION / CAMBIO_SECCION | — | cancelado(motivo) | RF-09, RF-10 |
 | 37 | cualquiera | cualquier otro evento | — | mismo estado (se ignora) | total: nunca lanza error |
+| 38 | abierto_toque | TECLA Escape | — | cancelado(escape) | RNF-05 (Escape cierra el menú) |
+| 39 | abierto_toque | TECLA flecha | — | abierto_teclado (foco = prioridad 1) | RNF-05 (se navega con flechas) |
+| 40 | abierto_teclado | POINTER_DOWN fuera | — | cancelado(toque_fuera) | RF-11 |
 
 `abierto_toque` y `confirmacion_toque` actualizan `ultimaActividad = t` con cualquier evento de puntero o teclado.
 

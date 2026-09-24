@@ -118,6 +118,8 @@ reposo ──Enter / Espacio / ↑ con foco en el ancla──▶ abierto_teclado
 abierto_teclado ──flechas, Inicio, Fin──▶ abierto_teclado (mueve el foco); sin cierre por tiempo       (C-12)
 abierto_teclado ──Enter / Espacio──▶ ejecutando | confirmacion_toque (si es irreversible)             (C-12)
 abierto_teclado ──Escape──▶ cancelado                                                                 (C-12)
+abierto_teclado ──toca fuera──▶ cancelado                                                             (RF-11)
+abierto_toque ──Escape──▶ cancelado; ──flecha──▶ abierto_teclado (foco en prioridad 1)                (RNF-05)
 bloqueado_sensible ──▶ reposo + aviso "Desliza más allá para confirmar"
 ejecutando ──▶ reposo (+ aviso con deshacer si es reversible)
 cancelado ──▶ reposo

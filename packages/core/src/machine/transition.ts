@@ -1,7 +1,7 @@
 import { distancia } from "../geometry";
 import { resolveSelection } from "../selection";
 import type { Point } from "../types";
-import { REPOSO, type AnchorEvent, type AnchorState, type Geometry } from "./states";
+import { ESTADOS_TRANSITORIOS, REPOSO, type AnchorEvent, type AnchorState, type Geometry } from "./states";
 
 // transition(estado, evento) → estado (spec §3, design.md §3.3).
 // Función PURA: no lee el reloj, no toca el DOM, no llama onSelect.
@@ -11,6 +11,9 @@ type Estado<T extends AnchorState["tipo"]> = Extract<AnchorState, { tipo: T }>;
 type Evento<T extends AnchorEvent["tipo"]> = Extract<AnchorEvent, { tipo: T }>;
 
 export function transition(estado: AnchorState, evento: AnchorEvent): AnchorState {
+  const cancelacion = cancelacionGlobal(estado, evento);
+  if (cancelacion) return cancelacion;
+
   switch (estado.tipo) {
     case "reposo":
       return desdeReposo(estado, evento);
@@ -25,6 +28,8 @@ export function transition(estado: AnchorState, evento: AnchorEvent): AnchorStat
       return desdeToque(estado, evento);
     case "confirmacion_toque":
       return desdeConfirmacionToque(estado, evento);
+    case "abierto_teclado":
+      return desdeTeclado(estado, evento);
     case "ejecutando":
     case "cancelado":
     case "bloqueado_sensible":
@@ -40,6 +45,21 @@ export function transition(estado: AnchorState, evento: AnchorEvent): AnchorStat
 // ---------------------------------------------------------------------------
 
 function desdeReposo(estado: Estado<"reposo">, evento: AnchorEvent): AnchorState {
+  // Fila 2 (C-12): click sin secuencia de puntero (lector de pantalla) → modo toque sin cierre por tiempo.
+  if (evento.tipo === "ACTIVAR") {
+    return {
+      tipo: "abierto_toque",
+      geo: evento.geo,
+      t0: evento.t,
+      tApertura: evento.t,
+      ultimaActividad: evento.t,
+      sinCierrePorTiempo: true,
+    };
+  }
+  // Fila 3 (C-12): Enter, Espacio o ↑ con el foco en el ancla → navegación con teclado.
+  if (evento.tipo === "TECLA" && evento.geo && ["Enter", " ", "ArrowUp"].includes(evento.tecla)) {
+    return abrirTeclado(evento.geo, evento.t);
+  }
   // Fila 1
   if (evento.tipo === "POINTER_DOWN" && evento.sobre === "ancla" && evento.geo) {
     return {
@@ -222,6 +242,14 @@ function desdeToque(estado: Estado<"abierto_toque">, evento: AnchorEvent): Ancho
   const P = estado.geo.params;
   const { presion } = estado;
 
+  if (evento.tipo === "TECLA") {
+    // Fila 38 (RNF-05): Escape cierra el menú, se haya abierto como se haya abierto.
+    if (evento.tecla === "Escape") return { tipo: "cancelado", motivo: "escape" };
+    // Fila 39 (RNF-05): una flecha pasa a navegar con teclado, empezando en la prioridad 1.
+    if (evento.tecla.startsWith("Arrow")) return abrirTeclado(estado.geo, estado.t0);
+    return estado;
+  }
+
   if (evento.tipo === "TICK") {
     // Fila 28: sin dedo apoyado y sin actividad durante T_INACTIVO. No aplica si lo abrió un lector de pantalla.
     const vencido = !estado.sinCierrePorTiempo && !presion && evento.t - estado.ultimaActividad >= P.T_INACTIVO;
@@ -305,6 +333,106 @@ function desdeConfirmacionToque(estado: Estado<"confirmacion_toque">, evento: An
     }
     case "TECLA":
       return evento.tecla === "Escape" ? { tipo: "cancelado", motivo: "escape" } : estado;
+    default:
+      return estado;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cancelaciones del entorno (filas 35 y 36; RF-09, RF-10)
+// ---------------------------------------------------------------------------
+
+/** Puntero que la interacción está siguiendo en este momento, si hay alguno. */
+function punteroActivo(estado: AnchorState): number | undefined {
+  switch (estado.tipo) {
+    case "armado":
+    case "descanso":
+    case "abierto_gesto":
+    case "confirmacion_armada":
+      return estado.pointerId;
+    case "abierto_toque":
+      return estado.presion?.pointerId;
+    default:
+      return undefined;
+  }
+}
+
+function cancelacionGlobal(estado: AnchorState, evento: AnchorEvent): AnchorState | undefined {
+  if (estado.tipo === "reposo" || ESTADOS_TRANSITORIOS.includes(estado.tipo)) return undefined;
+  const activo = punteroActivo(estado);
+
+  switch (evento.tipo) {
+    case "POINTER_DOWN":
+      // Fila 35: un segundo dedo mientras hay uno apoyado.
+      return activo !== undefined && evento.pointerId !== activo ? { tipo: "cancelado", motivo: "segundo_dedo" } : undefined;
+    case "POINTER_CANCEL":
+      // Fila 36: el navegador canceló el puntero que seguíamos (por ejemplo, un gesto del sistema).
+      return activo !== undefined && evento.pointerId === activo ? { tipo: "cancelado", motivo: "pointercancel" } : undefined;
+    case "ORIENTACION":
+      return { tipo: "cancelado", motivo: "orientacion" };
+    case "CAMBIO_SECCION":
+      return { tipo: "cancelado", motivo: "cambio_seccion" };
+    default:
+      return undefined;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// abierto_teclado (filas 3, 31–33 y 40; RNF-05, C-12)
+// ---------------------------------------------------------------------------
+
+function abrirTeclado(geo: Geometry, t: number): AnchorState {
+  if (geo.slots.length === 0) return REPOSO;
+  const foco = Math.max(0, geo.slots.findIndex((s) => s.id === geo.prioridad1));
+  return { tipo: "abierto_teclado", geo, foco, t0: t };
+}
+
+function desdeTeclado(estado: Estado<"abierto_teclado">, evento: AnchorEvent): AnchorState {
+  const { geo } = estado;
+  const ultimo = geo.slots.length - 1;
+
+  // Fila 40 (RF-11): tocar fuera también cierra el menú abierto con teclado.
+  if (evento.tipo === "POINTER_DOWN" && evento.sobre === "fuera") return { tipo: "cancelado", motivo: "toque_fuera" };
+  if (evento.tipo !== "TECLA") return estado;
+
+  // Los slots van de "arriba" (0) al extremo lateral. Las flechas horizontales
+  // siguen la dirección en pantalla: el extremo lateral está a la izquierda con
+  // la mano derecha y a la derecha con la izquierda.
+  const haciaLateral = geo.hand === "right" ? "ArrowLeft" : "ArrowRight";
+  const haciaArriba = geo.hand === "right" ? "ArrowRight" : "ArrowLeft";
+  const mover = (foco: number): AnchorState => ({ ...estado, foco: Math.min(ultimo, Math.max(0, foco)) });
+
+  switch (evento.tecla) {
+    case "ArrowUp":
+    case haciaArriba:
+      return mover(estado.foco - 1); // fila 31
+    case "ArrowDown":
+    case haciaLateral:
+      return mover(estado.foco + 1);
+    case "Home":
+      return mover(0);
+    case "End":
+      return mover(ultimo);
+    case "Escape":
+      return { tipo: "cancelado", motivo: "escape" }; // fila 33
+    case "Enter":
+    case " ": {
+      // Fila 32
+      const slot = geo.slots[estado.foco];
+      if (!slot || slot.disabled) return estado;
+      if (slot.kind === "irreversible") {
+        return {
+          tipo: "confirmacion_toque",
+          geo,
+          id: slot.id,
+          t0: estado.t0,
+          ultimaActividad: evento.t,
+          sinCierrePorTiempo: true,
+          modo: "teclado",
+        };
+      }
+      return { tipo: "ejecutando", id: slot.id, modo: "teclado", experto: false, ms: evento.t - estado.t0, recorridoPx: 0 };
+    }
     default:
       return estado;
   }

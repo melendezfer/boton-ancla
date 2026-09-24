@@ -56,7 +56,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba (Vitest):** tocar opción normal → ejecuta; irreversible → `confirmacion_toque` → `CONFIRMAR` ejecuta; tocar centro/fuera → cancela; 4 s sin actividad → cancela y cualquier actividad reinicia la cuenta; presionar el centro y deslizar → `abierto_gesto`.
 - **Commit:** `feat: modo toque en la máquina de estados`
 
-### [ ] T-09 · Máquina: cancelaciones globales, teclado y activación
+### [x] T-09 · Máquina: cancelaciones globales, teclado y activación
 - **Cubre:** RF-09, RF-10, RNF-05 (lógica), §3 filas 2, 3, 31–33, 35, 36 · C-12 decidido
 - **Prueba (Vitest):** desde cada estado activo, segundo `pointerId`, `POINTER_CANCEL`, `ORIENTACION` y `CAMBIO_SECCION` → `cancelado` con su motivo; en reposo se ignoran; navegación con flechas, Home/End, Enter, Escape; `abierto_teclado` no tiene plazo.
 - **Commit:** `feat: cancelaciones del entorno y navegación por teclado`
