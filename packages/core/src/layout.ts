@@ -1,6 +1,7 @@
 import { anguloParaMano, puntoEnDireccion, radioParaCuerda } from "./geometry";
 import type { Params } from "./params";
-import type { Hand, Insets, Point, Rect } from "./types";
+import type { ActionKind, AnchorScreen, Hand, Insets, Point, Rect } from "./types";
+import { ID_ATRAS, ID_DESHACER } from "./validate";
 
 // Posición del ancla y geometría del abanico (design.md §4.2 y §4.3).
 
@@ -122,4 +123,85 @@ function cabeEnZonaUtil(centro: Point, viewport: Rect, safeArea: Insets, params:
     centro.y - mitad >= arriba - tolerancia &&
     centro.y + mitad <= abajo + tolerancia
   );
+}
+
+// ---------------------------------------------------------------------------
+// Asignación de acciones a posiciones (design.md §4.4; C-10, C-11, C-21)
+// ---------------------------------------------------------------------------
+
+/** Lo que la geometría necesita saber de cada acción. */
+export type OrderedAction = { id: string; kind: ActionKind; disabled: boolean };
+
+/** Una posición del abanico con su acción asignada. */
+export type Slot = FanSlot & OrderedAction;
+
+const ATRAS: OrderedAction = { id: ID_ATRAS, kind: "normal", disabled: false };
+const DESHACER: OrderedAction = { id: ID_DESHACER, kind: "normal", disabled: false };
+
+/**
+ * Ordena las acciones de una pantalla: "Atrás" primero (si existe) y después
+ * por priority ascendente; sin priority, al final en orden de declaración.
+ * Con `deshacer`, "Deshacer" reemplaza a la acción de prioridad 1 (C-21).
+ */
+export function orderActions(screen: AnchorScreen, opciones: { deshacer?: boolean } = {}): OrderedAction[] {
+  const propias = screen.actions
+    .map((accion, orden) => ({ accion, orden }))
+    .sort(
+      (a, b) =>
+        (a.accion.priority ?? Number.POSITIVE_INFINITY) - (b.accion.priority ?? Number.POSITIVE_INFINITY) ||
+        a.orden - b.orden, // Infinity − Infinity = NaN (falso): desempata por orden de declaración
+    )
+    .map(({ accion }): OrderedAction => ({
+      id: accion.id,
+      kind: accion.kind ?? "normal",
+      disabled: accion.disabled ?? false,
+    }));
+
+  if (opciones.deshacer) {
+    if (propias.length === 0) propias.push(DESHACER);
+    else propias[0] = DESHACER;
+  }
+
+  return screen.back ? [ATRAS, ...propias] : propias;
+}
+
+/**
+ * Pone una acción en cada posición: "Atrás" en el extremo "arriba" (D-10) y el
+ * resto por cercanía a la diagonal, desempatando según params.DESEMPATE (C-10).
+ * Devuelve las posiciones en orden de index.
+ */
+export function assignActions(layout: FanLayout, ordered: OrderedAction[], params: Params): Slot[] {
+  if (ordered.length !== layout.slots.length) {
+    throw new Error(
+      `assignActions: hay ${ordered.length} acciones para ${layout.slots.length} posiciones; ` +
+        "computeFanLayout debe recibir count = orderActions(...).length.",
+    );
+  }
+
+  let libres = [...layout.slots];
+  let pendientes = ordered;
+  const asignadas: Slot[] = [];
+
+  const atras = ordered.find((a) => a.id === ID_ATRAS);
+  if (atras) {
+    // El extremo "arriba" es la posición de menor ángulo base (index 0).
+    const arriba = libres.reduce((min, s) => (s.anguloBase < min.anguloBase ? s : min));
+    asignadas.push({ ...arriba, ...atras });
+    libres = libres.filter((s) => s !== arriba);
+    pendientes = ordered.filter((a) => a !== atras);
+  }
+
+  const diagonal = (params.ARCO_DESDE + params.ARCO_HASTA) / 2;
+  const porComodidad = libres.sort((a, b) => {
+    const diferencia = Math.abs(a.anguloBase - diagonal) - Math.abs(b.anguloBase - diagonal);
+    if (Math.abs(diferencia) > 1e-9) return diferencia;
+    // Empate: "horizontal" prefiere el ángulo mayor (hacia el extremo lateral).
+    return params.DESEMPATE === "horizontal" ? b.anguloBase - a.anguloBase : a.anguloBase - b.anguloBase;
+  });
+
+  pendientes.forEach((accion, i) => {
+    asignadas.push({ ...porComodidad[i]!, ...accion });
+  });
+
+  return asignadas.sort((a, b) => a.index - b.index);
 }

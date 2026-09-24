@@ -22,9 +22,13 @@ export {
   reflejarAngulo,
 } from "./geometry";
 export {
+  assignActions,
   computeAnchorPosition,
   computeFanLayout,
+  orderActions,
   radioAdaptativo,
   type FanLayout,
   type FanSlot,
+  type OrderedAction,
+  type Slot,
 } from "./layout";

@@ -28,7 +28,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba (Vitest):** para viewports de 320, 375, 412 y 430 px de ancho × mano derecha/izquierda × 1–5 opciones × áreas seguras (0 y 34 px abajo): ninguna opción escalada queda fuera (`fueraDePantalla = false`) y en un viewport diminuto sí se marca; ángulos entre 90° y 180° (o su espejo); sin solape entre opciones a tamaño normal (radio 113 px con 5, 100 px con ≤4) y el radio crece al subir `SEPARACION_MIN`; la mano izquierda es el espejo exacto de la derecha; sectores contiguos de 70° a 200°; ancla a 56 px del borde lateral y 48 px del inferior (más el área segura).
 - **Commit:** `feat: posición del ancla y cálculo del abanico`
 
-### [ ] T-04 · Asignación de acciones por prioridad
+### [x] T-04 · Asignación de acciones por prioridad
 - **Cubre:** §6 "Distribución" y `DESEMPATE`, D-10 ("Atrás" fijo), RF-08 ("Deshacer" en prioridad 1) · C-10, C-11, C-21 decididos
 - **Hacer:** `orderActions` (con la opción `deshacer`), `assignActions` (`design.md` §4.4).
 - **Prueba (Vitest):** "Atrás" siempre en 90°; prioridad 1 en el slot más cercano a 135° con 1–5 opciones; empate hacia la horizontal por defecto y hacia arriba con `DESEMPATE = "vertical"`; acciones sin prioridad al final en orden de declaración; los 4 ejemplos de `design.md` §4.4 (incluido "Deshacer" reemplazando a Editar sin mover nada); espejo con la mano izquierda; error si no coinciden acciones y slots.
