@@ -4,6 +4,7 @@ import type { AnchorScreen } from "@boton-ancla/core";
 import { useAnchorScreen } from "@boton-ancla/react";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+import { enfocarBuscador } from "@/components/hojas";
 import { NEGOCIO_DEMO } from "@/lib/datos";
 import { useDemo, useRegistrarPantalla } from "@/lib/demo-store";
 import { ANCHOR_ICONS } from "@/lib/icons/semantic-icons";
@@ -33,7 +34,10 @@ function useVolver() {
 export function usePantallaMapa(): AnchorScreen {
   const { abrirHoja, pedirRecentrar, avisar } = useDemo();
   const p = pantallaMapa({
-    buscar: () => abrirHoja({ tipo: "buscar" }),
+    buscar: () => {
+      enfocarBuscador(); // síncrono, dentro del gesto (L-04, HU-01)
+      abrirHoja({ tipo: "buscar" });
+    },
     miUbicacion: () => {
       pedirRecentrar();
       avisar("Centrado en tu ubicación (simulado)");

@@ -111,9 +111,9 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Manual:** legibilidad del ancla sobre mapa claro, foto y oscuro (§10.3).
 - **Commit:** `feat: proveedor React y ancla en reposo`
 
-### [ ] T-16 · Gesto completo: abrir, preseleccionar, ejecutar, cancelar
+### [x] T-16 · Gesto completo: abrir, preseleccionar, ejecutar, cancelar
 - **Cubre:** RF-01…RF-06, RNF-02, RNF-03, D-08, D-09, D-10, HU-01, HU-02, HU-03, HU-06, HU-13 · L-01, L-04, L-05
-- **Hacer:** eventos de puntero con captura, abanico con opciones y escala, etiqueta sobre el dedo, centro que anticipa el ícono, vibración, `onSelect` sincrónico.
+- **Hacer:** eventos de puntero con captura, abanico con opciones y escala, banda de etiqueta (HM-02), centro que anticipa el ícono, vibración, `onSelect` sincrónico.
 - **E2E:** HU-01 (Buscar abre el campo enfocado; reposo en < 200 ms), HU-02 (cambia la preselección y el ícono del centro sin soltar), HU-03 (volver al centro no ejecuta), HU-06 (deslizamiento de ~60 ms ejecuta), HU-13 (deslizar desde el ancla no mueve el mapa; arrastrar el mapa pasando por el ancla no lo abre).
 - **Manual:** una mano en el celular; sin lupa ni selección en iOS; modo experto sin mirar.
 - **Commit:** `feat: gesto de abrir, preseleccionar y ejecutar`

@@ -21,7 +21,7 @@ type Registro = {
 
 const ContextoRegistro = createContext<Registro | null>(null);
 
-export function AnchorProvider({ prefs, theme, onEvent, params: parciales, children }: AnchorProviderProps) {
+export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, children }: AnchorProviderProps) {
   const pantallaRef = useRef<AnchorScreen | null>(null);
   const duenoRef = useRef<symbol | null>(null);
   // Copia para DIBUJAR. Para EJECUTAR se usa pantallaRef (siempre la más reciente).
@@ -50,7 +50,7 @@ export function AnchorProvider({ prefs, theme, onEvent, params: parciales, child
       {children}
       {montado &&
         createPortal(
-          <Ancla pantalla={pantalla} pantallaRef={pantallaRef} prefs={prefs} theme={theme} params={params} onEventRef={onEventRef} />,
+          <Ancla pantalla={pantalla} pantallaRef={pantallaRef} prefs={prefs} theme={theme} icons={icons} params={params} onEventRef={onEventRef} />,
           document.body,
         )}
     </ContextoRegistro.Provider>

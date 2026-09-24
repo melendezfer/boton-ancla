@@ -41,6 +41,8 @@ Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en 
 | C-16 | `Heart` = marcar favorito; `ListHeart` = ver la lista de Favoritos. Secciones: `IdentificationCard` (perfil) y `Cube` (producto). `Storefront` nunca para secciones (= local fijo en RUTEANDO). Solo en la demo; RUTEANDO no se toca. | spec §8; aquí §8 |
 | HM-01 | Hallazgo de prueba manual: el ancla quedaba demasiado abajo. Su altura es `ANCLA_ALTURA`, limitada entre un piso y un techo que deja caber el abanico y la banda. Después de probar en un Nubia Neo 3 GT queda en **0,38**. La demo mantiene el control deslizante en Ajustes. | spec §6, §12, D-17; aquí §2, §4.2, §8 |
 | HM-02 | Una sola etiqueta en una **banda fija encima del abanico**, con fondo sólido. Texto: preselección / foco / dedo apoyado en modo toque; si no hay, el nombre de la sección, o "Desliza hacia una opción" durante la bienvenida. | spec RF-06, RF-06b, HU-12, §6, §12; aquí §4.6, §6 |
+| API (T-16) | `AnchorProvider` recibe `icons: { back, undo }`: el ancla dibuja "Atrás" y "Deshacer", pero `AnchorScreen` no trae sus íconos, y los íconos se registran en la app (RNF-09). | spec §7; aquí §5.2 |
+| Banda (T-16) | Con una irreversible preseleccionada, la banda agrega "· desliza más allá para confirmar", y con la confirmación armada "· suelta para confirmar": la regla de HU-08 se ve antes de soltar. | aquí §4.6 |
 | L-02 | Margen lateral de 24 px (`MARGEN_LATERAL`); el inferior sigue en 16 px (`MARGEN_INFERIOR`). | spec §6, RF-12; aquí §2, §4.2 |
 | L-04 | La acción se ejecuta de forma **síncrona al soltar**, sin esperar la animación. | aquí §6 ("Ejecutar") |
 | L-09 | Se expone el 3002 igual que RUTEANDO expone el 3001: `portproxy` + regla del firewall, con `scripts/lan-3002.sh`, que genera los comandos de administrador y tú los ejecutas. `allowedDevOrigins` para que `next dev` hidrate por la IP de la LAN. | aquí §10, tasks T-12 |
@@ -458,6 +460,7 @@ export type AnchorTheme = { accent: string; surface: string; border: string; tex
 <AnchorProvider
   prefs={{ hand: "right" }}
   theme={theme}
+  icons={{ back: ArrowLeft, undo: ArrowCounterClockwise }}   // opciones fijas (RNF-09: íconos de la app)
   onEvent={(e: MetricEvent) => void}
   params={Partial<Params>}          // opcional, para ajustar con las pruebas
   storage={Storage}                 // opcional (usos de bienvenida); por defecto localStorage con try/catch

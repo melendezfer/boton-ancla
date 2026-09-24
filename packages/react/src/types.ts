@@ -23,9 +23,21 @@ export type AnchorTheme = {
   zIndex?: number;
 };
 
+/**
+ * Íconos de las opciones fijas que agrega el ancla. Los pone la app porque los
+ * íconos se registran en la app (RNF-09). No están en AnchorScreen (spec §7).
+ */
+export type AnchorIcons = {
+  /** Opción fija "Atrás" (D-10). */
+  back: ReactAnchorIcon;
+  /** Opción temporal "Deshacer" (C-21). */
+  undo: ReactAnchorIcon;
+};
+
 export type AnchorProviderProps = {
   prefs: AnchorPrefs;
   theme: AnchorTheme;
+  icons: AnchorIcons;
   /** Métricas locales (spec §9). */
   onEvent?: (evento: MetricEvent) => void;
   /** Ajustes de parámetros para las pruebas (por ejemplo ANCLA_ALTURA, HM-01). */

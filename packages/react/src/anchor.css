@@ -12,6 +12,17 @@
   pointer-events: none; /* solo el ancla y el menú reciben toques */
 }
 
+/*
+ * El toque siempre empieza en el botón o en la opción, nunca en el ícono de adentro.
+ * El ícono del centro se reemplaza al preseleccionar (D-09): si el toque hubiera
+ * empezado sobre ese <svg>, el navegador seguiría mandando eventos a un elemento que
+ * ya no existe (problema conocido de iOS con los toques).
+ */
+.ba-ancla *,
+.ba-opcion * {
+  pointer-events: none;
+}
+
 /* RNF-02: nada de selección, lupa, menú contextual ni gestos del navegador sobre el ancla. */
 .ba-ancla,
 .ba-opcion {
@@ -47,4 +58,143 @@
 .ba-ancla:focus-visible {
   outline: 3px solid var(--ba-accent);
   outline-offset: 3px;
+}
+
+/* --- Ancla activa (armado, descanso, menú abierto): sólida, un poco más grande, ícono de acento (C-02). --- */
+.ba-ancla--activa {
+  transform: translate(-50%, -50%) scale(var(--ba-escala-activo));
+  background: var(--ba-surface);
+  color: var(--ba-accent);
+  border-color: var(--ba-accent);
+}
+
+/* --- Abanico --------------------------------------------------------------------------- */
+.ba-abanico {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* El div de afuera ubica y anima la aparición; el cuerpo de adentro se agranda al preseleccionar. */
+.ba-opcion {
+  position: absolute;
+  width: var(--ba-d-opcion);
+  height: var(--ba-d-opcion);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.ba-opcion-cuerpo {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--ba-surface);
+  border: 1px solid var(--ba-border);
+  color: var(--ba-text);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.16);
+}
+
+.ba-opcion--activa .ba-opcion-cuerpo {
+  transform: scale(var(--ba-escala-presel));
+  background: var(--ba-accent);
+  border-color: var(--ba-accent);
+  color: var(--ba-surface);
+}
+
+.ba-opcion--irreversible .ba-opcion-cuerpo {
+  border-width: 2px;
+}
+
+.ba-opcion--deshabilitada .ba-opcion-cuerpo {
+  opacity: 0.45;
+}
+
+.ba-opcion--activa {
+  z-index: 1; /* la preseleccionada, agrandada, queda encima de sus vecinas */
+}
+
+/* Anillo exterior de las irreversibles (RF-07): hay que cruzarlo para confirmar. */
+.ba-anillo {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  border: 2px dashed var(--ba-accent);
+  pointer-events: none;
+}
+
+.ba-anillo--armado {
+  border-style: solid;
+  background: color-mix(in srgb, var(--ba-accent) 12%, transparent);
+}
+
+/* Banda de etiqueta (HM-02, RF-06b): fondo sólido, texto a contraste pleno (RNF-06). */
+.ba-banda {
+  position: absolute;
+  height: var(--ba-banda-alto);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 9999px;
+  background: var(--ba-surface);
+  border: 1px solid var(--ba-border);
+  color: var(--ba-text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.14);
+  pointer-events: none;
+}
+
+.ba-banda--seccion,
+.ba-banda--pista {
+  color: var(--ba-text-muted);
+  font-weight: 500;
+}
+
+/* --- Animaciones: solo transform y opacity (RNF-03). Con movimiento reducido, solo opacidad (RNF-04). --- */
+@media (prefers-reduced-motion: no-preference) {
+  .ba-ancla {
+    transition:
+      transform var(--ba-t-anim) ease-out,
+      background-color var(--ba-t-anim) ease-out;
+  }
+  .ba-opcion {
+    animation: ba-salir var(--ba-t-anim) ease-out both;
+  }
+  .ba-opcion-cuerpo {
+    transition: transform 90ms ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ba-opcion {
+    animation: ba-aparecer var(--ba-t-anim) linear both;
+  }
+}
+
+@keyframes ba-salir {
+  from {
+    transform: translate(-50%, -50%) translate(var(--ba-dx), var(--ba-dy)) scale(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+@keyframes ba-aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

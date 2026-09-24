@@ -2,6 +2,10 @@
 
 import { AnchorProvider, type AnchorTheme } from "@boton-ancla/react";
 import { useDemo } from "@/lib/demo-store";
+import { ANCHOR_ICONS } from "@/lib/icons/semantic-icons";
+
+// Íconos de las opciones fijas, desde el registro de la demo (RNF-09).
+const ICONOS = { back: ANCHOR_ICONS.back, undo: ANCHOR_ICONS.undo };
 
 // Tokens de RUTEANDO para el ancla (D-19). El componente no trae colores propios.
 const TEMA: AnchorTheme = {
@@ -17,7 +21,7 @@ const TEMA: AnchorTheme = {
 export function ProveedorAncla({ children }: { children: React.ReactNode }) {
   const { prefs } = useDemo();
   return (
-    <AnchorProvider prefs={{ hand: prefs.mano }} theme={TEMA} params={{ ANCLA_ALTURA: prefs.anclaAltura }}>
+    <AnchorProvider prefs={{ hand: prefs.mano }} theme={TEMA} icons={ICONOS} params={{ ANCLA_ALTURA: prefs.anclaAltura }}>
       {children}
     </AnchorProvider>
   );

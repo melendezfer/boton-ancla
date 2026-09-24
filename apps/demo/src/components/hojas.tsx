@@ -2,7 +2,7 @@
 
 import { X } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { createRef } from "react";
 import { NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos } from "@/lib/datos";
 import { useDemo, type Hoja } from "@/lib/demo-store";
 import { ANCHOR_ICONS, SEMANTIC_ICONS } from "@/lib/icons/semantic-icons";
@@ -32,8 +32,58 @@ export function HojaInferior({ titulo, onCerrar, children }: { titulo: string; o
 
 export function HojasDemo() {
   const { hoja, cerrarHoja } = useDemo();
-  if (!hoja) return null;
-  return <HojaSegunTipo hoja={hoja} cerrar={cerrarHoja} />;
+  return (
+    <>
+      <BuscadorPersistente />
+      {hoja && hoja.tipo !== "buscar" && <HojaSegunTipo hoja={hoja} cerrar={cerrarHoja} />}
+    </>
+  );
+}
+
+/**
+ * Campo de búsqueda SIEMPRE montado (invisible cuando está cerrado). iOS solo abre el
+ * teclado si focus() ocurre dentro del gesto (L-04): la acción "Buscar" del ancla llama
+ * enfocarBuscador() de forma síncrona, antes de que React muestre la hoja (HU-01).
+ */
+const refBuscador = createRef<HTMLInputElement>();
+
+export function enfocarBuscador() {
+  refBuscador.current?.focus({ preventScroll: true });
+}
+
+function BuscadorPersistente() {
+  const { hoja, cerrarHoja } = useDemo();
+  const abierta = hoja?.tipo === "buscar";
+  const cerrar = () => {
+    refBuscador.current?.blur();
+    cerrarHoja();
+  };
+  return (
+    <div
+      className={`fixed inset-x-0 bottom-0 z-[1000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] ${abierta ? "" : "pointer-events-none translate-y-[120%] opacity-0"}`}
+      data-testid={abierta ? "hoja-inferior" : undefined}
+      aria-hidden={!abierta || undefined}
+    >
+      <section role="dialog" aria-label="Buscar" className="mx-auto flex max-w-lg flex-col overflow-hidden rounded-card border border-border bg-surface shadow-lg">
+        <header className="flex items-center gap-2 border-b border-border px-4 py-3">
+          <h2 className="flex-1 font-heading text-title-2 font-semibold text-text">Buscar</h2>
+          <button type="button" onClick={cerrar} aria-label="Cerrar" tabIndex={abierta ? 0 : -1} className="flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-background">
+            <X size={20} />
+          </button>
+        </header>
+        <div className="px-4 py-3">
+          <input
+            ref={refBuscador}
+            type="search"
+            placeholder="Negocio, producto o categoría"
+            tabIndex={abierta ? 0 : -1}
+            data-testid="campo-busqueda"
+            className="h-btn w-full rounded-input border border-border bg-background px-3 font-sans text-body text-text outline-none focus:border-terracota"
+          />
+        </div>
+      </section>
+    </div>
+  );
 }
 
 function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
@@ -58,11 +108,7 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
       );
     }
     case "buscar":
-      return (
-        <HojaInferior titulo="Buscar" onCerrar={cerrar}>
-          <CampoBusqueda />
-        </HojaInferior>
-      );
+      return null; // lo dibuja BuscadorPersistente
     case "ofertas": {
       const Oferta = SEMANTIC_ICONS.offer;
       return (
@@ -127,20 +173,6 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
       );
     }
   }
-}
-
-/** El campo ya existe en el DOM cuando se enfoca: requisito de iOS para abrir el teclado (L-04). */
-function CampoBusqueda() {
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => ref.current?.focus(), []);
-  return (
-    <input
-      ref={ref}
-      type="search"
-      placeholder="Negocio, producto o categoría"
-      className="h-btn w-full rounded-input border border-border bg-background px-3 font-sans text-body text-text outline-none focus:border-terracota"
-    />
-  );
 }
 
 export function AvisoDemo() {

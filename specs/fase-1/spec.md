@@ -359,7 +359,9 @@ validateScreen(screen: AnchorScreen, params: Params): string[];      // lo que e
 // Params, Machine, FanLayout, Slot, Point, Rect, Insets: definidos en design.md §2–§5.
 
 // adaptador React
-<AnchorProvider prefs={...} theme={...} onEvent={logMetric}>…</AnchorProvider>
+<AnchorProvider prefs={...} theme={...} icons={{ back, undo }} onEvent={logMetric}>…</AnchorProvider>
+// icons: íconos de las opciones fijas "Atrás" y "Deshacer"; los pone la app porque los íconos
+// se registran en la app (RNF-09) y AnchorScreen no los trae (agregado en T-16).
 useAnchorScreen(screen: AnchorScreen): void;
 ```
 

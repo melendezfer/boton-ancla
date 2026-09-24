@@ -61,3 +61,12 @@ export {
   serializarBienvenida,
   type EstadoBienvenida,
 } from "./welcome";
+export {
+  etiquetaOpcion,
+  PISTA_BIENVENIDA,
+  posicionBanda,
+  radioDe,
+  textoBanda,
+  type PosicionBanda,
+  type TextoBanda,
+} from "./banda";
