@@ -33,3 +33,4 @@ export {
   type OrderedAction,
   type Slot,
 } from "./layout";
+export { resolveSelection, type Seleccion } from "./selection";

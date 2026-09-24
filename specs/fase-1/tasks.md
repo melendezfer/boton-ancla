@@ -34,7 +34,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba (Vitest):** "Atrás" siempre en 90°; prioridad 1 en el slot más cercano a 135° con 1–5 opciones; empate hacia la horizontal por defecto y hacia arriba con `DESEMPATE = "vertical"`; acciones sin prioridad al final en orden de declaración; los 4 ejemplos de `design.md` §4.4 (incluido "Deshacer" reemplazando a Editar sin mover nada); espejo con la mano izquierda; error si no coinciden acciones y slots.
 - **Commit:** `feat: asignación de acciones a posiciones del abanico`
 
-### [ ] T-05 · Selección por ángulo
+### [x] T-05 · Selección por ángulo
 - **Cubre:** RF-02, RF-03, RF-04, RF-05, RF-07 (anillo) · C-08
 - **Hacer:** `resolveSelection`.
 - **Prueba (Vitest):** dentro de `R_MUERTA` → sin id (aunque haya `previous`); cada sector devuelve su id; en el borde, con `previous`, no cambia hasta superar 8°; los extremos aceptan hasta 20° fuera del arco; fuera de 70°–200° → sin id; `beyondOuter` justo antes y después de `R_EXTERIOR`; todo igual en espejo para la mano izquierda.
