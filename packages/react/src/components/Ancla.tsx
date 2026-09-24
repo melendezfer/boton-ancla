@@ -19,6 +19,7 @@ import {
 } from "@boton-ancla/core";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
+import { useCambioOrientacion, useTecladoAbierto } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
 import type { AnchorIcons, AnchorTheme, ReactAnchorIcon } from "../types";
 
@@ -140,6 +141,23 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
 
   const velo = useVelo(estado);
 
+  // RF-09: un cambio de orientación cancela la interacción.
+  useCambioOrientacion(() => controlador.enviar({ tipo: "ORIENTACION" }));
+
+  // RF-10: si la app cambia de sección con el menú abierto, se cancela. El cambio que
+  // provoca una acción ejecutada (p. ej. "Carta") llega cuando el ancla ya está en reposo.
+  const idSeccion = pantalla?.id;
+  const seccionAnterior = useRef(idSeccion);
+  useEffect(() => {
+    if (seccionAnterior.current !== idSeccion) {
+      seccionAnterior.current = idSeccion;
+      controlador.enviar({ tipo: "CAMBIO_SECCION" });
+    }
+  }, [idSeccion, controlador]);
+
+  // RF-13: con el teclado abierto el ancla se oculta (valor por defecto de la spec).
+  const teclado = useTecladoAbierto();
+
   if (!pantalla || !geo || !medidas) return null;
 
   const geoDibujo = "geo" in estado ? estado.geo : geo;
@@ -154,7 +172,13 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
   const IconoCentro = (idActivo && iconoDe(idActivo)) || (pantalla.sectionIcon as ReactAnchorIcon);
 
   return (
-    <div className="ba-raiz" style={variablesCss(theme, params)} data-estado={estado.tipo} data-mano={prefs.hand}>
+    <div
+      className={`ba-raiz${teclado && estado.tipo === "reposo" ? " ba-raiz--oculta" : ""}`}
+      style={variablesCss(theme, params)}
+      data-estado={estado.tipo}
+      data-mano={prefs.hand}
+      data-oculta={(teclado && estado.tipo === "reposo") || undefined}
+    >
       {velo.visible && (
         // RF-11, L-06: tapa el contenido mientras el menú está abierto sin dedo apoyado
         // (toque, teclado) y un momento después, para tragarse el "clic fantasma".

@@ -136,7 +136,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **E2E:** HU-07 (se aplica al instante, aviso 5 s; deshacer deslizando hasta la posición de prioridad 1 **y** tocando el aviso revierte y registra `undo`), HU-08 (soltar sobre Eliminar no elimina; más allá sí), confirmación en modo toque.
 - **Commit:** `feat: deshacer y confirmación de acciones sensibles`
 
-### [ ] T-20 · Cancelaciones del entorno y teclado virtual
+### [x] T-20 · Cancelaciones del entorno y teclado virtual
 - **Cubre:** RF-09, RF-10, RF-13 · L-03, L-04, L-11
 - **E2E:** segundo dedo cancela (Chromium con CDP multitoque); cambio de orientación cancela; navegar a otra sección cancela y cambia el ícono; con el campo de búsqueda enfocado el ancla se oculta.
 - **Manual:** abrir el teclado en Android e iPhone; gesto "atrás" y barra de inicio cerca del ancla.

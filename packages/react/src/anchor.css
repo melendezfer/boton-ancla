@@ -12,6 +12,11 @@
   pointer-events: none; /* solo el ancla y el menú reciben toques */
 }
 
+/* RF-13: con el teclado virtual abierto, el ancla se oculta (y no recibe toques). */
+.ba-raiz--oculta {
+  visibility: hidden;
+}
+
 /*
  * El toque siempre empieza en el botón o en la opción, nunca en el ícono de adentro.
  * El ícono del centro se reemplaza al preseleccionar (D-09): si el toque hubiera
