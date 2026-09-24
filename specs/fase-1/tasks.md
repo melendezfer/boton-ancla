@@ -77,7 +77,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 
 ## Bloque B — Demo y herramientas de prueba
 
-### [ ] T-12 · App demo vacía en el puerto 3002
+### [x] T-12 · App demo vacía en el puerto 3002
 - **Cubre:** §0 (demo), L-09, L-12
 - **Hacer:** `apps/demo` con Next 16.3.4, React 19.2.8, TS 5, Tailwind v4 (`@import "tailwindcss"` + tokens de RUTEANDO en `:root` + `@theme inline`), `@phosphor-icons/react`; `viewport` con `viewportFit: "cover"`; `next.config.ts` con `transpilePackages`, `devIndicators: false` y `allowedDevOrigins`; script `dev` = `next dev -H 0.0.0.0 -p 3002`; `scripts/lan-3002.sh`, que detecta la IP actual de WSL y la del Wi-Fi, revisa el `portproxy` del 3002 y, si falta o apunta a una IP vieja, **genera** el `.ps1` con los comandos de administrador (portproxy + firewall) y te dice cómo ejecutarlo. No lo ejecuta ni toca RUTEANDO.
 - **Prueba:** `npm run build -w demo` compila.
