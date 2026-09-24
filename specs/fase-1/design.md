@@ -39,7 +39,8 @@ Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en 
 | C-22 | "Atrás" va a 90° aunque sea la única opción: `computeFanLayout` recibe `unicaArriba` (lo calcula `layoutParaPantalla`). Cualquier otra opción única sigue en la diagonal. | spec §6, §7; aquí §4.3 |
 | C-21 | "Deshacer" **reemplaza** a la acción de prioridad 1 en su posición; nada más se mueve. Aviso y "Deshacer" siguen hasta vencer los 5 s aunque cambie la sección. Ícono `ArrowCounterClockwise`, registrado en `semantic-icons.ts` de la demo. | spec RF-08, §6, §8; aquí §4.4 |
 | C-16 | `Heart` = marcar favorito; `ListHeart` = ver la lista de Favoritos. Secciones: `IdentificationCard` (perfil) y `Cube` (producto). `Storefront` nunca para secciones (= local fijo en RUTEANDO). Solo en la demo; RUTEANDO no se toca. | spec §8; aquí §8 |
-| HM-01 | Hallazgo de prueba manual: el ancla quedaba demasiado abajo. Su altura es `ANCLA_ALTURA` (0,30 del alto útil), limitada entre un piso y un techo que deja caber el abanico. La demo tiene un control deslizante para ajustarla. | spec §6, §12, D-17; aquí §2, §4.2, §8 |
+| HM-01 | Hallazgo de prueba manual: el ancla quedaba demasiado abajo. Su altura es `ANCLA_ALTURA`, limitada entre un piso y un techo que deja caber el abanico y la banda. Después de probar en un Nubia Neo 3 GT queda en **0,38**. La demo mantiene el control deslizante en Ajustes. | spec §6, §12, D-17; aquí §2, §4.2, §8 |
+| HM-02 | Una sola etiqueta en una **banda fija encima del abanico**, con fondo sólido. Texto: preselección / foco / dedo apoyado en modo toque; si no hay, el nombre de la sección, o "Desliza hacia una opción" durante la bienvenida. | spec RF-06, RF-06b, HU-12, §6, §12; aquí §4.6, §6 |
 | L-02 | Margen lateral de 24 px (`MARGEN_LATERAL`); el inferior sigue en 16 px (`MARGEN_INFERIOR`). | spec §6, RF-12; aquí §2, §4.2 |
 | L-04 | La acción se ejecuta de forma **síncrona al soltar**, sin esperar la animación. | aquí §6 ("Ejecutar") |
 | L-09 | Se expone el 3002 igual que RUTEANDO expone el 3001: `portproxy` + regla del firewall, con `scripts/lan-3002.sh`, que genera los comandos de administrador y tú los ejecutas. `allowedDevOrigins` para que `next dev` hidrate por la IP de la LAN. | aquí §10, tasks T-12 |
@@ -125,7 +126,9 @@ export type Params = {
   OPACIDAD_REPOSO: number; // 0.6
   MARGEN_LATERAL: number;  // 24 (se suma el área segura) — L-02
   MARGEN_INFERIOR: number; // 16 (se suma el área segura) — piso del ancla
-  ANCLA_ALTURA: number;    // 0.3 — fracción del alto útil sobre el borde inferior (HM-01)
+  ANCLA_ALTURA: number;    // 0.38 — fracción del alto útil sobre el borde inferior (HM-01)
+  BANDA_ALTO: number;      // 28 — alto de la banda de etiqueta (HM-02)
+  BANDA_MARGEN: number;    // 8 — espacio entre la opción de arriba y la banda (HM-02)
   R_MUERTA: number;        // 24
   R_ARCO: number;          // 100 — radio MÍNIMO; ver radio adaptativo en §4.3 (C-01)
   SEPARACION_MIN: number;  // 0 — espacio mínimo entre opciones vecinas (C-01)
@@ -319,13 +322,14 @@ computeAnchorPosition({ viewport, safeArea, hand, params }): Point
 //
 // Altura (HM-01). Con arriba = viewport.y + safeArea.top y abajo = viewport.y + height − safeArea.bottom:
 //   piso    = abajo − MARGEN_INFERIOR − D_ACTIVO/2                      (lo más abajo posible)
-//   techo   = arriba + radioAdaptativo(MAX_OPCIONES) + D_OPCION·ESCALA_PRESEL/2   (el abanico de 5 cabe)
+//   techo   = arriba + BANDA_ALTO + BANDA_MARGEN + radioAdaptativo(MAX_OPCIONES) + D_OPCION·ESCALA_PRESEL/2
+//             (caben el abanico de 5 y la banda de etiqueta, HM-02)
 //   deseada = abajo − ANCLA_ALTURA · (abajo − arriba)
 //   y = min(piso, max(techo, deseada))   // si chocan (pantalla diminuta), gana el piso
 ```
 Se usa `D_ACTIVO` (no `D_REPOSO`) para que al crecer no se salga del margen. El techo usa el radio de 5 opciones aunque la pantalla tenga menos, así el ancla no cambia de altura al pasar de una sección a otra.
 
-Ejemplo, 375 × 667 sin área segura: piso = 619, techo ≈ 140,5, deseada = 667 − 0,3 · 667 ≈ 466,9 → el ancla queda a ~200 px del borde inferior. Con `ANCLA_ALTURA = 0` se obtiene la posición anterior (48 px).
+Ejemplo, 375 × 667 sin área segura: piso = 619, techo ≈ 176,5, deseada = 667 − 0,38 · 667 ≈ 413,5 → el ancla queda a ~253 px del borde inferior. Con `ANCLA_ALTURA = 0` se obtiene la posición anterior (48 px).
 
 ### 4.3 Abanico — `computeFanLayout` (firma de §7)
 ```ts
@@ -376,6 +380,28 @@ Ejemplos con la mano derecha:
 - Producto dueño con aviso de deshacer: Atrás 90°, **Deshacer 150°**, Marcar no disponible 120°, Eliminar 180° (Editar queda oculta hasta que vence el aviso).
 
 Ejecutar "Deshacer" llama `onUndo` de la acción original y registra `undo {id}` (no `execute`). El aviso y "Deshacer" siguen hasta vencer `T_DESHACER` aunque cambie la sección. Ícono: `ArrowCounterClockwise`.
+
+### 4.6 Banda de etiqueta (HM-02, RF-06b)
+
+Núcleo, puro:
+```ts
+posicionBanda({ anchor, layout, viewport, safeArea, hand, params }): { x: number; yBase: number; anchoMax: number }
+// x      = centro horizontal del arco: anchor.x ∓ radio/2 (se refleja con la mano)
+// yBase  = borde de abajo de la banda = anchor.y − radio − D_OPCION·ESCALA_PRESEL/2 − BANDA_MARGEN
+// anchoMax = ancho útil (viewport − áreas seguras − 2·MARGEN_LATERAL)
+// El adaptador mide el texto y desplaza la banda para que no se salga por los costados.
+
+textoBanda({ estado, screen, bienvenida }): { texto: string; tipo: "opcion" | "seccion" | "pista" } | null
+// null si el menú no está abierto (reposo, armado, descanso, transitorios)
+// abierto_gesto / confirmacion_armada con presel → label de la opción ("… · no disponible" si está deshabilitada, C-09)
+// abierto_teclado → label de la opción con foco
+// abierto_toque con el dedo sobre una opción → su label
+// confirmacion_toque → label de la opción a confirmar
+// sin nada de lo anterior → bienvenida activa ? "Desliza hacia una opción" : screen.sectionLabel
+```
+"Bienvenida activa" = alguna opción de la pantalla todavía está por debajo de `USOS_ETIQUETA` usos (`mostrarEtiqueta`, T-11).
+
+Con 375 × 667, `ANCLA_ALTURA` 0,38 y 5 opciones, la banda queda en y ≈ 413 − 113 − 27,5 − 8 ≈ 265 (borde de abajo): por encima de todo lo que alcanza el pulgar.
 
 ### 4.5 Selección — `resolveSelection` (firma de §7)
 ```ts
@@ -455,7 +481,7 @@ useAnchorScreen(screen: AnchorScreen): void;
 | CSS del gesto | `touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none` en ancla y opciones; `contextmenu` con `preventDefault`; `touchstart` no pasivo con `preventDefault` en iOS. | RNF-02, L-05 |
 | Animación | Solo `transform` y `opacity`, duración `T_ANIM`. `backdrop-filter` solo en el ancla. Con `prefers-reduced-motion: reduce`, solo `opacity`. | RNF-03, RNF-04 |
 | Reposo | Fondo `color-mix(in srgb, var(--ba-surface) 60%, transparent)` + `backdrop-filter: blur(12px)` + borde `--ba-border`; ícono de la sección. **Decidido (C-02):** ícono en color `--ba-text` en reposo y `--ba-accent` solo en activo. | D-04, RNF-06 |
-| Preselección | Opción a `scale(1.25)`, etiqueta **sobre el punto del dedo** (limitada al viewport), centro con el ícono de la opción, `vibrar(VIB_MS)` si existe `navigator.vibrate`. | RF-06, D-09, D-02 |
+| Preselección | Opción a `scale(1.25)`, su nombre en la **banda de etiqueta** (§4.6), centro con el ícono de la opción, `vibrar(VIB_MS)` si existe `navigator.vibrate`. | RF-06, RF-06b, D-09, D-02 |
 | Irreversible | Al preseleccionarla se dibuja el anillo `R_EXTERIOR`; en `confirmacion_armada` se rellena. | RF-07 |
 | Ejecutar | `onSelect()` se llama **de forma sincrónica** dentro del manejador de `pointerup`/`click`/`keydown`, antes de `COMPLETADO`. Necesario para que iOS abra el teclado en HU-01 (L-04). Primero se registra `execute` y después se llama `onSelect`, para que un cambio de sección provocado por la acción no se cuente como cancelación. | HU-01, RF-10 |
 | Aviso | `AnchorNotice` (`role="status"`, `aria-live="polite"`): deshacer (`T_DESHACER`; tocarlo deshace, y además "Deshacer" entra al abanico en la posición de prioridad 1, §4.4), "Desliza más allá para confirmar", y "Confirmar" en modo toque. Se ubica encima del ancla, sin taparla. | RF-08, D-14, C-03 |

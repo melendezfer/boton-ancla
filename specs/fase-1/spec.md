@@ -1,6 +1,6 @@
 # Botón-ancla — Especificación Fase 1: núcleo del gesto
 
-Versión 0.5 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
+Versión 0.6 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
 
 > Esta spec es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
 
@@ -9,6 +9,8 @@ Versión 0.5 · Primera app base: RUTEANDO · Destino: componente integrable en 
 - C-02: en reposo el ícono usa el color `text`; `terracota` solo cuando el ancla está activa (D-04).
 - C-03: "Deshacer" también se puede hacer solo deslizando (D-14, RF-08, HU-07, §6 "Distribución").
 - L-02: el margen lateral sube a 24 px; el inferior sigue en 16 px (§6, RF-12).
+
+**Cambios en 0.6:** resultado de la prueba manual de HM-01 (`ANCLA_ALTURA` = 0,38) y decisión de HM-02: una sola etiqueta en una banda fija encima del abanico (RF-06, HU-12, §6, §12).
 
 **Cambios en 0.5:** hallazgo de prueba manual HM-01: el ancla sube; su altura es el parámetro `ANCLA_ALTURA` (§6, D-17, §12).
 
@@ -70,7 +72,7 @@ Versión 0.5 · Primera app base: RUTEANDO · Destino: componente integrable en 
 | D-14 | Las acciones sensibles no agregan esperas: las reversibles se ejecutan y ofrecen deshacer; las irreversibles se confirman deslizando más allá de la opción. Deshacer también se puede hacer solo deslizando: mientras el aviso está visible, "Deshacer" ocupa la posición de prioridad 1 del abanico. | H8, C-03 |
 | D-15 | **Todo debe poder hacerse solo deslizando**, sin toques. El toque es una alternativa, nunca un requisito. | H16 |
 | D-16 | Las formas de presentar las opciones (abanico, carrusel, submenú) serán **modos que el usuario elige**. En Fase 1 solo existe el abanico. | H16 |
-| D-17 | El ancla siempre queda en la parte inferior de la orientación actual, del lado que elija el usuario, y por encima de las hojas inferiores. "Parte inferior" no es el borde: su altura es `ANCLA_ALTURA` (por defecto, 30 % del alto útil sobre el borde inferior), según HM-01. | H14, H15, HM-01 |
+| D-17 | El ancla siempre queda en la parte inferior de la orientación actual, del lado que elija el usuario, y por encima de las hojas inferiores. "Parte inferior" no es el borde: su altura es `ANCLA_ALTURA` (por defecto, 38 % del alto útil sobre el borde inferior), según HM-01. | H14, H15, HM-01 |
 | D-18 | El núcleo es TypeScript puro sin React (headless); cada framework se conecta con un adaptador. | H21 |
 | D-19 | El componente no trae colores fijos: recibe los tokens de la app. En RUTEANDO: `terracota`, `surface`, `border`, `text`, `text-muted`. | H23 |
 
@@ -230,7 +232,8 @@ Y cada opción conserva su misma posición relativa al pulgar
 ```gherkin
 Dado que es la primera vez que abro la app
 Entonces el ancla hace una demostración breve (una opción sale y vuelve)
-Y cada opción muestra su etiqueta durante sus primeros 5 usos (uso = ejecutar la opción)
+Y durante los primeros 5 usos de las opciones de la pantalla (uso = ejecutar la opción), la banda de etiqueta
+  muestra "Desliza hacia una opción" mientras no hay preselección, y el nombre de la opción cuando la hay (HM-02)
 ```
 
 **HU-13 — No interferir con el mapa**
@@ -251,7 +254,8 @@ Entonces el ancla no se activa
 - **RF-03** Mientras esté en `abierto_gesto`, si la distancia supera `R_MUERTA`, el sistema debe preseleccionar la opción cuyo sector contenga el ángulo del dedo.
 - **RF-04** Cuando el ángulo cruce el borde entre dos sectores, el sistema debe cambiar la preselección solo si lo supera en al menos `HISTERESIS` grados.
 - **RF-05** Los sectores de los extremos deben extenderse hasta ±`EXT_EXTREMOS` grados fuera del arco, para tolerar movimientos imprecisos.
-- **RF-06** Cuando cambie la preselección, el sistema debe agrandar la opción (`ESCALA_PRESEL`), mostrar la etiqueta **por encima del dedo** y, si hay soporte, vibrar `VIB_MS`.
+- **RF-06** Cuando cambie la preselección, el sistema debe agrandar la opción (`ESCALA_PRESEL`), mostrar su etiqueta en la **banda de etiqueta** y, si hay soporte, vibrar `VIB_MS`.
+- **RF-06b** (HM-02) Mientras el menú esté abierto, el sistema debe mostrar **una sola** etiqueta, en una banda fija encima del abanico (fuera del alcance del pulgar), con fondo sólido `surface` y texto `text`. Contenido: la opción preseleccionada (gesto), con foco (teclado) o con el dedo apoyado (toque, antes de soltar); sin nada de eso, el nombre de la sección actual (D-09), salvo durante la bienvenida (HU-12), cuando muestra "Desliza hacia una opción". Nunca se muestran varias etiquetas a la vez.
 - **RF-07** Si la opción preseleccionada es `irreversible`, el sistema debe dibujar el anillo exterior y exigir cruzarlo para confirmar.
 - **RF-08** Si la opción ejecutada es `reversible`, el sistema debe mostrar un aviso con "Deshacer" durante `T_DESHACER`. Mientras el aviso esté visible, "Deshacer" debe ocupar la posición de prioridad 1 del abanico (para cumplir D-15), y tocar el aviso también debe deshacer. La acción de prioridad 1 queda oculta mientras tanto y ninguna otra opción se mueve (C-21). El aviso y "Deshacer" siguen hasta vencer `T_DESHACER` aunque cambie la sección. Si `onSelect` de una reversible devuelve una promesa que falla, no se ofrece deshacer y se muestra un aviso de error (C-19).
 - **RF-09** Mientras haya un segundo puntero, un `pointercancel` o un cambio de orientación, el sistema debe cancelar.
@@ -285,7 +289,9 @@ Entonces el ancla no se activa
 | `OPACIDAD_REPOSO` | fondo 60% + desenfoque | El ícono siempre al 100% |
 | `MARGEN_LATERAL` | 24 px + área segura | Aleja el ancla del gesto "atrás" de Android (~24 dp) |
 | `MARGEN_INFERIOR` | 16 px + área segura | Distancia **mínima** al borde inferior (piso del ancla) |
-| `ANCLA_ALTURA` | 0.3 del alto útil | Altura del centro del ancla sobre el borde inferior útil. Limitada entre el piso (`MARGEN_INFERIOR`) y el techo que deja caber el abanico de 5 opciones (HM-01) |
+| `ANCLA_ALTURA` | 0.38 del alto útil | Altura del centro del ancla sobre el borde inferior útil. Limitada entre el piso (`MARGEN_INFERIOR`) y el techo que deja caber el abanico de 5 opciones y la banda de etiqueta (HM-01, HM-02) |
+| `BANDA_ALTO` | 28 px | Alto de la banda de etiqueta (HM-02) |
+| `BANDA_MARGEN` | 8 px | Espacio entre la opción de más arriba y la banda (HM-02) |
 | `R_MUERTA` | 24 px | Radio de la zona muerta |
 | `R_ARCO` | 100 px | Radio **mínimo** del centro a las opciones |
 | `SEPARACION_MIN` | 0 px | Espacio mínimo entre opciones vecinas (a tamaño normal) |
@@ -421,5 +427,5 @@ Lo que aparece al probar en dispositivos reales y cambia la spec. Cada hallazgo 
 
 | ID | Fecha | Dispositivo / contexto | Hallazgo | Cambio |
 |---|---|---|---|---|
-| HM-01 | 24-09-2026 | Celular, una mano, demo T-12 | El ancla queda demasiado abajo; la posición cómoda está más arriba, hacia el centro-lateral. | Nuevo parámetro `ANCLA_ALTURA` (0,30 del alto útil) con piso y techo (§6); en la demo, un control deslizante para ajustarlo mientras se prueba. Arrastrar el ancla sigue siendo de la Fase 3 (D-12). |
-| HM-02 | 24-09-2026 | Celular y PC, demo del Bloque B (abanico fantasma) | Las etiquetas del abanico quedan tapadas por los íconos vecinos (en el Mapa, "Mi ubicación" queda debajo de Buscar y "Buscar" debajo de Ofertas cerca). Con el reparto actual las vecinas están a 52 px y entre 13 y 50 px más abajo, así que una etiqueta junto a cada ícono choca con la siguiente. Afecta también a HU-12 (etiquetas de todas las opciones) y a RF-06 ("por encima del dedo"). | **Pendiente de decisión**: propuesta en `decisiones-pendientes.md`. No se implementa sin visto bueno. |
+| HM-01 | 24-09-2026 | Celular, una mano, demo T-12 | El ancla queda demasiado abajo; la posición cómoda está más arriba, hacia el centro-lateral. | Nuevo parámetro `ANCLA_ALTURA` con piso y techo (§6); en la demo, un control deslizante para ajustarlo mientras se prueba. Arrastrar el ancla sigue siendo de la Fase 3 (D-12). **Resultado de la prueba manual** (24-09-2026, Nubia Neo 3 GT, una mano): al 30 % el ancla se siente baja (a un cuarto de la pantalla); la altura cómoda es **38 %**, entre un cuarto y la mitad. `ANCLA_ALTURA` queda en 0,38. El alcance a cada opción se evalúa cuando el ancla responda al dedo (Bloque C). |
+| HM-02 | 24-09-2026 | Celular y PC, demo del Bloque B (abanico fantasma) | Las etiquetas del abanico quedan tapadas por los íconos vecinos (en el Mapa, "Mi ubicación" queda debajo de Buscar y "Buscar" debajo de Ofertas cerca). Con el reparto actual las vecinas están a 52 px y entre 13 y 50 px más abajo, así que una etiqueta junto a cada ícono choca con la siguiente. Afecta también a HU-12 (etiquetas de todas las opciones) y a RF-06 ("por encima del dedo"). | **Decidido** (24-09-2026): una sola etiqueta, en una banda fija encima del abanico, con fondo sólido (RF-06b). Zona muerta → nombre de la sección (D-09). Modo toque → al apoyar el dedo sobre una opción, la banda muestra su nombre antes de soltar. Bienvenida (HU-12) → sin preselección, "Desliza hacia una opción"; con preselección, el nombre de la opción. Parámetros `BANDA_ALTO` y `BANDA_MARGEN` (§6); el techo de `ANCLA_ALTURA` deja lugar para la banda. |

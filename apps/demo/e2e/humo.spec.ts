@@ -53,6 +53,9 @@ test("arrastrar el mapa con un dedo mueve el lienzo (helper de gestos)", async (
 
 test("tocar un pin abre la hoja del negocio, por debajo del ancla (RF-14)", async ({ page }) => {
   await page.goto("/mapa");
+  // El pin ya se ve en el HTML del servidor, pero su onClick existe recién cuando React hidrata.
+  // data-offset-x lo pone un efecto del mapa: si está, la página ya está hidratada.
+  await expect(page.getByTestId("mapa-lienzo")).toHaveAttribute("data-offset-x", /-?\d+/);
   await page.getByRole("button", { name: "Arepas Doña Rosa" }).tap();
   const hoja = page.getByRole("dialog", { name: "Arepas Doña Rosa" });
   await expect(hoja).toBeVisible();
@@ -64,13 +67,13 @@ test("tocar un pin abre la hoja del negocio, por debajo del ancla (RF-14)", asyn
   await expect(page).toHaveURL(/\/negocio$/);
 });
 
-test("HM-01: el ancla queda al 30 % del alto sobre el borde inferior", async ({ page }) => {
+test("HM-01: el ancla queda al 38 % del alto sobre el borde inferior", async ({ page }) => {
   await page.goto("/mapa");
   const ancla = page.getByTestId("ancla-fantasma");
   await expect(ancla).toBeVisible();
   const { y } = await centro(ancla);
   const alto = page.viewportSize()!.height;
-  expect(alto - y).toBeCloseTo(0.3 * alto, 0); // ±0,5 px
+  expect(alto - y).toBeCloseTo(0.38 * alto, 0); // ±0,5 px
 });
 
 test("HM-01: deslizar el control de Ajustes sube el ancla (solo deslizando)", async ({ page, browserName }) => {
@@ -83,12 +86,12 @@ test("HM-01: deslizar el control de Ajustes sube el ancla (solo deslizando)", as
   const slider = page.getByTestId("slider-altura");
   await slider.scrollIntoViewIfNeeded();
   const caja = (await slider.boundingBox())!;
-  // El pulgar del control está en 0,30 / 0,60 = la mitad del ancho.
-  const desde = { x: caja.x + caja.width * 0.5, y: caja.y + caja.height / 2 };
+  // El pulgar del control está en 0,38 / 0,60 ≈ 63 % del ancho.
+  const desde = { x: caja.x + caja.width * 0.633, y: caja.y + caja.height / 2 };
   const gestos = await crearGestos(page);
-  await gestos.deslizar(desde, { x: caja.x + caja.width * 0.8, y: desde.y }, { pasos: 15, ms: 200 });
+  await gestos.deslizar(desde, { x: caja.x + caja.width * 0.9, y: desde.y }, { pasos: 15, ms: 200 });
 
-  await expect.poll(async () => Number(await slider.inputValue())).toBeGreaterThan(0.4);
+  await expect.poll(async () => Number(await slider.inputValue())).toBeGreaterThan(0.45);
   await expect.poll(async () => (await centro(ancla)).y).toBeLessThan(antes - 30);
 });
 

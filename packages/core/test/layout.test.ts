@@ -54,17 +54,23 @@ describe("computeAnchorPosition (design.md §4.2, L-02)", () => {
 describe("altura del ancla (HM-01)", () => {
   const y = (params: Params, h = 667, area: Insets = SIN_AREA) =>
     computeAnchorPosition({ viewport: viewport(375, h), safeArea: area, hand: "right", params }).y;
-  const techo = (area: Insets = SIN_AREA) => area.top + radioAdaptativo(5, P) + (P.D_OPCION * P.ESCALA_PRESEL) / 2;
+  const techo = (area: Insets = SIN_AREA) =>
+    area.top + P.BANDA_ALTO + P.BANDA_MARGEN + radioAdaptativo(5, P) + (P.D_OPCION * P.ESCALA_PRESEL) / 2;
 
-  it("por defecto (0,30) el centro queda a 30 % del alto útil sobre el borde inferior", () => {
-    expect(P.ANCLA_ALTURA).toBe(0.3);
-    expect(y(P)).toBeCloseTo(667 - 0.3 * 667, 9); // ≈ 200 px sobre el borde
+  it("por defecto (0,38, prueba manual de HM-01) el centro queda a 38 % del alto útil sobre el borde inferior", () => {
+    expect(P.ANCLA_ALTURA).toBe(0.38);
+    expect(y(P)).toBeCloseTo(667 - 0.38 * 667, 9); // ≈ 253 px sobre el borde
+  });
+
+  it("con 0,38 en la pantalla más chica (320 × 568) todavía queda por debajo del techo", () => {
+    expect(y(P, 568)).toBeCloseTo(568 - 0.38 * 568, 9);
+    expect(y(P, 568)).toBeGreaterThan(techo());
   });
 
   it("el alto útil descuenta las áreas seguras de arriba y abajo", () => {
     const area = { top: 47, right: 0, bottom: 34, left: 0 };
     const util = 812 - 47 - 34;
-    expect(y(P, 812, area)).toBeCloseTo(812 - 34 - 0.3 * util, 9);
+    expect(y(P, 812, area)).toBeCloseTo(812 - 34 - 0.38 * util, 9);
   });
 
   it("crece de forma continua con ANCLA_ALTURA", () => {
@@ -77,7 +83,7 @@ describe("altura del ancla (HM-01)", () => {
     expect(y({ ...P, ANCLA_ALTURA: -1 })).toBe(667 - 48);
   });
 
-  it("techo: nunca tan arriba que el abanico de 5 se salga, aunque la fracción sea 1", () => {
+  it("techo: nunca tan arriba que el abanico de 5 y la banda (HM-02) se salgan, aunque la fracción sea 1", () => {
     expect(y({ ...P, ANCLA_ALTURA: 1 })).toBeCloseTo(techo(), 9);
     expect(y({ ...P, ANCLA_ALTURA: 1 }, 812, IPHONE_AREA)).toBeCloseTo(techo(IPHONE_AREA), 9);
   });
@@ -236,7 +242,7 @@ describe("computeFanLayout", () => {
       for (const hand of ["right", "left"] as const) {
         for (const [nombreArea, area] of [["sin área segura", SIN_AREA], ["área segura de iPhone", IPHONE_AREA]] as const) {
           it(`${w}×${h}, mano ${hand === "right" ? "derecha" : "izquierda"}, ${nombreArea}, 1–5 opciones, ANCLA_ALTURA 0–1 (HM-01)`, () => {
-            for (const altura of [0, 0.15, 0.3, 0.45, 0.6, 1]) {
+            for (const altura of [0, 0.15, 0.3, 0.38, 0.45, 0.6, 1]) {
             for (let count = 1; count <= 5; count++) {
               const f = abanico({ w, h, count, hand, area, params: { ...P, ANCLA_ALTURA: altura } });
               expect(f.fueraDePantalla).toBe(false);

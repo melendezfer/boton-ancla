@@ -23,6 +23,10 @@ export type Params = {
    * Queda limitada para que el abanico quepa (HM-01).
    */
   ANCLA_ALTURA: number;
+  /** Alto de la banda de etiqueta encima del abanico (HM-02). */
+  BANDA_ALTO: number;
+  /** Espacio entre la opción de más arriba y la banda de etiqueta (HM-02). */
+  BANDA_MARGEN: number;
   /** Radio de la zona muerta. */
   R_MUERTA: number;
   /** Radio MÍNIMO del arco; el real se adapta al número de opciones (C-01). */
@@ -72,7 +76,9 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   OPACIDAD_REPOSO: 0.6,
   MARGEN_LATERAL: 24,
   MARGEN_INFERIOR: 16,
-  ANCLA_ALTURA: 0.3,
+  ANCLA_ALTURA: 0.38,
+  BANDA_ALTO: 28,
+  BANDA_MARGEN: 8,
   R_MUERTA: 24,
   R_ARCO: 100,
   SEPARACION_MIN: 0,
