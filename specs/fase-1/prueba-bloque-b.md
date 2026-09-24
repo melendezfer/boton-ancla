@@ -11,7 +11,7 @@ Guía para probar en el PC y en el celular todo lo que existe al cerrar el Bloqu
 | HM-01 | ✅ | El ancla sube a 30 % del alto útil (parámetro `ANCLA_ALTURA`, con piso y techo). En Ajustes hay un control deslizante para cambiarla. Registrado en `spec.md` §12. |
 | T-12 | ✅ | Demo en el puerto 3002 que carga en el PC y en el celular (confirmado por ti). |
 | T-13 | ✅ | Pantallas simuladas de RUTEANDO, mapa falso arrastrable, hojas inferiores y **ancla y abanico fantasma** (dibujos punteados que todavía no responden). |
-| T-14 | ⚠️ **Parcial** | Playwright está configurado y las pruebas están escritas, pero **no se pudieron ejecutar**: al sistema le faltan librerías que se instalan con `sudo` (paso 1). |
+| T-14 | ✅ | Playwright configurado; verificado después de instalar las librerías: 25 pruebas pasan y 1 se salta a propósito. |
 
 Pruebas automáticas que sí corren hoy: 362 del núcleo y 24 de la demo (Vitest), todas en verde.
 
@@ -164,3 +164,13 @@ Con eso fijo el valor por defecto de `ANCLA_ALTURA` en la spec, o abrimos otro h
 2. Lo del punto 4 (altura cómoda de HM-01).
 3. Cualquier cosa que se vea rota, cortada o tapada, con el nombre de la pantalla y si pasa en el PC, en el celular o en los dos.
 4. En qué fondo del mapa (claro, foto u oscuro) se distinguía peor el ancla fantasma.
+
+---
+
+## 7. Decisión pendiente: HM-02 (etiquetas tapadas)
+
+Encontrado en esta prueba: en el abanico, las etiquetas quedan tapadas por los íconos vecinos. Está registrado en `spec.md` §12. La propuesta completa está en **`decisiones-pendientes.md`**.
+
+Resumen de la propuesta (opción A): **una sola etiqueta**, la de la opción preseleccionada, en una **banda fija encima del abanico**, fuera del alcance del pulgar y con fondo sólido. Tiene tres sub-preguntas (modo toque, bienvenida y zona muerta).
+
+**No está implementada.** La vista previa fantasma sigue mostrando las etiquetas junto a cada ícono hasta que decidas. Bloquea T-16 (etiqueta de la preselección) y T-23 (bienvenida).

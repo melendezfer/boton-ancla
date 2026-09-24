@@ -91,8 +91,8 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Manual:** navegar todas las pantallas en PC y celular; el mapa se arrastra con un dedo.
 - **Commit:** `feat: pantallas simuladas de RUTEANDO en la demo`
 
-### [~] T-14 · Playwright con emulación táctil
-> **Estado (24-09-2026):** configuración, ayudante de gestos y pruebas de humo escritos y con typecheck en verde, pero **sin ejecutar**: faltan librerías del sistema para Chromium (`libnspr4.so`) y WebKit. Hay que correr `sudo npx playwright install-deps chromium webkit` (lo hace el usuario; ver `prueba-bloque-b.md`) y después `npm run e2e`. Se marca `[x]` cuando pasen.
+### [x] T-14 · Playwright con emulación táctil
+> Verificada el 24-09-2026 después de instalar las librerías del sistema: 25 pruebas pasan y 1 se salta a propósito (control deslizante en WebKit, L-07).
 - **Cubre:** §10.2 (infraestructura), L-07, L-14
 - **Hacer:** `playwright.config.ts` con proyectos `Pixel 7` (Chromium) y `iPhone 14` (WebKit), `webServer` en 3002; `e2e/helpers/gestos.ts` (CDP en Chromium, `PointerEvent` sintéticos en WebKit); instalación de navegadores (tú ejecutas el `sudo`).
 - **Prueba:** test de humo: arrastrar el mapa falso con el helper mueve el lienzo en ambos proyectos.
