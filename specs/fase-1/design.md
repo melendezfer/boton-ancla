@@ -294,6 +294,12 @@ El adaptador mantiene **un solo** `setTimeout` hacia ese plazo y envía `TICK`. 
 
 "Experto" no se sabe al abrir, solo al soltar (C-04): se reporta en `execute.expert`.
 
+Matices implementados en `derivarMetricas` (T-10):
+- Deslizamiento relámpago (C-05): `armado` → final con `POINTER_UP` también emite `open {mode:"gesto"}`, aunque nunca se vio `abierto_gesto`.
+- Con teclado, mover el foco emite `preselect {id}`.
+- `execute` lleva además `mode` (gesto, toque o teclado), y `pathPx` se redondea a px enteros.
+- Ejecutar "Deshacer" no emite `execute`: el adaptador emite `undo {id}` con el id de la acción original.
+
 ---
 
 ## 4. Geometría

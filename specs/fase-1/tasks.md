@@ -61,7 +61,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba (Vitest):** desde cada estado activo, segundo `pointerId`, `POINTER_CANCEL`, `ORIENTACION` y `CAMBIO_SECCION` → `cancelado` con su motivo; en reposo se ignoran; navegación con flechas, Home/End, Enter, Escape; `abierto_teclado` no tiene plazo.
 - **Commit:** `feat: cancelaciones del entorno y navegación por teclado`
 
-### [ ] T-10 · `createAnchorMachine` y métricas derivadas
+### [x] T-10 · `createAnchorMachine` y métricas derivadas
 - **Cubre:** §7, §9, RNF-08 · C-04
 - **Hacer:** envoltorio `send/subscribe/nextDeadline`; `derivarMetricas(prev, next, evento)`.
 - **Prueba (Vitest):** los suscriptores reciben `prev/next/evento`; cada cambio de la tabla de `design.md` §3.5 produce su evento exacto; un recorrido completo (abrir, cambiar dos veces, ejecutar) produce `open`, `preselect`×2, `execute` con `ms` y `pathPx` correctos.

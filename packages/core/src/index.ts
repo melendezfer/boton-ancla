@@ -49,3 +49,5 @@ export {
   type TipoEstado,
 } from "./machine/states";
 export { transition } from "./machine/transition";
+export { createAnchorMachine, type Listener, type Machine } from "./machine/machine";
+export { derivarMetricas, type MetricEvent } from "./metrics";
