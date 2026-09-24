@@ -154,9 +154,9 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Manual:** probar con la mano izquierda.
 - **Commit:** `feat: preferencia de mano izquierda`
 
-### [ ] T-23 · Bienvenida
+### [x] T-23 · Bienvenida
 - **Cubre:** HU-12 · C-17
-- **E2E:** con almacenamiento limpio, la demostración ocurre una vez; las etiquetas se ven en los usos 1–5 y no en el 6; "reiniciar bienvenida" en Ajustes la repite.
+- **E2E:** con almacenamiento limpio, la demostración ocurre una vez; durante los primeros 5 usos la banda muestra "Desliza hacia una opción" sin preselección y el nombre de la opción con preselección (HM-02); con 5 usos en todas las opciones, el nombre de la sección; "Repetir la bienvenida" en Ajustes la repite.
 - **Commit:** `feat: bienvenida con demostración y etiquetas`
 
 ---

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { sinBienvenida } from "./helpers/almacen";
 import { estadoAncla } from "./helpers/ancla";
 
 // T-21: accesibilidad (RNF-04, RNF-05, C-12).
@@ -10,6 +11,7 @@ test.beforeEach(async ({ page }) => {
       window.localStorage.clear();
     } catch {}
   });
+  await sinBienvenida(page);
 });
 
 test("RNF-05: Enter abre con el foco en la prioridad 1, las flechas lo mueven y Enter ejecuta", async ({ page }) => {

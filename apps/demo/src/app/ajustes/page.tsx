@@ -1,7 +1,7 @@
 "use client";
 
 import { computeAnchorPosition, DEFAULT_PARAMS } from "@boton-ancla/core";
-import { useMedidas } from "@boton-ancla/react";
+import { reiniciarBienvenida, useMedidas } from "@boton-ancla/react";
 import { EspacioBarra } from "@/components/barra-demo";
 import { usePantallaDemo } from "@/components/pantallas-conectadas";
 import { useDemo, type Fondo, type Preferencias, type Rol } from "@/lib/demo-store";
@@ -64,6 +64,20 @@ export default function PaginaAjustes() {
         <p className="font-sans text-caption text-text-muted">
           Si el abanico no cabe arriba, el ancla deja de subir sola (techo). Moverla arrastrándola llega en la Fase 3.
         </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-heading text-title-2 font-semibold text-text">Bienvenida</h2>
+        <p className="font-sans text-body-sm text-text-muted">
+          Vuelve a mostrar la demostración inicial y la pista &quot;Desliza hacia una opción&quot; (HU-12).
+        </p>
+        <button
+          type="button"
+          onClick={() => reiniciarBienvenida()}
+          className="flex h-btn items-center justify-center rounded-input border border-border bg-surface font-sans text-button font-semibold text-text"
+        >
+          Repetir la bienvenida
+        </button>
       </section>
 
       <Opciones<Preferencias["mano"]>

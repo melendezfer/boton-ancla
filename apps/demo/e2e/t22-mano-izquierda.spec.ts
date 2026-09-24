@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { sinBienvenida } from "./helpers/almacen";
 import { haciaOpcion, leerGeometria } from "./helpers/ancla";
 import { crearGestos } from "./helpers/gestos";
 
@@ -10,6 +11,7 @@ test.beforeEach(async ({ page }) => {
       window.localStorage.clear();
     } catch {}
   });
+  await sinBienvenida(page);
 });
 
 test("HU-11: en Ajustes, 'Izquierda' pasa el ancla abajo a la izquierda al instante y refleja el abanico", async ({ page }) => {

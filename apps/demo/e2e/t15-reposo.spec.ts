@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { sinBienvenida } from "./helpers/almacen";
 
 // T-15: ancla en reposo (D-04, D-09, D-17, RF-12, RF-14, RNF-05, C-02).
 
@@ -8,6 +9,7 @@ test.beforeEach(async ({ page }) => {
       window.localStorage.clear();
     } catch {}
   });
+  await sinBienvenida(page);
 });
 
 test("es un botón de menú con nombre accesible 'Menú, sección {sección}' (RNF-05)", async ({ page }) => {

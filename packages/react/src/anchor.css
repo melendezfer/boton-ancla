@@ -268,3 +268,49 @@
   outline: 3px solid var(--ba-accent);
   outline-offset: 3px;
 }
+
+/* --- Bienvenida (HU-12): la opción de prioridad 1 sale del ancla y vuelve, una sola vez. --- */
+.ba-demostracion {
+  position: absolute;
+  width: var(--ba-d-opcion);
+  height: var(--ba-d-opcion);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ba-demostracion {
+    animation: ba-demostracion 1400ms ease-in-out 600ms both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ba-demostracion {
+    animation: ba-demostracion-suave 1400ms linear 600ms both;
+  }
+}
+
+@keyframes ba-demostracion {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translate(var(--ba-dx), var(--ba-dy)) scale(0.3);
+    opacity: 0;
+  }
+  35%,
+  65% {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+@keyframes ba-demostracion-suave {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  35%,
+  65% {
+    opacity: 1;
+  }
+}

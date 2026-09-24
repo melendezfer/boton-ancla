@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { sinBienvenida } from "./helpers/almacen";
 import { estadoAncla, haciaOpcion, leerGeometria } from "./helpers/ancla";
 import { crearGestos, type Gestos, type Punto } from "./helpers/gestos";
 
@@ -12,6 +13,7 @@ test.beforeEach(async ({ page }) => {
       window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify({ rol: "dueno" }));
     } catch {}
   });
+  await sinBienvenida(page);
 });
 
 async function abrirProducto(page: Page, id = "arepa-queso") {

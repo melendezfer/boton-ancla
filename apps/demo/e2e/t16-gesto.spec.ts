@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { sinBienvenida } from "./helpers/almacen";
 import { estadoAncla, haciaOpcion, leerGeometria } from "./helpers/ancla";
 import { crearGestos } from "./helpers/gestos";
 
@@ -11,6 +12,7 @@ test.beforeEach(async ({ page }) => {
       window.localStorage.clear();
     } catch {}
   });
+  await sinBienvenida(page);
 });
 
 async function abrirMapa(page: Page) {

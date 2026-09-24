@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { sinBienvenida } from "./helpers/almacen";
 import { crearGestos } from "./helpers/gestos";
 
 // T-14: pruebas de humo de la infraestructura E2E y de lo construido en T-12/T-13.
@@ -22,6 +23,7 @@ test.beforeEach(async ({ page }) => {
       window.localStorage.removeItem("boton-ancla-demo:v1:prefs");
     } catch {}
   });
+  await sinBienvenida(page);
 });
 
 test("el diagnóstico carga y React hidrata (T-12)", async ({ page }) => {

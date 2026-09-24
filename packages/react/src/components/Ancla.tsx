@@ -6,6 +6,8 @@ import {
   distancia,
   etiquetaOpcion,
   ID_ATRAS,
+  mostrarEtiqueta,
+  necesitaDemostracion,
   ID_DESHACER,
   posicionBanda,
   radioDe,
@@ -19,6 +21,7 @@ import {
 } from "@boton-ancla/core";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
+import { useBienvenida } from "../dom/bienvenida";
 import { useCambioOrientacion, useTecladoAbierto } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
 import type { AnchorIcons, AnchorTheme, ReactAnchorIcon } from "../types";
@@ -64,6 +67,9 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
     return () => clearTimeout(t);
   }, [aviso]);
 
+  // --- Bienvenida (HU-12, T-23) ---
+  const bienvenida = useBienvenida();
+
   const deshacer = () => {
     const d = deshacerRef.current;
     if (!d) return;
@@ -79,6 +85,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
 
   const efectos: EfectosAncla = {
     alEjecutar: (id, p, resultado) => {
+      bienvenida.usar(id); // C-17: uso = ejecución
       const accion = p.actions.find((a) => a.id === id);
       const mostrarDeshacer = () => {
         if (accion?.kind !== "reversible" || !accion.onUndo) return;
@@ -182,6 +189,11 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
   const geoDibujo = "geo" in estado ? estado.geo : geo;
   const abierto = menuAbierto(estado);
   const idActivo = opcionActiva(estado);
+  // HU-12: la bienvenida sigue mientras alguna opción de la pantalla esté en sus primeros usos.
+  const bienvenidaActiva =
+    bienvenida.estado !== null && geoDibujo.slots.some((s) => mostrarEtiqueta(bienvenida.estado!, s.id, params));
+  const demostrar = bienvenida.estado !== null && necesitaDemostracion(bienvenida.estado) && estado.tipo === "reposo";
+  const slotDemostracion = geoDibujo.slots.find((s) => s.id === geoDibujo.prioridad1) ?? geoDibujo.slots[0];
   const iconoDe = (id: string): ReactAnchorIcon | undefined => {
     if (id === ID_ATRAS) return icons.back;
     if (id === ID_DESHACER) return icons.undo;
@@ -213,7 +225,42 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
           }}
         />
       )}
-      {abierto && <Abanico estado={estado} geo={geoDibujo} pantalla={pantalla} iconoDe={iconoDe} idActivo={idActivo} medidas={medidas} />}
+      {abierto && (
+        <Abanico
+          estado={estado}
+          geo={geoDibujo}
+          pantalla={pantalla}
+          iconoDe={iconoDe}
+          idActivo={idActivo}
+          medidas={medidas}
+          bienvenida={bienvenidaActiva}
+        />
+      )}
+
+      {demostrar && slotDemostracion && (
+        // HU-12: la primera vez, la opción de prioridad 1 sale del ancla y vuelve.
+        <div
+          className="ba-demostracion"
+          data-testid="demostracion"
+          aria-hidden
+          style={
+            {
+              left: slotDemostracion.punto.x,
+              top: slotDemostracion.punto.y,
+              "--ba-dx": `${geoDibujo.centro.x - slotDemostracion.punto.x}px`,
+              "--ba-dy": `${geoDibujo.centro.y - slotDemostracion.punto.y}px`,
+            } as CSSProperties
+          }
+          onAnimationEnd={bienvenida.terminarDemostracion}
+        >
+          <span className="ba-opcion-cuerpo">
+            {(() => {
+              const Icono = iconoDe(slotDemostracion.id);
+              return Icono ? <Icono size={22} aria-hidden /> : null;
+            })()}
+          </span>
+        </div>
+      )}
 
       {estado.tipo === "confirmacion_toque" && (
         <ZonaAviso geo={estado.geo} medidas={medidas}>
@@ -274,6 +321,7 @@ function Abanico({
   iconoDe,
   idActivo,
   medidas,
+  bienvenida,
 }: {
   estado: AnchorState;
   geo: Geometry;
@@ -281,6 +329,7 @@ function Abanico({
   iconoDe: (id: string) => ReactAnchorIcon | undefined;
   idActivo: string | undefined;
   medidas: Medidas;
+  bienvenida: boolean;
 }) {
   const { centro, slots, params } = geo;
   const radio = slots[0] ? distancia(centro, slots[0].punto) : params.R_ARCO;
@@ -327,15 +376,29 @@ function Abanico({
           );
         })}
       </div>
-      <Banda estado={estado} geo={geo} pantalla={pantalla} radio={radio} medidas={medidas} />
+      <Banda estado={estado} geo={geo} pantalla={pantalla} radio={radio} medidas={medidas} bienvenida={bienvenida} />
     </>
   );
 }
 
 /** Banda de etiqueta (HM-02, RF-06b): una sola etiqueta, encima del abanico. */
-function Banda({ estado, geo, pantalla, radio, medidas }: { estado: AnchorState; geo: Geometry; pantalla: AnchorScreen; radio: number; medidas: Medidas }) {
+function Banda({
+  estado,
+  geo,
+  pantalla,
+  radio,
+  medidas,
+  bienvenida,
+}: {
+  estado: AnchorState;
+  geo: Geometry;
+  pantalla: AnchorScreen;
+  radio: number;
+  medidas: Medidas;
+  bienvenida: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
-  const contenido = textoBanda({ estado, screen: pantalla, bienvenida: false });
+  const contenido = textoBanda({ estado, screen: pantalla, bienvenida });
   const pos = posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params });
 
   // Se mide el texto y se corre la banda para que no se salga por los costados.

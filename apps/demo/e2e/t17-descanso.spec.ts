@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { sinBienvenida } from "./helpers/almacen";
 import { estadoAncla, haciaOpcion, leerGeometria } from "./helpers/ancla";
 import { crearGestos } from "./helpers/gestos";
 
@@ -10,6 +11,7 @@ test.beforeEach(async ({ page }) => {
       window.localStorage.clear();
     } catch {}
   });
+  await sinBienvenida(page);
   await page.goto("/mapa");
   await expect(page.getByTestId("mapa-lienzo")).toHaveAttribute("data-offset-x", /-?\d+/);
 });
