@@ -46,7 +46,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba (Vitest):** una prueba por fila de la tabla, pasando `t` a mano (sin temporizadores falsos): toque vs. movimiento vs. descanso en los bordes exactos de 10 px, 250 ms y 400 ms; deslizamiento rápido sin MOVE (C-05); deriva en descanso (C-07); `experto` verdadero/falso alrededor de `T_ANIM`; `transition` nunca lanza error ante eventos inesperados.
 - **Commit:** `feat: máquina de estados para gesto y descanso`
 
-### [ ] T-07 · Máquina: acciones irreversibles
+### [x] T-07 · Máquina: acciones irreversibles
 - **Cubre:** D-14, RF-07, HU-08 (lógica), §3 filas 12, 17–19
 - **Prueba (Vitest):** soltar sobre irreversible sin cruzar → `bloqueado_sensible`; cruzar → `confirmacion_armada`; volver dentro o cambiar de sector → `abierto_gesto`; soltar confirmado → `ejecutando`.
 - **Commit:** `feat: confirmación deslizando más allá para irreversibles`

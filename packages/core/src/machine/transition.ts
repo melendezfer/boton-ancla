@@ -165,6 +165,12 @@ function moverGesto(estado: EstadoGesto, punto: Point): EstadoGesto {
     hand: geo.hand,
     params: geo.params,
   });
+  const slot = geo.slots.find((s) => s.id === sel.id);
+  // Fila 12: irreversible (y habilitada) más allá del anillo exterior → confirmación armada.
+  if (slot && slot.kind === "irreversible" && !slot.disabled && sel.beyondOuter) {
+    return { ...estado, tipo: "confirmacion_armada", presel: slot.id };
+  }
+  // Fila 11, o fila 18 al volver dentro del anillo o cambiar de sector.
   return { ...estado, tipo: "abierto_gesto", presel: sel.id };
 }
 
@@ -188,9 +194,12 @@ function soltarGesto(estado: EstadoGesto, evento: Evento<"POINTER_UP">): AnchorS
   const slot = geo.slots.find((s) => s.id === final.presel);
   if (!slot) return { tipo: "cancelado", motivo: "fuera_de_arco" }; // fila 14
   if (slot.disabled) return { tipo: "cancelado", motivo: "deshabilitada" }; // fila 15
-  if (slot.kind === "irreversible") return { tipo: "bloqueado_sensible", id: slot.id }; // fila 17
+  // Fila 17: irreversible sin haber cruzado el anillo. (Si lo cruzó, `final` es confirmacion_armada.)
+  if (slot.kind === "irreversible" && final.tipo !== "confirmacion_armada") {
+    return { tipo: "bloqueado_sensible", id: slot.id };
+  }
 
-  // Fila 16
+  // Fila 16 (normal o reversible) y fila 19 (irreversible confirmada).
   return {
     tipo: "ejecutando",
     id: slot.id,
