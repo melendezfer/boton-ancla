@@ -22,7 +22,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba (Vitest):** `DEFAULT_PARAMS` coincide con §6; `validateScreen` rechaza más de 5 contando "Atrás", ids repetidos y reversible sin `onUndo`; acepta las 4 pantallas de §8.
 - **Commit:** `feat: tipos, parámetros y validación de pantallas del núcleo`
 
-### [ ] T-03 · Geometría y posición del abanico
+### [x] T-03 · Geometría y posición del abanico
 - **Cubre:** D-03, D-17, RF-12, HU-11 (espejo), §6 `ARCO`/`MARGEN_LATERAL`/`MARGEN_INFERIOR`/radio adaptativo · C-01 y L-02 decididos
 - **Hacer:** `geometry.ts` (ángulo, distancia, espejo), `computeAnchorPosition`, `computeFanLayout` → `FanLayout` con radio adaptativo, sectores y `fueraDePantalla` (`design.md` §4.2–§4.3).
 - **Prueba (Vitest):** para viewports de 320, 375, 412 y 430 px de ancho × mano derecha/izquierda × 1–5 opciones × áreas seguras (0 y 34 px abajo): ninguna opción escalada queda fuera (`fueraDePantalla = false`) y en un viewport diminuto sí se marca; ángulos entre 90° y 180° (o su espejo); sin solape entre opciones a tamaño normal (radio 113 px con 5, 100 px con ≤4) y el radio crece al subir `SEPARACION_MIN`; la mano izquierda es el espejo exacto de la derecha; sectores contiguos de 70° a 200°; ancla a 56 px del borde lateral y 48 px del inferior (más el área segura).

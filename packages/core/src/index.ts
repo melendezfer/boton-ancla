@@ -13,3 +13,18 @@ export type {
 } from "./types";
 export { DEFAULT_PARAMS, type Desempate, type Params } from "./params";
 export { ID_ATRAS, ID_DESHACER, validateScreen } from "./validate";
+export {
+  anguloDesde,
+  anguloParaMano,
+  distancia,
+  normalizarAngulo,
+  puntoEnDireccion,
+  reflejarAngulo,
+} from "./geometry";
+export {
+  computeAnchorPosition,
+  computeFanLayout,
+  radioAdaptativo,
+  type FanLayout,
+  type FanSlot,
+} from "./layout";
