@@ -10,7 +10,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 
 ## Bloque A — Núcleo (`packages/core`, solo Vitest, sin navegador)
 
-### [ ] T-01 · Esqueleto del monorepo
+### [x] T-01 · Esqueleto del monorepo
 - **Cubre:** D-18, RNF-07 (estructura)
 - **Hacer:** `package.json` raíz con workspaces `packages/*` y `apps/*`; `tsconfig.base.json` estricto; `packages/core` con `tsconfig` **sin `DOM` en `lib`**, Vitest en entorno `node`; scripts raíz `test`, `typecheck`.
 - **Prueba:** `npm install`, `npm run typecheck` y `npm test` pasan (una prueba de humo `1+1`). Prueba de que un archivo con `window` **no** compila en core.

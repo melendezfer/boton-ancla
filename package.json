@@ -1,0 +1,21 @@
+{
+  "name": "boton-ancla",
+  "private": true,
+  "description": "Botón-ancla: menú radial de una mano, integrable en cualquier app. Monorepo de la Fase 1.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  // Código del núcleo. Sin "DOM" en lib y sin tipos de Node: si alguien usa
+  // window, document, navigator o process en src/, no compila (RNF-07, D-18).
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src"]
+}
