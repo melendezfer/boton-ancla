@@ -1,11 +1,14 @@
 "use client";
 
-import { computeAnchorPosition, DEFAULT_PARAMS, type Insets, type Point } from "@boton-ancla/core";
-import { CheckCircle, HourglassMedium, Info } from "@phosphor-icons/react/dist/ssr";
+import type { Insets } from "@boton-ancla/core";
+import { HourglassMedium } from "@phosphor-icons/react/dist/ssr";
+import { SEMANTIC_ICONS } from "@/lib/icons/semantic-icons";
+
+const CheckCircle = SEMANTIC_ICONS.success;
 import { useEffect, useRef, useState } from "react";
 
-// T-12: diagnóstico del entorno donde va a vivir el ancla. Nada aquí es
-// interactivo todavía; el ancla real llega en T-15.
+// Diagnóstico del entorno donde va a vivir el ancla (T-12). La posición del
+// ancla la muestra la vista previa global (components/vista-previa-ancla.tsx).
 
 type Medidas = {
   ancho: number;
@@ -18,7 +21,6 @@ type Medidas = {
   contextoSeguro: boolean;
   movimientoReducido: boolean;
   vertical: boolean;
-  ancla: Point;
 };
 
 function leerArea(sonda: HTMLElement): Insets {
@@ -33,7 +35,6 @@ function leerArea(sonda: HTMLElement): Insets {
 
 function medir(sonda: HTMLElement): Medidas {
   const area = leerArea(sonda);
-  const viewport = { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
   return {
     ancho: window.innerWidth,
     alto: window.innerHeight,
@@ -45,7 +46,6 @@ function medir(sonda: HTMLElement): Medidas {
     contextoSeguro: window.isSecureContext,
     movimientoReducido: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     vertical: window.matchMedia("(orientation: portrait)").matches,
-    ancla: computeAnchorPosition({ viewport, safeArea: area, hand: "right", params: DEFAULT_PARAMS }),
   };
 }
 
@@ -114,33 +114,9 @@ export function Diagnostico() {
           <Fila nombre="Contexto seguro (HTTPS)" valor={m.contextoSeguro ? "sí" : "no"} nota="Por la IP de la red local: no (L-10)" />
           <Fila nombre="Movimiento reducido" valor={m.movimientoReducido ? "activado" : "no"} />
           <Fila nombre="Orientación" valor={m.vertical ? "vertical" : "horizontal"} nota="Fase 1 solo se prueba en vertical" />
-          <Fila
-            nombre="Centro del ancla (mano derecha)"
-            valor={`x ${Math.round(m.ancla.x)} · y ${Math.round(m.ancla.y)} px`}
-            nota="Calculado por @boton-ancla/core"
-          />
         </section>
       )}
 
-      <p className="flex items-start gap-2 font-sans text-body-sm text-text-muted">
-        <Info size={18} className="mt-0.5 shrink-0" />
-        El círculo punteado de abajo a la derecha marca dónde irá el ancla. Todavía no responde al toque.
-      </p>
-
-      {m && (
-        <div
-          aria-hidden
-          className="pointer-events-none fixed flex items-center justify-center rounded-full border-2 border-dashed border-terracota/70"
-          style={{
-            width: DEFAULT_PARAMS.D_REPOSO,
-            height: DEFAULT_PARAMS.D_REPOSO,
-            left: m.ancla.x - DEFAULT_PARAMS.D_REPOSO / 2,
-            top: m.ancla.y - DEFAULT_PARAMS.D_REPOSO / 2,
-          }}
-        >
-          <span className="font-sans text-caption font-medium text-terracota">ancla</span>
-        </div>
-      )}
     </>
   );
 }

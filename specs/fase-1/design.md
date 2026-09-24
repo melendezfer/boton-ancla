@@ -490,13 +490,18 @@ Estado simulado en memoria (`demo-store.tsx`): rol (visitante/dueño), favoritos
 | `/negocio` (visitante) | Perfil de negocio `IdentificationCard` | Carta `BookOpen` (1) → `/negocio/carta` · Cómo llegar `NavigationArrow` (2) → aviso simulado · Favorito `Heart` (3) → alterna · Compartir `ShareNetwork` (4) → aviso "Enlace copiado (simulado)" (L-10) · Atrás `ArrowLeft` |
 | `/negocio?rol=dueno` | Perfil de negocio `IdentificationCard` | Agregar plato `PlusCircle` (1) → hoja con formulario · Editar `PencilSimple` (2) → hoja · Atrás |
 | `/negocio/carta` | Carta `BookOpen` | Compartir `ShareNetwork` (1) → aviso simulado · Favorito `Heart` (2) → alterna · Atrás. Lista de productos; tocar uno → `/producto` |
-| `/producto?id=` (dueño) | Detalle de producto `Cube` | Editar `PencilSimple` (1) → hoja · Marcar no disponible `MinusCircle` (2, reversible) → insignia "No disponible" + aviso "Marcado no disponible · Deshacer" · Eliminar `Trash` (3, irreversible) → quita el producto y vuelve a la carta · Atrás |
+| `/producto/[id]` (dueño) | Detalle de producto `Cube` | Editar `PencilSimple` (1) → hoja · Marcar no disponible `MinusCircle` (2, reversible) → insignia "No disponible" + aviso "Marcado no disponible · Deshacer" · Eliminar `Trash` (3, irreversible) → quita el producto y vuelve a la carta · Atrás |
 | `/ajustes` | Ajustes `GearSix` | Atrás. Pantalla: mano derecha/izquierda (HU-11), rol, fondo del mapa, reiniciar bienvenida |
 | `/metricas` | Métricas `ChartBar` | Atrás. Lista de eventos, formulario Doc 8 §13 y exportar JSON (§9, RNF-08) |
 
 - **Mapa falso** (`components/fake-map.tsx`): lienzo SVG grande que se arrastra con puntero (`touch-action:none`) con pines de negocios. Sin Leaflet ni teselas externas: la E2E no depende de internet y se prueba HU-13 igual. Fondo seleccionable: *mapa claro*, *foto* (imagen local en `public/`), *oscuro*, para la revisión de legibilidad de §10.3.
 - **Hojas inferiores** con `z-[1000]`, como en RUTEANDO, para probar RF-14.
-- Barra superior mínima con enlaces a Ajustes y Métricas (fuera del alcance del ancla; HU-09 cubre las acciones del ancla).
+- Barra superior mínima con "Atrás" y enlaces a Diagnóstico, Métricas y Ajustes (navegación de la demo, fuera del alcance del ancla; HU-09 cubre las acciones del ancla).
+- **Vista previa fantasma** (`components/vista-previa-ancla.tsx`): el ancla y el abanico de la pantalla actual dibujados con líneas punteadas, calculados con `layoutParaPantalla`. No responde al toque. Sirve para juzgar la altura (HM-01) hasta que llegue el ancla real (T-15), que la reemplaza.
+- En Ajustes: control deslizante de `ANCLA_ALTURA` (0–60 %, se usa solo deslizando), mano, rol, fondo del mapa y "mostrar abanico de referencia". Las preferencias se guardan en `localStorage` (`boton-ancla-demo:v1:prefs`).
+- `/diagnostico` conserva la página de T-12. `/` redirige a `/mapa`.
+- Las definiciones de pantalla son funciones puras (`lib/pantallas.ts`) probadas con `validateScreen`; `components/pantallas-conectadas.ts` les pone las acciones reales.
+- Producto no disponible: "Marcar no disponible" queda deshabilitada (C-09). El detalle de producto solo se abre con rol Dueño (C-14).
 - `semantic-icons.ts` de la demo copia el de RUTEANDO y registra los íconos nuevos; registrarlos en RUTEANDO es parte de la integración, no de este repo.
 
 ---

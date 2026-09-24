@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <!-- Respaldo de "foto" para la demo: mezcla zonas muy oscuras y muy claras para
+       exigirle contraste al ancla translúcida (D-04, RNF-06). Para usar una foto real,
+       guarda un archivo en apps/demo/public/fondos/foto.jpg: la demo la pone encima. -->
+  <defs>
+    <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2a4a"/>
+      <stop offset="0.45" stop-color="#c8643b"/>
+      <stop offset="0.7" stop-color="#f3c77a"/>
+      <stop offset="1" stop-color="#2b1a12"/>
+    </linearGradient>
+    <radialGradient id="luz" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff8e1" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#fff8e1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="plato" cx="0.45" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.8" stop-color="#d9d3c7"/>
+      <stop offset="1" stop-color="#8a8274"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#cielo)"/>
+  <circle cx="260" cy="300" r="180" fill="url(#luz)"/>
+  <circle cx="980" cy="220" r="120" fill="url(#luz)"/>
+  <circle cx="860" cy="520" r="70" fill="url(#luz)"/>
+  <rect x="0" y="760" width="1200" height="440" fill="#1a0f0a"/>
+  <rect x="0" y="740" width="1200" height="40" fill="#5a3a22"/>
+  <ellipse cx="420" cy="900" rx="300" ry="120" fill="url(#plato)"/>
+  <ellipse cx="420" cy="885" rx="190" ry="70" fill="#e0a64a"/>
+  <ellipse cx="380" cy="870" rx="70" ry="26" fill="#f6e3a1"/>
+  <ellipse cx="470" cy="895" rx="60" ry="22" fill="#b86b2a"/>
+  <ellipse cx="900" cy="980" rx="210" ry="90" fill="url(#plato)"/>
+  <ellipse cx="900" cy="968" rx="130" ry="48" fill="#6b2f1a"/>
+  <circle cx="1050" cy="840" r="46" fill="#f4f1ea"/>
+  <circle cx="1050" cy="840" r="30" fill="#3b2314"/>
+  <rect x="120" y="1060" width="960" height="18" rx="9" fill="#fff" opacity="0.18"/>
+</svg>

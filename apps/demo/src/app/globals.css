@@ -85,3 +85,15 @@ body {
   color: var(--color-text);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+/* Entrada de las hojas inferiores (solo con motion-safe, RNF-04). */
+@keyframes subir {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

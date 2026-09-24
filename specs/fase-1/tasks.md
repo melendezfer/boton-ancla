@@ -84,7 +84,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Manual:** abrir `http://<IP>:3002` en PC **y** en el celular (aquí se resuelve la red de WSL, L-09).
 - **Commit:** `chore: app demo con Next.js y Tailwind en el puerto 3002`
 
-### [ ] T-13 · Pantallas simuladas sin ancla
+### [x] T-13 · Pantallas simuladas sin ancla
 - **Cubre:** §8, RNF-09, D-06 · C-14, C-15, C-16 decididos (incluye `MinusCircle` y `ArrowCounterClockwise` en el registro)
 - **Hacer:** `semantic-icons.ts` de la demo, `demo-store.tsx`, mapa falso arrastrable con 3 fondos, rutas de `design.md` §8, hojas inferiores `z-[1000]`, barra superior con Ajustes y Métricas.
 - **Prueba:** `npm run build`; prueba unitaria de que ningún ícono aparece dos veces en el registro.
