@@ -57,20 +57,20 @@ describe("altura del ancla (HM-01)", () => {
   const techo = (area: Insets = SIN_AREA) =>
     area.top + P.BANDA_ALTO + P.BANDA_MARGEN + radioAdaptativo(5, P) + (P.D_OPCION * P.ESCALA_PRESEL) / 2;
 
-  it("por defecto (0,38, prueba manual de HM-01) el centro queda a 38 % del alto útil sobre el borde inferior", () => {
-    expect(P.ANCLA_ALTURA).toBe(0.38);
-    expect(y(P)).toBeCloseTo(667 - 0.38 * 667, 9); // ≈ 253 px sobre el borde
+  it("por defecto (0,44, segunda prueba manual de HM-01) el centro queda a 44 % del alto útil sobre el borde inferior", () => {
+    expect(P.ANCLA_ALTURA).toBe(0.44);
+    expect(y(P)).toBeCloseTo(667 - 0.44 * 667, 9); // ≈ 293 px sobre el borde
   });
 
-  it("con 0,38 en la pantalla más chica (320 × 568) todavía queda por debajo del techo", () => {
-    expect(y(P, 568)).toBeCloseTo(568 - 0.38 * 568, 9);
+  it("con 0,44 en la pantalla más chica (320 × 568) todavía queda por debajo del techo", () => {
+    expect(y(P, 568)).toBeCloseTo(568 - 0.44 * 568, 9);
     expect(y(P, 568)).toBeGreaterThan(techo());
   });
 
   it("el alto útil descuenta las áreas seguras de arriba y abajo", () => {
     const area = { top: 47, right: 0, bottom: 34, left: 0 };
     const util = 812 - 47 - 34;
-    expect(y(P, 812, area)).toBeCloseTo(812 - 34 - 0.38 * util, 9);
+    expect(y(P, 812, area)).toBeCloseTo(812 - 34 - 0.44 * util, 9);
   });
 
   it("crece de forma continua con ANCLA_ALTURA", () => {
@@ -242,7 +242,7 @@ describe("computeFanLayout", () => {
       for (const hand of ["right", "left"] as const) {
         for (const [nombreArea, area] of [["sin área segura", SIN_AREA], ["área segura de iPhone", IPHONE_AREA]] as const) {
           it(`${w}×${h}, mano ${hand === "right" ? "derecha" : "izquierda"}, ${nombreArea}, 1–5 opciones, ANCLA_ALTURA 0–1 (HM-01)`, () => {
-            for (const altura of [0, 0.15, 0.3, 0.38, 0.45, 0.6, 1]) {
+            for (const altura of [0, 0.15, 0.3, 0.38, 0.44, 0.6, 1]) {
             for (let count = 1; count <= 5; count++) {
               const f = abanico({ w, h, count, hand, area, params: { ...P, ANCLA_ALTURA: altura } });
               expect(f.fueraDePantalla).toBe(false);

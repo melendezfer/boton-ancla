@@ -69,13 +69,13 @@ test("tocar un pin abre la hoja del negocio, por debajo del ancla (RF-14)", asyn
   await expect(page).toHaveURL(/\/negocio$/);
 });
 
-test("HM-01: el ancla queda al 38 % del alto sobre el borde inferior", async ({ page }) => {
+test("HM-01: el ancla queda al 44 % del alto sobre el borde inferior", async ({ page }) => {
   await page.goto("/mapa");
   const ancla = page.getByTestId("ancla");
   await expect(ancla).toBeVisible();
   const { y } = await centro(ancla);
   const alto = page.viewportSize()!.height;
-  expect(alto - y).toBeCloseTo(0.38 * alto, 0); // ±0,5 px
+  expect(alto - y).toBeCloseTo(0.44 * alto, 0); // ±0,5 px
 });
 
 test("HM-01: deslizar el control de Ajustes sube el ancla (solo deslizando)", async ({ page, browserName }) => {
@@ -88,12 +88,12 @@ test("HM-01: deslizar el control de Ajustes sube el ancla (solo deslizando)", as
   const slider = page.getByTestId("slider-altura");
   await slider.scrollIntoViewIfNeeded();
   const caja = (await slider.boundingBox())!;
-  // El pulgar del control está en 0,38 / 0,60 ≈ 63 % del ancho.
-  const desde = { x: caja.x + caja.width * 0.633, y: caja.y + caja.height / 2 };
+  // El pulgar del control está en 0,44 / 0,60 ≈ 73 % del ancho.
+  const desde = { x: caja.x + caja.width * 0.733, y: caja.y + caja.height / 2 };
   const gestos = await crearGestos(page);
-  await gestos.deslizar(desde, { x: caja.x + caja.width * 0.9, y: desde.y }, { pasos: 15, ms: 200 });
+  await gestos.deslizar(desde, { x: caja.x + caja.width * 0.97, y: desde.y }, { pasos: 15, ms: 200 });
 
-  await expect.poll(async () => Number(await slider.inputValue())).toBeGreaterThan(0.45);
+  await expect.poll(async () => Number(await slider.inputValue())).toBeGreaterThan(0.5);
   await expect.poll(async () => (await centro(ancla)).y).toBeLessThan(antes - 30);
 });
 

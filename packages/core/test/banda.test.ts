@@ -31,7 +31,7 @@ describe("posicionBanda", () => {
 
   it("la banda entera cabe por arriba en todas las pantallas de prueba, con 0,38 y con el máximo del control (0,6)", () => {
     for (const [w, h] of [[320, 568], [375, 667], [412, 915], [430, 932]] as const) {
-      for (const altura of [0.38, 0.6, 1]) {
+      for (const altura of [0.38, 0.44, 0.6, 1]) {
         const params = { ...P, ANCLA_ALTURA: altura };
         const vp = { x: 0, y: 0, width: w, height: h };
         const anchor = computeAnchorPosition({ viewport: vp, safeArea: SIN_AREA, hand: "right", params });

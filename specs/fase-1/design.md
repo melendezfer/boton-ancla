@@ -39,10 +39,14 @@ Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en 
 | C-22 | "Atrás" va a 90° aunque sea la única opción: `computeFanLayout` recibe `unicaArriba` (lo calcula `layoutParaPantalla`). Cualquier otra opción única sigue en la diagonal. | spec §6, §7; aquí §4.3 |
 | C-21 | "Deshacer" **reemplaza** a la acción de prioridad 1 en su posición; nada más se mueve. Aviso y "Deshacer" siguen hasta vencer los 5 s aunque cambie la sección. Ícono `ArrowCounterClockwise`, registrado en `semantic-icons.ts` de la demo. | spec RF-08, §6, §8; aquí §4.4 |
 | C-16 | `Heart` = marcar favorito; `ListHeart` = ver la lista de Favoritos. Secciones: `IdentificationCard` (perfil) y `Cube` (producto). `Storefront` nunca para secciones (= local fijo en RUTEANDO). Solo en la demo; RUTEANDO no se toca. | spec §8; aquí §8 |
-| HM-01 | Hallazgo de prueba manual: el ancla quedaba demasiado abajo. Su altura es `ANCLA_ALTURA`, limitada entre un piso y un techo que deja caber el abanico y la banda. Después de probar en un Nubia Neo 3 GT queda en **0,38**. La demo mantiene el control deslizante en Ajustes. | spec §6, §12, D-17; aquí §2, §4.2, §8 |
+| HM-01 | Hallazgo de prueba manual: el ancla quedaba demasiado abajo. Su altura es `ANCLA_ALTURA`, limitada entre un piso y un techo que deja caber el abanico y la banda. Después de probar en un Nubia Neo 3 GT: 0,38 (Bloque B) y luego **0,44** (Bloque C, con el ancla respondiendo al dedo). La demo mantiene el control deslizante en Ajustes. | spec §6, §12, D-17; aquí §2, §4.2, §8 |
 | HM-02 | Una sola etiqueta en una **banda fija encima del abanico**, con fondo sólido. Texto: preselección / foco / dedo apoyado en modo toque; si no hay, el nombre de la sección, o "Desliza hacia una opción" durante la bienvenida. | spec RF-06, RF-06b, HU-12, §6, §12; aquí §4.6, §6 |
-| API (T-16) | `AnchorProvider` recibe `icons: { back, undo }`: el ancla dibuja "Atrás" y "Deshacer", pero `AnchorScreen` no trae sus íconos, y los íconos se registran en la app (RNF-09). | spec §7; aquí §5.2 |
-| Banda (T-16) | Con una irreversible preseleccionada, la banda agrega "· desliza más allá para confirmar", y con la confirmación armada "· suelta para confirmar": la regla de HU-08 se ve antes de soltar. | aquí §4.6 |
+| API (T-16) | ✅ **Aceptada.** `AnchorProvider` recibe `icons: { back, undo }`: el ancla dibuja "Atrás" y "Deshacer", pero `AnchorScreen` no trae sus íconos, y los íconos se registran en la app (RNF-09). | spec §7; aquí §5.2 |
+| Banda (T-16) | ✅ **Aceptada.** Con una irreversible preseleccionada, la banda agrega "· desliza más allá para confirmar", y con la confirmación armada "· suelta para confirmar": la regla de HU-08 se ve antes de soltar. | spec RF-06c; aquí §4.6 |
+| Descanso (T-17) | ✅ **Aceptada.** En descanso el ancla sigue translúcida con un anillo sutil; el aspecto sólido y violeta queda para armar y para el menú abierto. | spec D-11 |
+| Avisos (T-19) | ✅ **Aceptada.** Deshacer, bloqueado, error y "Confirmar" van justo encima de la banda, fuera del alcance del pulgar. | spec RF-08b; aquí §6 |
+| Error asíncrono (T-19, C-19) | ✅ **Aceptada.** Si `onSelect` devuelve una promesa que falla: aviso "No se pudo completar la acción" y sin deshacer. Implementado; sin E2E porque ninguna acción de la demo es asíncrona. | spec RF-08b |
+| Etiqueta deshabilitada (C-09) | ✅ **Aceptada.** Siempre "{etiqueta} · no disponible", aunque la etiqueta ya diga "no disponible". | spec RF-06c |
 | L-02 | Margen lateral de 24 px (`MARGEN_LATERAL`); el inferior sigue en 16 px (`MARGEN_INFERIOR`). | spec §6, RF-12; aquí §2, §4.2 |
 | L-04 | La acción se ejecuta de forma **síncrona al soltar**, sin esperar la animación. | aquí §6 ("Ejecutar") |
 | L-09 | Se expone el 3002 igual que RUTEANDO expone el 3001: `portproxy` + regla del firewall, con `scripts/lan-3002.sh`, que genera los comandos de administrador y tú los ejecutas. `allowedDevOrigins` para que `next dev` hidrate por la IP de la LAN. | aquí §10, tasks T-12 |
@@ -128,7 +132,7 @@ export type Params = {
   OPACIDAD_REPOSO: number; // 0.6
   MARGEN_LATERAL: number;  // 24 (se suma el área segura) — L-02
   MARGEN_INFERIOR: number; // 16 (se suma el área segura) — piso del ancla
-  ANCLA_ALTURA: number;    // 0.38 — fracción del alto útil sobre el borde inferior (HM-01)
+  ANCLA_ALTURA: number;    // 0.44 — fracción del alto útil sobre el borde inferior (HM-01)
   BANDA_ALTO: number;      // 28 — alto de la banda de etiqueta (HM-02)
   BANDA_MARGEN: number;    // 8 — espacio entre la opción de arriba y la banda (HM-02)
   R_MUERTA: number;        // 24
@@ -331,7 +335,7 @@ computeAnchorPosition({ viewport, safeArea, hand, params }): Point
 ```
 Se usa `D_ACTIVO` (no `D_REPOSO`) para que al crecer no se salga del margen. El techo usa el radio de 5 opciones aunque la pantalla tenga menos, así el ancla no cambia de altura al pasar de una sección a otra.
 
-Ejemplo, 375 × 667 sin área segura: piso = 619, techo ≈ 176,5, deseada = 667 − 0,38 · 667 ≈ 413,5 → el ancla queda a ~253 px del borde inferior. Con `ANCLA_ALTURA = 0` se obtiene la posición anterior (48 px).
+Ejemplo, 375 × 667 sin área segura: piso = 619, techo ≈ 176,5, deseada = 667 − 0,44 · 667 ≈ 373,5 → el ancla queda a ~293 px del borde inferior. Con `ANCLA_ALTURA = 0` se obtiene la posición anterior (48 px).
 
 ### 4.3 Abanico — `computeFanLayout` (firma de §7)
 ```ts
@@ -403,7 +407,7 @@ textoBanda({ estado, screen, bienvenida }): { texto: string; tipo: "opcion" | "s
 ```
 "Bienvenida activa" = alguna opción de la pantalla todavía está por debajo de `USOS_ETIQUETA` usos (`mostrarEtiqueta`, T-11).
 
-Con 375 × 667, `ANCLA_ALTURA` 0,38 y 5 opciones, la banda queda en y ≈ 413 − 113 − 27,5 − 8 ≈ 265 (borde de abajo): por encima de todo lo que alcanza el pulgar.
+Con 375 × 667, `ANCLA_ALTURA` 0,44 y 5 opciones, la banda queda en y ≈ 373 − 113 − 27,5 − 8 ≈ 225 (borde de abajo): por encima de todo lo que alcanza el pulgar.
 
 ### 4.5 Selección — `resolveSelection` (firma de §7)
 ```ts
