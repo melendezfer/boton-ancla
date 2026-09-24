@@ -10,6 +10,7 @@ import {
   type Machine,
   type MetricEvent,
   type Point,
+  type Tecla,
 } from "@boton-ancla/core";
 
 // Puente entre el navegador y la máquina pura (design.md §3.1 y §6).
@@ -103,6 +104,38 @@ export class Controlador {
     this.enviar({ tipo: "POINTER_DOWN", pointerId: e.pointerId, punto: punto(e), t: performance.now(), sobre: "ancla", geo });
   }
 
+  /** Tecla sobre el ancla en reposo (Enter, Espacio, ↑ abren con teclado: RNF-05). */
+  teclaEnAncla(e: KeyboardEvent) {
+    if (this.o.machine.getState().tipo !== "reposo") return;
+    const tecla = teclaDe(e);
+    const geo = this.o.obtenerGeo();
+    if (!tecla || !geo || !["Enter", " ", "ArrowUp"].includes(tecla)) return;
+    e.preventDefault(); // sin esto, Enter/Espacio también dispararían click
+    this.enviar({ tipo: "TECLA", tecla, t: performance.now(), geo });
+  }
+
+  /**
+   * Click en el ancla. Si no vino de un puntero (lector de pantalla, C-12), abre en modo
+   * toque sin cierre por tiempo. Si vino de un toque, ya lo manejaron los eventos de puntero.
+   */
+  clicEnAncla() {
+    const ahora = performance.now();
+    if (ahora - this.ultimoPunteroMs < 700) return;
+    const geo = this.o.obtenerGeo();
+    if (this.o.machine.getState().tipo !== "reposo" || !geo) return;
+    this.enviar({ tipo: "ACTIVAR", t: ahora, geo });
+  }
+
+  private readonly alTeclado = (e: KeyboardEvent) => {
+    const tecla = teclaDe(e);
+    if (!tecla) return;
+    const antes = this.o.machine.getState();
+    this.enviar({ tipo: "TECLA", tecla, t: performance.now() });
+    // Se consume la tecla si la usó el menú (o si navega con flechas, para que no desplace la página).
+    // Enter en la confirmación no se consume: así activa el botón "Confirmar" que tiene el foco.
+    if (this.o.machine.getState() !== antes || antes.tipo === "abierto_teclado") e.preventDefault();
+  };
+
   // --- punteros en window mientras el menú está activo ---------------------------------
 
   private readonly alPuntero = (e: PointerEvent) => {
@@ -136,6 +169,7 @@ export class Controlador {
     for (const tipo of ["pointerdown", "pointermove", "pointerup", "pointercancel"] as const) {
       window.addEventListener(tipo, this.alPuntero, { capture: true });
     }
+    window.addEventListener("keydown", this.alTeclado, { capture: true });
   }
 
   private dejarDeEscuchar() {
@@ -144,6 +178,7 @@ export class Controlador {
     for (const tipo of ["pointerdown", "pointermove", "pointerup", "pointercancel"] as const) {
       window.removeEventListener(tipo, this.alPuntero, { capture: true });
     }
+    window.removeEventListener("keydown", this.alTeclado, { capture: true });
   }
 
   /** ¿El punto cae sobre el ancla, sobre una opción o fuera? Por geometría, no por DOM. */
@@ -214,6 +249,13 @@ export class Controlador {
     const espera = Math.max(0, plazo - performance.now());
     this.temporizador = setTimeout(() => this.enviar({ tipo: "TICK", t: performance.now() }), espera + 1);
   }
+}
+
+const TECLAS: readonly Tecla[] = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "Enter", " ", "Escape"];
+
+function teclaDe(e: KeyboardEvent): Tecla | undefined {
+  if (e.altKey || e.ctrlKey || e.metaKey) return undefined;
+  return TECLAS.includes(e.key as Tecla) ? (e.key as Tecla) : undefined;
 }
 
 function punto(e: PointerEvent): Point {

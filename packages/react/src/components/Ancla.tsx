@@ -158,6 +158,25 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
   // RF-13: con el teclado abierto el ancla se oculta (valor por defecto de la spec).
   const teclado = useTecladoAbierto();
 
+  // RNF-05: foco itinerante. Con teclado, el foco va a la opción activa; al cerrar, vuelve al ancla.
+  const refBoton = useRef<HTMLButtonElement>(null);
+  const refRaiz = useRef<HTMLDivElement>(null);
+  const tipoAnterior = useRef(estado.tipo);
+  const focoTeclado = estado.tipo === "abierto_teclado" ? estado.foco : -1;
+  useEffect(() => {
+    const raiz = refRaiz.current;
+    if (estado.tipo === "abierto_teclado") {
+      raiz?.querySelectorAll<HTMLElement>('[role="menuitem"]')[focoTeclado]?.focus();
+    } else if (estado.tipo === "confirmacion_toque" && estado.modo === "teclado") {
+      raiz?.querySelector<HTMLElement>('[data-testid="confirmar"]')?.focus();
+    } else if (estado.tipo === "reposo" && ["abierto_teclado", "confirmacion_toque"].includes(tipoAnterior.current)) {
+      // Si el foco quedó dentro del menú (que ya no existe), vuelve al ancla.
+      const activo = document.activeElement;
+      if (!activo || activo === document.body || raiz?.contains(activo)) refBoton.current?.focus();
+    }
+    tipoAnterior.current = estado.tipo;
+  }, [estado, focoTeclado]);
+
   if (!pantalla || !geo || !medidas) return null;
 
   const geoDibujo = "geo" in estado ? estado.geo : geo;
@@ -173,6 +192,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
 
   return (
     <div
+      ref={refRaiz}
       className={`ba-raiz${teclado && estado.tipo === "reposo" ? " ba-raiz--oculta" : ""}`}
       style={variablesCss(theme, params)}
       data-estado={estado.tipo}
@@ -226,6 +246,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
       )}
 
       <button
+        ref={refBoton}
         type="button"
         className={`ba-ancla${claseAncla(estado)}`}
         data-testid="ancla"
@@ -236,6 +257,8 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
         aria-label={`Menú, sección ${pantalla.sectionLabel}`}
         style={{ left: geoDibujo.centro.x, top: geoDibujo.centro.y }}
         onPointerDown={(e) => controlador.bajarEnAncla(e.nativeEvent, e.currentTarget)}
+        onKeyDown={(e) => controlador.teclaEnAncla(e.nativeEvent)}
+        onClick={() => controlador.clicEnAncla()}
         onContextMenu={(e) => e.preventDefault()}
       >
         <IconoCentro size={26} aria-hidden />

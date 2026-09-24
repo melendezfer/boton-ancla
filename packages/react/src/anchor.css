@@ -258,3 +258,13 @@
 .ba-aviso--error {
   cursor: default;
 }
+
+/* Foco con teclado (RNF-05): contorno visible en la opción con foco. */
+.ba-opcion:focus {
+  outline: none;
+}
+
+.ba-opcion:focus-visible .ba-opcion-cuerpo {
+  outline: 3px solid var(--ba-accent);
+  outline-offset: 3px;
+}

@@ -142,7 +142,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Manual:** abrir el teclado en Android e iPhone; gesto "atrás" y barra de inicio cerca del ancla.
 - **Commit:** `feat: cancelación por entorno y ocultar con teclado abierto`
 
-### [ ] T-21 · Accesibilidad: teclado y movimiento reducido
+### [x] T-21 · Accesibilidad: teclado y movimiento reducido
 - **Cubre:** RNF-04, RNF-05 · C-12, L-13
 - **E2E:** Tab al ancla, Enter abre, flechas mueven el foco (`aria-expanded`, `role="menuitem"`), Enter ejecuta, Escape cierra y devuelve el foco; con `emulateMedia({ reducedMotion: "reduce" })` no hay transformaciones animadas.
 - **Manual:** VoiceOver (iPhone) o TalkBack (Android): el ancla se anuncia y se usa con doble toque.
