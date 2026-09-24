@@ -67,9 +67,9 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba (Vitest):** los suscriptores reciben `prev/next/evento`; cada cambio de la tabla de `design.md` §3.5 produce su evento exacto; un recorrido completo (abrir, cambiar dos veces, ejecutar) produce `open`, `preselect`×2, `execute` con `ms` y `pathPx` correctos.
 - **Commit:** `feat: envoltorio de la máquina y métricas derivadas`
 
-### [ ] T-11 · Bienvenida (lógica)
+### [x] T-11 · Bienvenida (lógica)
 - **Cubre:** HU-12 (lógica), `USOS_ETIQUETA` · C-17
-- **Hacer:** `welcome.ts`: `registrarUso`, `mostrarEtiqueta`, `necesitaDemostracion`, con almacenamiento inyectado (interfaz, sin `localStorage`).
+- **Hacer:** `welcome.ts`: `registrarUso`, `mostrarEtiqueta`, `necesitaDemostracion`, `marcarDemostracion` como funciones puras, y `serializarBienvenida` / `leerBienvenida` para que el adaptador guarde el texto en `localStorage` (el núcleo no conoce ningún almacenamiento). Los conteos van por id de acción.
 - **Prueba (Vitest):** la etiqueta se muestra en los usos 1–5 y no en el 6; los conteos son por opción; la demostración solo la primera vez.
 - **Commit:** `feat: lógica de bienvenida y etiquetas de primeros usos`
 

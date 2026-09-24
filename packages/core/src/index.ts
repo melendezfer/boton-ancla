@@ -51,3 +51,13 @@ export {
 export { transition } from "./machine/transition";
 export { createAnchorMachine, type Listener, type Machine } from "./machine/machine";
 export { derivarMetricas, type MetricEvent } from "./metrics";
+export {
+  BIENVENIDA_INICIAL,
+  leerBienvenida,
+  marcarDemostracion,
+  mostrarEtiqueta,
+  necesitaDemostracion,
+  registrarUso,
+  serializarBienvenida,
+  type EstadoBienvenida,
+} from "./welcome";
