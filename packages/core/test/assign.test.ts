@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assignActions, computeAnchorPosition, computeFanLayout, orderActions, type Slot } from "../src/layout";
+import { assignActions, computeAnchorPosition, computeFanLayout, layoutParaPantalla, orderActions, type Slot } from "../src/layout";
 import { DEFAULT_PARAMS, type Params } from "../src/params";
 import type { AnchorScreen, Hand } from "../src/types";
 import { ID_ATRAS, ID_DESHACER } from "../src/validate";
@@ -12,10 +12,7 @@ function asignar(screen: AnchorScreen, opciones: { hand?: Hand; params?: Params;
   const { hand = "right", params = P, deshacer = false } = opciones;
   const viewport = { x: 0, y: 0, width: 375, height: 667 };
   const safeArea = { top: 0, right: 0, bottom: 0, left: 0 };
-  const ordered = orderActions(screen, { deshacer });
-  const anchor = computeAnchorPosition({ viewport, safeArea, hand, params });
-  const layout = computeFanLayout({ anchor, viewport, safeArea, count: ordered.length, hand, params });
-  return assignActions(layout, ordered, params);
+  return layoutParaPantalla({ screen, viewport, safeArea, hand, params, deshacer }).slots;
 }
 
 /** { id: ánguloBase } para leer los resultados como en design.md §4.4. */
@@ -157,12 +154,24 @@ describe("assignActions", () => {
       });
     }
 
-    for (let propias = 1; propias <= 4; propias++) {
+    for (let propias = 0; propias <= 4; propias++) {
       it(`"Atrás" siempre en 90° (con ${propias} acciones propias)`, () => {
         const slots = asignar({ ...perfilVisitante, actions: acciones.slice(0, propias) });
         expect(slots.find((s) => s.id === ID_ATRAS)!.anguloBase).toBe(90);
       });
     }
+
+    it('"Atrás" como única opción va a 90° y no a la diagonal (C-22)', () => {
+      const soloAtras = { ...perfilVisitante, actions: [] };
+      const [atras] = asignar(soloAtras);
+      expect(atras!.id).toBe(ID_ATRAS);
+      expect(atras!.anguloBase).toBe(90);
+      expect(asignar(soloAtras, { hand: "left" })[0]!.angulo).toBeCloseTo(90, 9); // arriba también con la izquierda
+    });
+
+    it("otra opción única sigue en la diagonal (C-22)", () => {
+      expect(asignar({ ...mapa, actions: [accion("unica", "Única")] })[0]!.anguloBase).toBe(135);
+    });
 
     it("cada acción aparece una sola vez y todas las posiciones tienen dueña", () => {
       const slots = asignar(perfilVisitante);

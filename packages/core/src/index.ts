@@ -25,6 +25,7 @@ export {
   assignActions,
   computeAnchorPosition,
   computeFanLayout,
+  layoutParaPantalla,
   orderActions,
   radioAdaptativo,
   type FanLayout,

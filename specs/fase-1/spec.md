@@ -1,6 +1,6 @@
 # Botón-ancla — Especificación Fase 1: núcleo del gesto
 
-Versión 0.3 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
+Versión 0.4 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
 
 > Esta spec es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
 
@@ -9,6 +9,8 @@ Versión 0.3 · Primera app base: RUTEANDO · Destino: componente integrable en 
 - C-02: en reposo el ícono usa el color `text`; `terracota` solo cuando el ancla está activa (D-04).
 - C-03: "Deshacer" también se puede hacer solo deslizando (D-14, RF-08, HU-07, §6 "Distribución").
 - L-02: el margen lateral sube a 24 px; el inferior sigue en 16 px (§6, RF-12).
+
+**Cambios en 0.4:** "Atrás" va arriba (90°) aunque sea la única opción del abanico (C-22, §6, §7).
 
 **Cambios en 0.3** (segunda revisión; detalle en `design.md` §0):
 - §3: deslizamiento rápido sin `pointermove` (C-05), reglas del modo toque (C-06), descanso medido desde donde empezó (C-07), soltar fuera del arco o sobre una opción deshabilitada (C-08, C-09), teclado y lector de pantalla (C-12).
@@ -298,7 +300,7 @@ Entonces el ancla no se activa
 | `MAX_OPCIONES` | 5 | Fase 1 |
 | `DESEMPATE` | horizontal | Si dos posiciones quedan igual de cerca de la diagonal, gana la más horizontal (`vertical` = la más cercana a "arriba") (C-10) |
 
-Distribución: las opciones se reparten en el arco ordenadas por `priority`. La prioridad 1 va en la **diagonal**, que es la posición más cómoda. Si la app habilita "Atrás", ocupa siempre el extremo **"arriba"** del arco, pegado al borde, para que sea fácil de memorizar. Las opciones se ubican en los extremos y a intervalos iguales del arco. Las posiciones libres se ordenan de la más cercana a la diagonal (135° con la mano derecha) a la más lejana, desempatando según `DESEMPATE`; la prioridad 1 toma la primera, la 2 la segunda, y así. Las acciones sin `priority` van al final, en orden de declaración (C-10). Mientras el aviso de deshacer está visible, "Deshacer" reemplaza a la acción de prioridad 1 en su misma posición y nada más se mueve (C-21).
+Distribución: las opciones se reparten en el arco ordenadas por `priority`. La prioridad 1 va en la **diagonal**, que es la posición más cómoda. Si la app habilita "Atrás", ocupa siempre el extremo **"arriba"** del arco, pegado al borde, para que sea fácil de memorizar, **incluso cuando es la única opción** (C-22). Cualquier otra opción única va en la diagonal. Las opciones se ubican en los extremos y a intervalos iguales del arco. Las posiciones libres se ordenan de la más cercana a la diagonal (135° con la mano derecha) a la más lejana, desempatando según `DESEMPATE`; la prioridad 1 toma la primera, la 2 la segunda, y así. Las acciones sin `priority` van al final, en orden de declaración (C-10). Mientras el aviso de deshacer está visible, "Deshacer" reemplaza a la acción de prioridad 1 en su misma posición y nada más se mueve (C-21).
 
 ---
 
@@ -336,7 +338,8 @@ export type AnchorPrefs = { hand: "right" | "left" };   // Fase 1: solo la mano;
 createAnchorMachine(params?: Partial<Params>): Machine;
 computeAnchorPosition(input: { viewport: Rect; safeArea: Insets; hand: "right" | "left"; params: Params }): Point;
 computeFanLayout(input: { anchor: Point; viewport: Rect; safeArea: Insets;
-  count: number; hand: "right" | "left"; params: Params }): FanLayout;   // geometría, sin ids (C-11)
+  count: number; hand: "right" | "left"; params: Params;
+  unicaArriba?: boolean }): FanLayout;   // geometría, sin ids (C-11); unicaArriba: la opción única es "Atrás" (C-22)
 orderActions(screen: AnchorScreen): OrderedAction[];                 // "Atrás" + acciones por prioridad (C-11)
 assignActions(layout: FanLayout, ordered: OrderedAction[], params: Params): Slot[];  // pone un id en cada posición
 resolveSelection(input: { center: Point; pointer: Point; slots: Slot[];

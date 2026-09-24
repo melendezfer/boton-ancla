@@ -36,6 +36,7 @@ Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en 
 | C-18 | Fase 1 guarda solo la mano, con una clave que incluye la orientación. | spec §7 |
 | C-19 | Si `onSelect` de una reversible falla, no hay deshacer y se muestra un aviso de error. | spec RF-08 |
 | C-20 | Los campos de exportación son los de spec §9 hasta tener el Documento 8. | spec §9 |
+| C-22 | "Atrás" va a 90° aunque sea la única opción: `computeFanLayout` recibe `unicaArriba` (lo calcula `layoutParaPantalla`). Cualquier otra opción única sigue en la diagonal. | spec §6, §7; aquí §4.3 |
 | C-21 | "Deshacer" **reemplaza** a la acción de prioridad 1 en su posición; nada más se mueve. Aviso y "Deshacer" siguen hasta vencer los 5 s aunque cambie la sección. Ícono `ArrowCounterClockwise`, registrado en `semantic-icons.ts` de la demo. | spec RF-08, §6, §8; aquí §4.4 |
 | C-16 | `Heart` = marcar favorito; `ListHeart` = ver la lista de Favoritos. Secciones: `IdentificationCard` (perfil) y `Cube` (producto). `Storefront` nunca para secciones (= local fijo en RUTEANDO). Solo en la demo; RUTEANDO no se toca. | spec §8; aquí §8 |
 | L-02 | Margen lateral de 24 px (`MARGEN_LATERAL`); el inferior sigue en 16 px (`MARGEN_INFERIOR`). | spec §6, RF-12; aquí §2, §4.2 |
@@ -323,10 +324,13 @@ type FanLayout = {
   slots: FanSlot[];
   fueraDePantalla: boolean;  // true si alguna opción escalada se sale de la zona útil (RF-12)
 };
-computeFanLayout({ anchor, viewport, safeArea, count, hand, params }): FanLayout
+computeFanLayout({ anchor, viewport, safeArea, count, hand, params, unicaArriba? }): FanLayout
+
+// Atajo que usa el adaptador: ordena, calcula la geometría (con unicaArriba) y asigna.
+layoutParaPantalla({ screen, viewport, safeArea, hand, params, deshacer? }): { anchor: Point; layout: FanLayout; slots: Slot[] }
 ```
 **Decidido (C-01):**
-- Las opciones se reparten **en los extremos del arco**: con `n` opciones, ángulos `ARCO_DESDE + i·(ARCO_HASTA − ARCO_DESDE)/(n−1)`; con 1 opción, la diagonal (135°); con 0, ninguna.
+- Las opciones se reparten **en los extremos del arco**: con `n` opciones, ángulos `ARCO_DESDE + i·(ARCO_HASTA − ARCO_DESDE)/(n−1)`; con 1 opción, la diagonal (135°), salvo que `unicaArriba` sea verdadero: entonces `ARCO_DESDE` (90°), porque esa opción única es "Atrás" (C-22); con 0, ninguna.
 - **Radio adaptativo** `R = max(R_ARCO, (D_OPCION + SEPARACION_MIN) / (2·sin(Δ/2)))`, con `Δ` = separación angular entre vecinas. Con los valores por defecto da 100 px con 2–4 opciones y 113 px con 5. `R_EXTERIOR = R + EXTRA_EXTERIOR`. Para la prueba manual se ajusta `R_ARCO` o `SEPARACION_MIN` desde `params` del Provider.
 - Punto en pantalla: `x = anchor.x + R·cos(angulo)`, `y = anchor.y − R·sin(angulo)` (la `y` de la pantalla crece hacia abajo).
 - Sectores: bisectrices entre ángulos vecinos; el primero empieza en `ARCO_DESDE − EXT_EXTREMOS` (70°) y el último termina en `ARCO_HASTA + EXT_EXTREMOS` (200°). Con 1 opción, su sector es todo ese rango.
@@ -506,6 +510,7 @@ Todas decididas; el detalle está en §0 y en `spec.md` v0.3. Se mantiene la lis
 | C-19 | `onSelect` asíncrono | ¿deshacer si falla? | ✅ no; aviso de error |
 | C-20 | Documentos 1, 7, 8 | no están en el repo | ✅ manda la lista de §9 |
 | C-21 | Deshacer desplaza | ¿qué pasa con la prioridad 1? | ✅ reemplazo temporal |
+| C-22 | Solo "Atrás" | con 1 opción iba a la diagonal y rompía D-10 | ✅ "Atrás" siempre a 90° |
 
 ---
 

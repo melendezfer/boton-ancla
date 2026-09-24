@@ -89,6 +89,18 @@ describe("computeFanLayout", () => {
     expect(abanico({ count }).slots.map((s) => s.index)).toEqual(esperados.map((_, i) => i));
   });
 
+  it("con 1 opción y unicaArriba va a 90°, con su sector completo (C-22)", () => {
+    const vp = viewport(375, 667);
+    const anchor = computeAnchorPosition({ viewport: vp, safeArea: SIN_AREA, hand: "right", params: P });
+    const f = computeFanLayout({ anchor, viewport: vp, safeArea: SIN_AREA, count: 1, hand: "right", params: P, unicaArriba: true });
+    expect(f.slots.map((s) => s.anguloBase)).toEqual([90]);
+    expect(f.slots[0]!.sector).toEqual({ desde: 70, hasta: 200 });
+    expect(f.fueraDePantalla).toBe(false);
+    // Con más de una opción no tiene efecto:
+    const tres = computeFanLayout({ anchor, viewport: vp, safeArea: SIN_AREA, count: 3, hand: "right", params: P, unicaArriba: true });
+    expect(tres.slots.map((s) => s.anguloBase)).toEqual([90, 135, 180]);
+  });
+
   it("R_EXTERIOR = radio + 48 (161 px con 5)", () => {
     expect(abanico({ count: 3 }).rExterior).toBe(148);
     expect(abanico({ count: 5 }).rExterior).toBeCloseTo(160.77, 1);

@@ -58,10 +58,13 @@ export function radioAdaptativo(count: number, params: Params): number {
   return Math.max(params.R_ARCO, radioParaCuerda(params.D_OPCION + params.SEPARACION_MIN, paso(count, params)));
 }
 
-/** Ángulos base: en los extremos del arco y a intervalos iguales; con 1 opción, la diagonal. */
-function angulosBase(count: number, params: Params): number[] {
+/**
+ * Ángulos base: en los extremos del arco y a intervalos iguales. Con 1 opción,
+ * la diagonal, salvo que sea "Atrás" (unicaArriba): entonces arriba (C-22).
+ */
+function angulosBase(count: number, params: Params, unicaArriba: boolean): number[] {
   if (count <= 0) return [];
-  if (count === 1) return [(params.ARCO_DESDE + params.ARCO_HASTA) / 2];
+  if (count === 1) return [unicaArriba ? params.ARCO_DESDE : (params.ARCO_HASTA + params.ARCO_DESDE) / 2];
   const delta = paso(count, params);
   return Array.from({ length: count }, (_, i) => params.ARCO_DESDE + i * delta);
 }
@@ -73,11 +76,21 @@ type EntradaAbanico = {
   count: number;
   hand: Hand;
   params: Params;
+  /** La opción única es "Atrás": va arriba y no en la diagonal (C-22). Sin efecto si count ≠ 1. */
+  unicaArriba?: boolean;
 };
 
-export function computeFanLayout({ anchor, viewport, safeArea, count, hand, params }: EntradaAbanico): FanLayout {
+export function computeFanLayout({
+  anchor,
+  viewport,
+  safeArea,
+  count,
+  hand,
+  params,
+  unicaArriba = false,
+}: EntradaAbanico): FanLayout {
   const radio = radioAdaptativo(count, params);
-  const angulos = angulosBase(count, params);
+  const angulos = angulosBase(count, params, unicaArriba);
   const inicio = params.ARCO_DESDE - params.EXT_EXTREMOS;
   const fin = params.ARCO_HASTA + params.EXT_EXTREMOS;
 
@@ -204,4 +217,37 @@ export function assignActions(layout: FanLayout, ordered: OrderedAction[], param
   });
 
   return asignadas.sort((a, b) => a.index - b.index);
+}
+
+type EntradaPantalla = {
+  screen: AnchorScreen;
+  viewport: Rect;
+  safeArea: Insets;
+  hand: Hand;
+  params: Params;
+  /** Hay un aviso de deshacer vivo (C-21). */
+  deshacer?: boolean;
+};
+
+/**
+ * Atajo para el adaptador: ordena las acciones, calcula el ancla y el abanico
+ * (con unicaArriba cuando la única opción es "Atrás", C-22) y asigna cada acción.
+ */
+export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, deshacer = false }: EntradaPantalla): {
+  anchor: Point;
+  layout: FanLayout;
+  slots: Slot[];
+} {
+  const ordered = orderActions(screen, { deshacer });
+  const anchor = computeAnchorPosition({ viewport, safeArea, hand, params });
+  const layout = computeFanLayout({
+    anchor,
+    viewport,
+    safeArea,
+    count: ordered.length,
+    hand,
+    params,
+    unicaArriba: ordered.length === 1 && ordered[0]!.id === ID_ATRAS,
+  });
+  return { anchor, layout, slots: assignActions(layout, ordered, params) };
 }
