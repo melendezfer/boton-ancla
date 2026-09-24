@@ -236,6 +236,7 @@ type EntradaPantalla = {
 export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, deshacer = false }: EntradaPantalla): {
   anchor: Point;
   layout: FanLayout;
+  ordered: OrderedAction[];
   slots: Slot[];
 } {
   const ordered = orderActions(screen, { deshacer });
@@ -249,5 +250,5 @@ export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, d
     params,
     unicaArriba: ordered.length === 1 && ordered[0]!.id === ID_ATRAS,
   });
-  return { anchor, layout, slots: assignActions(layout, ordered, params) };
+  return { anchor, layout, ordered, slots: assignActions(layout, ordered, params) };
 }

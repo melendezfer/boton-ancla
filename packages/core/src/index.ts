@@ -34,3 +34,18 @@ export {
   type Slot,
 } from "./layout";
 export { resolveSelection, type Seleccion } from "./selection";
+export { proximoPlazo } from "./machine/deadline";
+export {
+  crearGeometria,
+  ESTADOS_TRANSITORIOS,
+  REPOSO,
+  type AnchorEvent,
+  type AnchorState,
+  type CancelReason,
+  type Geometry,
+  type ModoEjecucion,
+  type Presion,
+  type Tecla,
+  type TipoEstado,
+} from "./machine/states";
+export { transition } from "./machine/transition";

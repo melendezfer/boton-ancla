@@ -40,7 +40,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba (Vitest):** dentro de `R_MUERTA` → sin id (aunque haya `previous`); cada sector devuelve su id; en el borde, con `previous`, no cambia hasta superar 8°; los extremos aceptan hasta 20° fuera del arco; fuera de 70°–200° → sin id; `beyondOuter` justo antes y después de `R_EXTERIOR`; todo igual en espejo para la mano izquierda.
 - **Commit:** `feat: resolución de la preselección por ángulo y distancia`
 
-### [ ] T-06 · Máquina: reposo, armado, descanso y gesto
+### [x] T-06 · Máquina: reposo, armado, descanso y gesto
 - **Cubre:** §3 filas 1, 4–19, 34, 37 · D-07, D-08, D-10, D-11, HU-01, HU-02, HU-03, HU-04, HU-06 (lógica) · C-05, C-07
 - **Hacer:** `states.ts`, `transition.ts` (estos estados), `deadline.ts`.
 - **Prueba (Vitest):** una prueba por fila de la tabla, pasando `t` a mano (sin temporizadores falsos): toque vs. movimiento vs. descanso en los bordes exactos de 10 px, 250 ms y 400 ms; deslizamiento rápido sin MOVE (C-05); deriva en descanso (C-07); `experto` verdadero/falso alrededor de `T_ANIM`; `transition` nunca lanza error ante eventos inesperados.
