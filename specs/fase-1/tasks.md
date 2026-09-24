@@ -124,7 +124,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Manual:** leer sosteniendo el celular con el pulgar sobre el ancla.
 - **Commit:** `feat: modo descanso del ancla`
 
-### [ ] T-18 · Modo toque
+### [x] T-18 · Modo toque
 - **Cubre:** D-07, D-13, HU-05, RF-11 · L-06
 - **Hacer:** abrir con toque, overlay que captura toques fuera (y el clic fantasma), cierre a los 4 s.
 - **E2E:** toque abre; tocar una opción ejecuta; tocar fuera cierra **y el contenido no recibe el clic**; 4 s sin actividad cierra.

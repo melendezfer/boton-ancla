@@ -64,6 +64,8 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
   );
   useEffect(() => () => controlador.destruir(), [controlador]);
 
+  const velo = useVelo(estado);
+
   if (!pantalla || !geo || !medidas) return null;
 
   const geoDibujo = "geo" in estado ? estado.geo : geo;
@@ -79,6 +81,20 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
 
   return (
     <div className="ba-raiz" style={variablesCss(theme, params)} data-estado={estado.tipo} data-mano={prefs.hand}>
+      {velo.visible && (
+        // RF-11, L-06: tapa el contenido mientras el menú está abierto sin dedo apoyado
+        // (toque, teclado) y un momento después, para tragarse el "clic fantasma".
+        <div
+          className="ba-velo"
+          data-testid="velo"
+          aria-hidden
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            velo.retirar();
+          }}
+        />
+      )}
       {abierto && <Abanico estado={estado} geo={geoDibujo} pantalla={pantalla} iconoDe={iconoDe} idActivo={idActivo} medidas={medidas} />}
 
       <button
@@ -194,6 +210,30 @@ function Banda({ estado, geo, pantalla, radio, medidas }: { estado: AnchorState;
       {contenido.texto}
     </div>
   );
+}
+
+const ESTADOS_CON_VELO: readonly AnchorState["tipo"][] = ["abierto_toque", "confirmacion_toque", "abierto_teclado"];
+/** Cuánto sigue el velo después de cerrar: cubre el click que llega tras el pointerup (L-06). */
+const VELO_EXTRA_MS = 400;
+
+function useVelo(estado: AnchorState) {
+  const conVelo = ESTADOS_CON_VELO.includes(estado.tipo);
+  const [demorado, setDemorado] = useState(false);
+  const [antes, setAntes] = useState(conVelo);
+
+  // Al salir de un estado con velo, el velo sigue VELO_EXTRA_MS más.
+  if (antes !== conVelo) {
+    setAntes(conVelo);
+    if (!conVelo) setDemorado(true);
+  }
+
+  useEffect(() => {
+    if (!demorado) return;
+    const t = setTimeout(() => setDemorado(false), VELO_EXTRA_MS);
+    return () => clearTimeout(t);
+  }, [demorado]);
+
+  return { visible: conVelo || demorado, retirar: () => setDemorado(false) };
 }
 
 /**
