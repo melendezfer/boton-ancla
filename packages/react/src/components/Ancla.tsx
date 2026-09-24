@@ -83,7 +83,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
 
       <button
         type="button"
-        className={`ba-ancla${estado.tipo !== "reposo" ? " ba-ancla--activa" : ""}`}
+        className={`ba-ancla${claseAncla(estado)}`}
         data-testid="ancla"
         data-geometria={JSON.stringify(resumenGeometria(geo))}
         aria-haspopup="menu"
@@ -194,6 +194,17 @@ function Banda({ estado, geo, pantalla, radio, medidas }: { estado: AnchorState;
       {contenido.texto}
     </div>
   );
+}
+
+/**
+ * Aspecto del ancla: activa (sólida, más grande) al armar y con el menú abierto; en
+ * descanso sigue translúcida y solo muestra un anillo sutil (HU-04): el pulgar está
+ * apoyado para leer, no para actuar.
+ */
+function claseAncla(estado: AnchorState): string {
+  if (estado.tipo === "reposo") return "";
+  if (estado.tipo === "descanso") return " ba-ancla--descanso";
+  return " ba-ancla--activa";
 }
 
 /** Opción "activa" para el ícono del centro: preselección, foco o dedo apoyado. */

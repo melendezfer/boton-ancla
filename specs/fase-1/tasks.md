@@ -118,7 +118,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Manual:** una mano en el celular; sin lupa ni selección en iOS; modo experto sin mirar.
 - **Commit:** `feat: gesto de abrir, preseleccionar y ejecutar`
 
-### [ ] T-17 · Descanso visible
+### [x] T-17 · Descanso visible
 - **Cubre:** D-11, D-12, HU-04
 - **E2E (`page.clock`):** 400 ms quieto → anillo de descanso sin opciones; soltar no ejecuta; deslizar desde el descanso abre en modo gesto.
 - **Manual:** leer sosteniendo el celular con el pulgar sobre el ancla.
