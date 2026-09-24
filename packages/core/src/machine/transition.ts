@@ -21,6 +21,10 @@ export function transition(estado: AnchorState, evento: AnchorEvent): AnchorStat
     case "abierto_gesto":
     case "confirmacion_armada":
       return desdeGesto(estado, evento);
+    case "abierto_toque":
+      return desdeToque(estado, evento);
+    case "confirmacion_toque":
+      return desdeConfirmacionToque(estado, evento);
     case "ejecutando":
     case "cancelado":
     case "bloqueado_sensible":
@@ -208,4 +212,100 @@ function soltarGesto(estado: EstadoGesto, evento: Evento<"POINTER_UP">): AnchorS
     ms: evento.t - final.t0,
     recorridoPx: final.recorridoPx,
   };
+}
+
+// ---------------------------------------------------------------------------
+// abierto_toque y confirmacion_toque (C-06: regla del botón clásico)
+// ---------------------------------------------------------------------------
+
+function desdeToque(estado: Estado<"abierto_toque">, evento: AnchorEvent): AnchorState {
+  const P = estado.geo.params;
+  const { presion } = estado;
+
+  if (evento.tipo === "TICK") {
+    // Fila 28: sin dedo apoyado y sin actividad durante T_INACTIVO. No aplica si lo abrió un lector de pantalla.
+    const vencido = !estado.sinCierrePorTiempo && !presion && evento.t - estado.ultimaActividad >= P.T_INACTIVO;
+    return vencido ? { tipo: "cancelado", motivo: "inactividad" } : estado;
+  }
+
+  if (evento.tipo === "POINTER_DOWN" && !presion) {
+    const activo = { ...estado, ultimaActividad: evento.t };
+    // Fila 27: tocar fuera cierra (y el adaptador evita que el toque llegue al contenido, RF-11).
+    if (evento.sobre === "fuera") return { tipo: "cancelado", motivo: "toque_fuera" };
+    // Fila 24: presionar el centro; todavía no se sabe si será toque o deslizamiento.
+    if (evento.sobre === "ancla") {
+      return { ...activo, presion: { pointerId: evento.pointerId, inicio: evento.punto, sobre: "centro", movido: false } };
+    }
+    // Fila 20: presionar una opción que existe en el abanico.
+    const { id } = evento.sobre;
+    if (!estado.geo.slots.some((s) => s.id === id)) return activo;
+    return { ...activo, presion: { pointerId: evento.pointerId, inicio: evento.punto, sobre: { id }, movido: false } };
+  }
+
+  if (evento.tipo === "POINTER_MOVE" && presion && evento.pointerId === presion.pointerId) {
+    const d = distancia(presion.inicio, evento.punto);
+    if (presion.sobre === "centro" && d > P.UMBRAL_MOV) {
+      // Fila 25: presionar el centro y deslizar pasa a modo gesto (así se usa solo deslizando, HU-09).
+      const datos: DatosPuntero = {
+        pointerId: presion.pointerId,
+        inicio: presion.inicio,
+        ultimo: evento.punto,
+        recorridoPx: d,
+        t0: estado.t0,
+        geo: estado.geo,
+      };
+      return abrirGesto(datos, evento.t, "toque");
+    }
+    return { ...estado, ultimaActividad: evento.t, presion: { ...presion, movido: presion.movido || d > P.UMBRAL_MOV } };
+  }
+
+  if (evento.tipo === "POINTER_UP" && presion && evento.pointerId === presion.pointerId) {
+    const sinPresion: Estado<"abierto_toque"> = { ...estado, presion: undefined, ultimaActividad: evento.t };
+    const quieto = !presion.movido && distancia(presion.inicio, evento.punto) < P.UMBRAL_MOV;
+
+    if (presion.sobre === "centro") {
+      // Fila 26: tocar el centro cierra, a cualquier tiempo.
+      return quieto ? { tipo: "cancelado", motivo: "toque_centro" } : sinPresion;
+    }
+
+    // Filas 21–23: solo cuenta si baja y sube sobre la MISMA opción sin moverse.
+    const { id } = presion.sobre;
+    const mismaOpcion = evento.sobre === undefined || (typeof evento.sobre === "object" && evento.sobre.id === id);
+    const slot = estado.geo.slots.find((s) => s.id === id);
+    if (!quieto || !mismaOpcion || !slot || slot.disabled) return sinPresion;
+    if (slot.kind === "irreversible") {
+      return {
+        tipo: "confirmacion_toque",
+        geo: estado.geo,
+        id,
+        t0: estado.t0,
+        ultimaActividad: evento.t,
+        sinCierrePorTiempo: estado.sinCierrePorTiempo,
+        modo: "toque",
+      };
+    }
+    return { tipo: "ejecutando", id, modo: "toque", experto: false, ms: evento.t - estado.t0, recorridoPx: 0 };
+  }
+
+  return estado;
+}
+
+function desdeConfirmacionToque(estado: Estado<"confirmacion_toque">, evento: AnchorEvent): AnchorState {
+  const P = estado.geo.params;
+  switch (evento.tipo) {
+    case "CONFIRMAR":
+      // Fila 29
+      return { tipo: "ejecutando", id: estado.id, modo: estado.modo, experto: false, ms: evento.t - estado.t0, recorridoPx: 0 };
+    case "POINTER_DOWN":
+      // Fila 30: tocar fuera cancela; otros toques solo cuentan como actividad.
+      return evento.sobre === "fuera" ? { tipo: "cancelado", motivo: "toque_fuera" } : { ...estado, ultimaActividad: evento.t };
+    case "TICK": {
+      const vencido = !estado.sinCierrePorTiempo && evento.t - estado.ultimaActividad >= P.T_INACTIVO;
+      return vencido ? { tipo: "cancelado", motivo: "inactividad" } : estado;
+    }
+    case "TECLA":
+      return evento.tecla === "Escape" ? { tipo: "cancelado", motivo: "escape" } : estado;
+    default:
+      return estado;
+  }
 }

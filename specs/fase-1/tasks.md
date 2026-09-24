@@ -51,7 +51,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba (Vitest):** soltar sobre irreversible sin cruzar → `bloqueado_sensible`; cruzar → `confirmacion_armada`; volver dentro o cambiar de sector → `abierto_gesto`; soltar confirmado → `ejecutando`.
 - **Commit:** `feat: confirmación deslizando más allá para irreversibles`
 
-### [ ] T-08 · Máquina: modo toque
+### [x] T-08 · Máquina: modo toque
 - **Cubre:** D-07, D-13, HU-05, RF-11 (lógica), §3 filas 20–30 · C-06 decidido
 - **Prueba (Vitest):** tocar opción normal → ejecuta; irreversible → `confirmacion_toque` → `CONFIRMAR` ejecuta; tocar centro/fuera → cancela; 4 s sin actividad → cancela y cualquier actividad reinicia la cuenta; presionar el centro y deslizar → `abierto_gesto`.
 - **Commit:** `feat: modo toque en la máquina de estados`

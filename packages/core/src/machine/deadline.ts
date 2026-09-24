@@ -10,6 +10,11 @@ export function proximoPlazo(estado: AnchorState): number | undefined {
   switch (estado.tipo) {
     case "armado":
       return estado.t0 + estado.geo.params.T_DESCANSO;
+    case "abierto_toque":
+      // Con un dedo apoyado o abierto por lector de pantalla no corre el cierre por inactividad.
+      return estado.sinCierrePorTiempo || estado.presion ? undefined : estado.ultimaActividad + estado.geo.params.T_INACTIVO;
+    case "confirmacion_toque":
+      return estado.sinCierrePorTiempo ? undefined : estado.ultimaActividad + estado.geo.params.T_INACTIVO;
     default:
       return undefined;
   }
