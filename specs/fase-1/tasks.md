@@ -130,7 +130,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **E2E:** toque abre; tocar una opción ejecuta; tocar fuera cierra **y el contenido no recibe el clic**; 4 s sin actividad cierra.
 - **Commit:** `feat: modo toque con cierre por inactividad`
 
-### [ ] T-19 · Acciones sensibles
+### [x] T-19 · Acciones sensibles
 - **Cubre:** D-14, RF-07, RF-08, HU-07, HU-08, RNF-01 · C-03, C-19 y C-21 decididos (el aviso sigue aunque cambie la sección)
 - **Hacer:** anillo exterior, aviso "Desliza más allá para confirmar", aviso con deshacer (5 s, `role="status"`), "Confirmar" en modo toque, "Deshacer" en la posición de prioridad 1 del abanico mientras dura el aviso (C-03).
 - **E2E:** HU-07 (se aplica al instante, aviso 5 s; deshacer deslizando hasta la posición de prioridad 1 **y** tocando el aviso revierte y registra `undo`), HU-08 (soltar sobre Eliminar no elimina; más allá sí), confirmación en modo toque.

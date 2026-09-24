@@ -8,6 +8,7 @@ import {
   ID_ATRAS,
   ID_DESHACER,
   posicionBanda,
+  radioDe,
   textoBanda,
   type AnchorPrefs,
   type AnchorScreen,
@@ -17,7 +18,7 @@ import {
   type Params,
 } from "@boton-ancla/core";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
-import { Controlador, menuAbierto } from "../dom/controlador";
+import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
 import { useMedidas, type Medidas } from "../dom/medidas";
 import type { AnchorIcons, AnchorTheme, ReactAnchorIcon } from "../types";
 
@@ -35,17 +36,85 @@ export type PropsAncla = {
   onEventRef: RefObject<((evento: MetricEvent) => void) | undefined>;
 };
 
+/** Avisos del ancla (T-19): deshacer (RF-08), irreversible bloqueada (HU-08) o error (C-19). */
+type Aviso =
+  | { tipo: "deshacer"; texto: string; hasta: number }
+  | { tipo: "bloqueado"; texto: string; hasta: number }
+  | { tipo: "error"; texto: string; hasta: number };
+
+const DURACION_AVISO_MS = 2500;
+
 export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEventRef }: PropsAncla) {
   const medidas = useMedidas();
   const [machine] = useState(() => createAnchorMachine());
   const estado = useSyncExternalStore(machine.subscribe, machine.getState, machine.getState);
 
+  // --- Avisos y deshacer (T-19) ---
+  const [aviso, setAviso] = useState<Aviso | null>(null);
+  /** Acción que se puede deshacer mientras dura el aviso (C-21: sigue aunque cambie la sección). */
+  const deshacerRef = useRef<{ accionId: string; onUndo: () => void } | null>(null);
+
+  useEffect(() => {
+    if (!aviso) return;
+    const t = setTimeout(() => {
+      if (aviso.tipo === "deshacer") deshacerRef.current = null;
+      setAviso(null);
+    }, Math.max(0, aviso.hasta - performance.now()));
+    return () => clearTimeout(t);
+  }, [aviso]);
+
+  const deshacer = () => {
+    const d = deshacerRef.current;
+    if (!d) return;
+    deshacerRef.current = null;
+    setAviso(null);
+    try {
+      d.onUndo();
+    } catch (error) {
+      console.error("[boton-ancla] deshacer falló:", error);
+    }
+    onEventRef.current?.({ type: "undo", id: d.accionId });
+  };
+
+  const efectos: EfectosAncla = {
+    alEjecutar: (id, p, resultado) => {
+      const accion = p.actions.find((a) => a.id === id);
+      const mostrarDeshacer = () => {
+        if (accion?.kind !== "reversible" || !accion.onUndo) return;
+        deshacerRef.current = { accionId: accion.id, onUndo: accion.onUndo };
+        setAviso({ tipo: "deshacer", texto: accion.undoMessage ?? accion.label, hasta: performance.now() + params.T_DESHACER });
+      };
+      if (resultado instanceof Promise) {
+        // C-19: con una promesa, el deshacer aparece al resolver; si falla, un aviso de error.
+        resultado.then(mostrarDeshacer, (error: unknown) => {
+          console.error("[boton-ancla] la acción falló:", error);
+          setAviso({ tipo: "error", texto: "No se pudo completar la acción", hasta: performance.now() + DURACION_AVISO_MS });
+        });
+      } else mostrarDeshacer();
+    },
+    alBloquear: () =>
+      setAviso({ tipo: "bloqueado", texto: "Desliza más allá para confirmar", hasta: performance.now() + DURACION_AVISO_MS }),
+    alDeshacer: deshacer,
+  };
+  const efectosRef = useRef(efectos);
+  useLayoutEffect(() => {
+    efectosRef.current = efectos;
+  });
+
   // Geometría para EMPEZAR una interacción. Mientras hay una abierta, se dibuja la de la máquina
   // (la foto tomada al empezar), así el abanico no se mueve bajo el dedo.
   const geo = useMemo<Geometry | null>(() => {
     if (!pantalla || !medidas) return null;
-    return crearGeometria({ screen: pantalla, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: prefs.hand, params });
-  }, [pantalla, medidas, prefs.hand, params]);
+    return crearGeometria({
+      screen: pantalla,
+      viewport: medidas.viewport,
+      safeArea: medidas.safeArea,
+      hand: prefs.hand,
+      params,
+      // C-21: mientras hay algo para deshacer, "Deshacer" reemplaza a la prioridad 1.
+      deshacer: aviso?.tipo === "deshacer",
+    });
+  }, [pantalla, medidas, prefs.hand, params, aviso?.tipo]);
 
   const geoRef = useRef<Geometry | null>(geo);
   useLayoutEffect(() => {
@@ -59,7 +128,12 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
         obtenerGeo: () => geoRef.current,
         obtenerPantalla: () => pantallaRef.current,
         onEvent: (m) => onEventRef.current?.(m),
-        efectos: {},
+        // Siempre la versión más reciente de los efectos (usan estado de React).
+        efectos: {
+          alEjecutar: (...a) => efectosRef.current.alEjecutar?.(...a),
+          alBloquear: (...a) => efectosRef.current.alBloquear?.(...a),
+          alDeshacer: () => efectosRef.current.alDeshacer?.(),
+        },
       }),
   );
   useEffect(() => () => controlador.destruir(), [controlador]);
@@ -96,6 +170,36 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
         />
       )}
       {abierto && <Abanico estado={estado} geo={geoDibujo} pantalla={pantalla} iconoDe={iconoDe} idActivo={idActivo} medidas={medidas} />}
+
+      {estado.tipo === "confirmacion_toque" && (
+        <ZonaAviso geo={estado.geo} medidas={medidas}>
+          {/* Irreversible en modo toque: confirmar con un toque explícito (§3). */}
+          <button
+            type="button"
+            className="ba-aviso ba-aviso--confirmar"
+            data-ba-control
+            data-testid="confirmar"
+            onClick={() => controlador.enviar({ tipo: "CONFIRMAR", t: performance.now() })}
+          >
+            Confirmar: {etiquetaOpcion(pantalla, estado.id)}
+          </button>
+        </ZonaAviso>
+      )}
+
+      {aviso && estado.tipo !== "confirmacion_toque" && (
+        <ZonaAviso geo={geoDibujo} medidas={medidas}>
+          {aviso.tipo === "deshacer" ? (
+            // RF-08: tocar el aviso también deshace (además de "Deshacer" en el abanico).
+            <button type="button" className="ba-aviso" data-ba-control data-testid="aviso" onClick={deshacer}>
+              {aviso.texto} · <strong>Deshacer</strong>
+            </button>
+          ) : (
+            <div className={`ba-aviso ba-aviso--${aviso.tipo}`} data-ba-control data-testid="aviso">
+              {aviso.texto}
+            </div>
+          )}
+        </ZonaAviso>
+      )}
 
       <button
         type="button"
@@ -245,6 +349,31 @@ function claseAncla(estado: AnchorState): string {
   if (estado.tipo === "reposo") return "";
   if (estado.tipo === "descanso") return " ba-ancla--descanso";
   return " ba-ancla--activa";
+}
+
+/**
+ * Zona de avisos: justo encima de donde va la banda de etiqueta, fuera del alcance del
+ * pulgar y sin tapar el ancla (design.md §6). Se corre para no salirse por los costados.
+ */
+function ZonaAviso({ geo, medidas, children }: { geo: Geometry; medidas: Medidas; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const radio = radioDe(geo.centro, geo.slots, geo.params);
+  const pos = posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params });
+  const abajo = pos.yBase - geo.params.BANDA_ALTO - 8;
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ancho = el.offsetWidth;
+    el.style.left = `${Math.min(Math.max(pos.x - ancho / 2, pos.izquierda), pos.derecha - ancho)}px`;
+    el.style.top = `${Math.max(medidas.safeArea.top + 4, abajo - el.offsetHeight)}px`;
+  });
+
+  return (
+    <div ref={ref} className="ba-zona-aviso" role="status" aria-live="polite" style={{ left: pos.x, top: abajo - 44, maxWidth: pos.derecha - pos.izquierda }}>
+      {children}
+    </div>
+  );
 }
 
 /** Opción "activa" para el ícono del centro: preselección, foco o dedo apoyado. */

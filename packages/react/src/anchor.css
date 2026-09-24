@@ -214,3 +214,42 @@
     opacity: 1;
   }
 }
+
+/* --- Avisos (T-19): deshacer (RF-08), confirmar irreversible, bloqueado (HU-08) y error (C-19). --- */
+.ba-zona-aviso {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.ba-aviso {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px; /* mínimo táctil */
+  padding: 0 16px;
+  border-radius: 9999px;
+  border: 1px solid var(--ba-border);
+  background: var(--ba-text);
+  color: var(--ba-surface);
+  font: inherit;
+  font-size: 15px;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.22);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ba-aviso strong {
+  font-weight: 700;
+}
+
+.ba-aviso--confirmar {
+  background: var(--ba-accent);
+  border-color: var(--ba-accent);
+  font-weight: 700;
+}
+
+.ba-aviso--bloqueado,
+.ba-aviso--error {
+  cursor: default;
+}

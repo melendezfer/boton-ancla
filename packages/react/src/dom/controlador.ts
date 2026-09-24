@@ -20,8 +20,11 @@ import {
 //   vibración, métricas y COMPLETADO para volver a reposo.
 
 export type EfectosAncla = {
-  /** Una acción se ejecutó. `id` es el de la opción (incluye "atras" y "deshacer"). */
-  alEjecutar?: (id: string, pantalla: AnchorScreen) => void;
+  /**
+   * Una acción se ejecutó. `id` es el de la opción (incluye "atras" y "deshacer").
+   * `resultado` es lo que devolvió onSelect (puede ser una promesa, C-19).
+   */
+  alEjecutar?: (id: string, pantalla: AnchorScreen, resultado: unknown) => void;
   /** Se soltó sobre una irreversible sin cruzar el anillo (HU-08). */
   alBloquear?: (id: string) => void;
   /** Ejecuta "deshacer" (C-21): lo resuelve el adaptador, que conoce la acción original. */
@@ -105,6 +108,8 @@ export class Controlador {
   private readonly alPuntero = (e: PointerEvent) => {
     const estado = this.o.machine.getState();
     if (estado.tipo === "reposo") return;
+    // Controles propios fuera del abanico ("Confirmar", el aviso de deshacer): no son "tocar fuera".
+    if (e.type === "pointerdown" && e.target instanceof Element && e.target.closest("[data-ba-control]")) return;
     const p = punto(e);
     const t = performance.now();
     switch (e.type) {
@@ -187,14 +192,15 @@ export class Controlador {
     const pantalla = this.o.obtenerPantalla();
     if (!pantalla) return;
     try {
+      let resultado: unknown;
       if (id === ID_ATRAS) pantalla.back?.onSelect();
       else if (id === ID_DESHACER) this.o.efectos.alDeshacer?.();
       else {
         const accion = pantalla.actions.find((a) => a.id === id);
         if (!accion || accion.disabled) return;
-        void accion.onSelect();
+        resultado = accion.onSelect();
       }
-      this.o.efectos.alEjecutar?.(id, pantalla);
+      this.o.efectos.alEjecutar?.(id, pantalla, resultado);
     } catch (error) {
       // Un error de la app no debe dejar el ancla trabada: se registra y se vuelve a reposo.
       console.error("[boton-ancla] la acción falló:", error);
