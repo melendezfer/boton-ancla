@@ -148,7 +148,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Manual:** VoiceOver (iPhone) o TalkBack (Android): el ancla se anuncia y se usa con doble toque.
 - **Commit:** `feat: navegación por teclado y movimiento reducido`
 
-### [ ] T-22 · Mano izquierda
+### [x] T-22 · Mano izquierda
 - **Cubre:** HU-11, D-12, D-17
 - **E2E:** en Ajustes elegir "Mano izquierda" → ancla abajo a la izquierda, abanico reflejado; el mismo gesto espejado ejecuta la misma acción.
 - **Manual:** probar con la mano izquierda.
