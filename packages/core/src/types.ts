@@ -1,0 +1,50 @@
+// Tipos públicos del núcleo (spec §7 y design.md §2).
+
+/** Punto en coordenadas de pantalla (px, y crece hacia abajo). */
+export type Point = { x: number; y: number };
+
+/** Rectángulo en px, por ejemplo el viewport. */
+export type Rect = { x: number; y: number; width: number; height: number };
+
+/** Márgenes en px, por ejemplo el área segura (`env(safe-area-inset-*)`). */
+export type Insets = { top: number; right: number; bottom: number; left: number };
+
+/** Mano con la que se usa el ancla: decide si va abajo a la derecha o a la izquierda (HU-11). */
+export type Hand = "right" | "left";
+
+/** Tipo de acción según su riesgo (D-14). */
+export type ActionKind = "normal" | "reversible" | "irreversible";
+
+/** El núcleo no sabe dibujar íconos: el adaptador decide qué es (en RUTEANDO, un componente de Phosphor). */
+export type AnchorIcon = unknown;
+
+export type AnchorAction = {
+  id: string;
+  icon: AnchorIcon;
+  /** Etiqueta visible y nombre accesible (RNF-05). */
+  label: string;
+  onSelect: () => void | Promise<void>;
+  /** 1 = posición más cómoda (la diagonal). */
+  priority?: number;
+  /** Por defecto "normal". */
+  kind?: ActionKind;
+  /** Obligatorio si kind = "reversible"; lo comprueba validateScreen (C-13). */
+  onUndo?: () => void;
+  /** Texto del aviso, por ejemplo "Marcado no disponible". */
+  undoMessage?: string;
+  disabled?: boolean;
+};
+
+export type AnchorScreen = {
+  /** Identifica la sección, por ejemplo "mapa" o "perfil-negocio". Cambiarlo cancela la interacción (RF-10). */
+  id: string;
+  /** Lo que muestra el centro del ancla (D-09). */
+  sectionIcon: AnchorIcon;
+  sectionLabel: string;
+  /** Si existe, habilita la opción fija "Atrás" en el extremo "arriba" del arco (D-10). */
+  back?: { onSelect: () => void };
+  /** Máximo MAX_OPCIONES en Fase 1, contando "Atrás". */
+  actions: AnchorAction[];
+};
+
+export type AnchorPrefs = { hand: Hand };

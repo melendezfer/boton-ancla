@@ -16,7 +16,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Prueba:** `npm install`, `npm run typecheck` y `npm test` pasan (una prueba de humo `1+1`). Prueba de que un archivo con `window` **no** compila en core.
 - **Commit:** `chore: monorepo con npm workspaces y paquete core`
 
-### [ ] T-02 · Tipos, parámetros y validación de pantallas
+### [x] T-02 · Tipos, parámetros y validación de pantallas
 - **Cubre:** §6 (v0.2), §7, C-11, C-13, `MAX_OPCIONES`
 - **Hacer:** `types.ts`, `params.ts` (`DEFAULT_PARAMS` con los valores de §6), `validateScreen`.
 - **Prueba (Vitest):** `DEFAULT_PARAMS` coincide con §6; `validateScreen` rechaza más de 5 contando "Atrás", ids repetidos y reversible sin `onUndo`; acepta las 4 pantallas de §8.
