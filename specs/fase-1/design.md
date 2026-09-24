@@ -39,6 +39,7 @@ Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en 
 | C-22 | "Atrás" va a 90° aunque sea la única opción: `computeFanLayout` recibe `unicaArriba` (lo calcula `layoutParaPantalla`). Cualquier otra opción única sigue en la diagonal. | spec §6, §7; aquí §4.3 |
 | C-21 | "Deshacer" **reemplaza** a la acción de prioridad 1 en su posición; nada más se mueve. Aviso y "Deshacer" siguen hasta vencer los 5 s aunque cambie la sección. Ícono `ArrowCounterClockwise`, registrado en `semantic-icons.ts` de la demo. | spec RF-08, §6, §8; aquí §4.4 |
 | C-16 | `Heart` = marcar favorito; `ListHeart` = ver la lista de Favoritos. Secciones: `IdentificationCard` (perfil) y `Cube` (producto). `Storefront` nunca para secciones (= local fijo en RUTEANDO). Solo en la demo; RUTEANDO no se toca. | spec §8; aquí §8 |
+| HM-01 | Hallazgo de prueba manual: el ancla quedaba demasiado abajo. Su altura es `ANCLA_ALTURA` (0,30 del alto útil), limitada entre un piso y un techo que deja caber el abanico. La demo tiene un control deslizante para ajustarla. | spec §6, §12, D-17; aquí §2, §4.2, §8 |
 | L-02 | Margen lateral de 24 px (`MARGEN_LATERAL`); el inferior sigue en 16 px (`MARGEN_INFERIOR`). | spec §6, RF-12; aquí §2, §4.2 |
 | L-04 | La acción se ejecuta de forma **síncrona al soltar**, sin esperar la animación. | aquí §6 ("Ejecutar") |
 | L-09 | Se expone el 3002 igual que RUTEANDO expone el 3001: `portproxy` + regla del firewall, con `scripts/lan-3002.sh`, que genera los comandos de administrador y tú los ejecutas. `allowedDevOrigins` para que `next dev` hidrate por la IP de la LAN. | aquí §10, tasks T-12 |
@@ -123,7 +124,8 @@ export type Params = {
   ESCALA_PRESEL: number;   // 1.25
   OPACIDAD_REPOSO: number; // 0.6
   MARGEN_LATERAL: number;  // 24 (se suma el área segura) — L-02
-  MARGEN_INFERIOR: number; // 16 (se suma el área segura)
+  MARGEN_INFERIOR: number; // 16 (se suma el área segura) — piso del ancla
+  ANCLA_ALTURA: number;    // 0.3 — fracción del alto útil sobre el borde inferior (HM-01)
   R_MUERTA: number;        // 24
   R_ARCO: number;          // 100 — radio MÍNIMO; ver radio adaptativo en §4.3 (C-01)
   SEPARACION_MIN: number;  // 0 — espacio mínimo entre opciones vecinas (C-01)
@@ -314,9 +316,16 @@ Grados, 0° = derecha, 90° = arriba, 180° = izquierda (eje y hacia arriba, aun
 computeAnchorPosition({ viewport, safeArea, hand, params }): Point
 // x = right  : viewport.width  − safeArea.right − MARGEN_LATERAL − D_ACTIVO/2
 //     left   : safeArea.left + MARGEN_LATERAL + D_ACTIVO/2
-// y = viewport.height − safeArea.bottom − MARGEN_INFERIOR − D_ACTIVO/2
+//
+// Altura (HM-01). Con arriba = viewport.y + safeArea.top y abajo = viewport.y + height − safeArea.bottom:
+//   piso    = abajo − MARGEN_INFERIOR − D_ACTIVO/2                      (lo más abajo posible)
+//   techo   = arriba + radioAdaptativo(MAX_OPCIONES) + D_OPCION·ESCALA_PRESEL/2   (el abanico de 5 cabe)
+//   deseada = abajo − ANCLA_ALTURA · (abajo − arriba)
+//   y = min(piso, max(techo, deseada))   // si chocan (pantalla diminuta), gana el piso
 ```
-Se usa `D_ACTIVO` (no `D_REPOSO`) para que al crecer no se salga del margen.
+Se usa `D_ACTIVO` (no `D_REPOSO`) para que al crecer no se salga del margen. El techo usa el radio de 5 opciones aunque la pantalla tenga menos, así el ancla no cambia de altura al pasar de una sección a otra.
+
+Ejemplo, 375 × 667 sin área segura: piso = 619, techo ≈ 140,5, deseada = 667 − 0,3 · 667 ≈ 466,9 → el ancla queda a ~200 px del borde inferior. Con `ANCLA_ALTURA = 0` se obtiene la posición anterior (48 px).
 
 ### 4.3 Abanico — `computeFanLayout` (firma de §7)
 ```ts

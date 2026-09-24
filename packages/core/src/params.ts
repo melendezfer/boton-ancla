@@ -15,8 +15,14 @@ export type Params = {
   OPACIDAD_REPOSO: number;
   /** Distancia al borde lateral, además del área segura (L-02). */
   MARGEN_LATERAL: number;
-  /** Distancia al borde inferior, además del área segura. */
+  /** Distancia MÍNIMA al borde inferior, además del área segura (piso del ancla). */
   MARGEN_INFERIOR: number;
+  /**
+   * Altura del centro del ancla sobre el borde inferior útil, como fracción del
+   * alto útil (alto visible menos áreas seguras). 0 = lo más abajo posible.
+   * Queda limitada para que el abanico quepa (HM-01).
+   */
+  ANCLA_ALTURA: number;
   /** Radio de la zona muerta. */
   R_MUERTA: number;
   /** Radio MÍNIMO del arco; el real se adapta al número de opciones (C-01). */
@@ -66,6 +72,7 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   OPACIDAD_REPOSO: 0.6,
   MARGEN_LATERAL: 24,
   MARGEN_INFERIOR: 16,
+  ANCLA_ALTURA: 0.3,
   R_MUERTA: 24,
   R_ARCO: 100,
   SEPARACION_MIN: 0,

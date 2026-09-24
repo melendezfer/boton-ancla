@@ -19,31 +19,71 @@ function abanico(opciones: { w?: number; h?: number; count: number; hand?: Hand;
   return computeFanLayout({ anchor, viewport: vp, safeArea: area, count, hand, params });
 }
 
+/** Parámetros con el ancla lo más abajo posible (posición anterior a HM-01). */
+const ABAJO: Params = { ...P, ANCLA_ALTURA: 0 };
+
 describe("computeAnchorPosition (design.md §4.2, L-02)", () => {
-  it("mano derecha: 24 + 32 px del borde lateral y 16 + 32 px del inferior", () => {
-    expect(computeAnchorPosition({ viewport: viewport(375, 667), safeArea: SIN_AREA, hand: "right", params: P })).toEqual({
+  it("mano derecha, ANCLA_ALTURA 0: 24 + 32 px del borde lateral y 16 + 32 px del inferior", () => {
+    expect(computeAnchorPosition({ viewport: viewport(375, 667), safeArea: SIN_AREA, hand: "right", params: ABAJO })).toEqual({
       x: 375 - 56,
       y: 667 - 48,
     });
   });
 
-  it("mano izquierda: mismo margen desde el borde izquierdo", () => {
-    expect(computeAnchorPosition({ viewport: viewport(375, 667), safeArea: SIN_AREA, hand: "left", params: P })).toEqual({
-      x: 56,
-      y: 667 - 48,
-    });
+  it("mano izquierda: mismo margen desde el borde izquierdo y misma altura", () => {
+    for (const params of [ABAJO, P]) {
+      const d = computeAnchorPosition({ viewport: viewport(375, 667), safeArea: SIN_AREA, hand: "right", params });
+      const i = computeAnchorPosition({ viewport: viewport(375, 667), safeArea: SIN_AREA, hand: "left", params });
+      expect(i).toEqual({ x: 56, y: d.y });
+    }
   });
 
   it("suma el área segura del lado que corresponde", () => {
     const area = { top: 47, right: 10, bottom: 34, left: 20 };
     const vp = viewport(375, 812);
-    expect(computeAnchorPosition({ viewport: vp, safeArea: area, hand: "right", params: P })).toEqual({ x: 375 - 10 - 56, y: 812 - 34 - 48 });
-    expect(computeAnchorPosition({ viewport: vp, safeArea: area, hand: "left", params: P })).toEqual({ x: 20 + 56, y: 812 - 34 - 48 });
+    expect(computeAnchorPosition({ viewport: vp, safeArea: area, hand: "right", params: ABAJO })).toEqual({ x: 375 - 10 - 56, y: 812 - 34 - 48 });
+    expect(computeAnchorPosition({ viewport: vp, safeArea: area, hand: "left", params: ABAJO })).toEqual({ x: 20 + 56, y: 812 - 34 - 48 });
   });
 
   it("respeta el origen del viewport", () => {
     const vp = { x: 10, y: 20, width: 375, height: 667 };
-    expect(computeAnchorPosition({ viewport: vp, safeArea: SIN_AREA, hand: "right", params: P })).toEqual({ x: 10 + 375 - 56, y: 20 + 667 - 48 });
+    expect(computeAnchorPosition({ viewport: vp, safeArea: SIN_AREA, hand: "right", params: ABAJO })).toEqual({ x: 10 + 375 - 56, y: 20 + 667 - 48 });
+  });
+});
+
+describe("altura del ancla (HM-01)", () => {
+  const y = (params: Params, h = 667, area: Insets = SIN_AREA) =>
+    computeAnchorPosition({ viewport: viewport(375, h), safeArea: area, hand: "right", params }).y;
+  const techo = (area: Insets = SIN_AREA) => area.top + radioAdaptativo(5, P) + (P.D_OPCION * P.ESCALA_PRESEL) / 2;
+
+  it("por defecto (0,30) el centro queda a 30 % del alto útil sobre el borde inferior", () => {
+    expect(P.ANCLA_ALTURA).toBe(0.3);
+    expect(y(P)).toBeCloseTo(667 - 0.3 * 667, 9); // ≈ 200 px sobre el borde
+  });
+
+  it("el alto útil descuenta las áreas seguras de arriba y abajo", () => {
+    const area = { top: 47, right: 0, bottom: 34, left: 0 };
+    const util = 812 - 47 - 34;
+    expect(y(P, 812, area)).toBeCloseTo(812 - 34 - 0.3 * util, 9);
+  });
+
+  it("crece de forma continua con ANCLA_ALTURA", () => {
+    const alturas = [0.1, 0.2, 0.3, 0.4, 0.5].map((a) => y({ ...P, ANCLA_ALTURA: a }));
+    for (let i = 1; i < alturas.length; i++) expect(alturas[i]!).toBeLessThan(alturas[i - 1]!); // más alto = y menor
+  });
+
+  it("piso: nunca más abajo que MARGEN_INFERIOR + D_ACTIVO/2, aunque la fracción sea negativa", () => {
+    expect(y({ ...P, ANCLA_ALTURA: 0 })).toBe(667 - 48);
+    expect(y({ ...P, ANCLA_ALTURA: -1 })).toBe(667 - 48);
+  });
+
+  it("techo: nunca tan arriba que el abanico de 5 se salga, aunque la fracción sea 1", () => {
+    expect(y({ ...P, ANCLA_ALTURA: 1 })).toBeCloseTo(techo(), 9);
+    expect(y({ ...P, ANCLA_ALTURA: 1 }, 812, IPHONE_AREA)).toBeCloseTo(techo(IPHONE_AREA), 9);
+  });
+
+  it("en una pantalla diminuta donde piso y techo chocan, gana el piso (el ancla no se sale)", () => {
+    expect(y(P, 150)).toBe(150 - 48);
   });
 });
 
@@ -107,7 +147,7 @@ describe("computeFanLayout", () => {
   });
 
   it("cada opción queda a la distancia del radio y en su ángulo", () => {
-    const f = abanico({ count: 3 });
+    const f = abanico({ count: 3, params: ABAJO });
     const anchor = { x: 319, y: 619 };
     expect(f.slots[0]!.punto.x).toBeCloseTo(319, 9); // 90°: justo encima
     expect(f.slots[0]!.punto.y).toBeCloseTo(519, 9);
@@ -162,8 +202,9 @@ describe("computeFanLayout", () => {
       it(`con ${count}: espejo exacto de la derecha respecto a su ancla`, () => {
         const derecha = abanico({ count, hand: "right" });
         const izquierda = abanico({ count, hand: "left" });
-        const anclaD = { x: 375 - 56, y: 667 - 48 };
-        const anclaI = { x: 56, y: 667 - 48 };
+        const vp = viewport(375, 667);
+        const anclaD = computeAnchorPosition({ viewport: vp, safeArea: SIN_AREA, hand: "right", params: P });
+        const anclaI = computeAnchorPosition({ viewport: vp, safeArea: SIN_AREA, hand: "left", params: P });
         expect(izquierda.radio).toBe(derecha.radio);
         derecha.slots.forEach((d, i) => {
           const iz = izquierda.slots[i]!;
@@ -194,9 +235,10 @@ describe("computeFanLayout", () => {
     for (const [w, h] of pantallas) {
       for (const hand of ["right", "left"] as const) {
         for (const [nombreArea, area] of [["sin área segura", SIN_AREA], ["área segura de iPhone", IPHONE_AREA]] as const) {
-          it(`${w}×${h}, mano ${hand === "right" ? "derecha" : "izquierda"}, ${nombreArea}, 1–5 opciones`, () => {
+          it(`${w}×${h}, mano ${hand === "right" ? "derecha" : "izquierda"}, ${nombreArea}, 1–5 opciones, ANCLA_ALTURA 0–1 (HM-01)`, () => {
+            for (const altura of [0, 0.15, 0.3, 0.45, 0.6, 1]) {
             for (let count = 1; count <= 5; count++) {
-              const f = abanico({ w, h, count, hand, area });
+              const f = abanico({ w, h, count, hand, area, params: { ...P, ANCLA_ALTURA: altura } });
               expect(f.fueraDePantalla).toBe(false);
               // Comprobación independiente del cálculo interno:
               const mitad = (P.D_OPCION * P.ESCALA_PRESEL) / 2;
@@ -206,6 +248,7 @@ describe("computeFanLayout", () => {
                 expect(s.punto.y - mitad).toBeGreaterThanOrEqual(area.top);
                 expect(s.punto.y + mitad).toBeLessThanOrEqual(h - area.bottom - P.MARGEN_INFERIOR + 1e-9);
               }
+            }
             }
           });
         }

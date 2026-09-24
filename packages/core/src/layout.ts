@@ -31,8 +31,15 @@ export type FanLayout = {
 type EntradaPosicion = { viewport: Rect; safeArea: Insets; hand: Hand; params: Params };
 
 /**
- * Centro del ancla: abajo a la derecha o a la izquierda, respetando área segura y márgenes.
- * Se usa D_ACTIVO (no D_REPOSO) para que al crecer no invada el margen.
+ * Centro del ancla, del lado de la mano, respetando área segura y márgenes.
+ *
+ * Altura (HM-01): ANCLA_ALTURA × alto útil sobre el borde inferior útil, limitada a
+ * - piso: no más abajo que MARGEN_INFERIOR + D_ACTIVO/2 sobre el borde inferior útil;
+ * - techo: no tan arriba que la opción de 90° del abanico más grande (MAX_OPCIONES,
+ *   escalada) se salga por arriba del área segura.
+ * Si en una pantalla diminuta los dos límites chocan, gana el piso (el ancla nunca
+ * se sale) y computeFanLayout marcará fueraDePantalla.
+ * Se usa D_ACTIVO (no D_REPOSO) para que al crecer no invada los márgenes.
  */
 export function computeAnchorPosition({ viewport, safeArea, hand, params }: EntradaPosicion): Point {
   const distanciaLateral = params.MARGEN_LATERAL + params.D_ACTIVO / 2;
@@ -40,7 +47,13 @@ export function computeAnchorPosition({ viewport, safeArea, hand, params }: Entr
     hand === "right"
       ? viewport.x + viewport.width - safeArea.right - distanciaLateral
       : viewport.x + safeArea.left + distanciaLateral;
-  const y = viewport.y + viewport.height - safeArea.bottom - params.MARGEN_INFERIOR - params.D_ACTIVO / 2;
+
+  const arriba = viewport.y + safeArea.top;
+  const abajo = viewport.y + viewport.height - safeArea.bottom;
+  const piso = abajo - params.MARGEN_INFERIOR - params.D_ACTIVO / 2;
+  const techo = arriba + radioAdaptativo(params.MAX_OPCIONES, params) + (params.D_OPCION * params.ESCALA_PRESEL) / 2;
+  const deseada = abajo - params.ANCLA_ALTURA * (abajo - arriba);
+  const y = Math.min(piso, Math.max(techo, deseada));
   return { x, y };
 }
 

@@ -8,7 +8,7 @@ import { productoDueno } from "../fixtures/pantallas-ruteando";
 // Ayudas para escribir las pruebas de la máquina como pequeñas historias.
 // Pantalla por defecto: Producto dueño (3 + Atrás), mano derecha, 375×667:
 //   Atrás 90° · Marcar no disponible 120° · Editar 150° · Eliminar 180° (irreversible)
-//   radio 100 px, R_EXTERIOR 148 px, centro (319, 619).
+//   radio 100 px, R_EXTERIOR 148 px. El centro depende de ANCLA_ALTURA (HM-01): usar geo.centro.
 
 export const P = DEFAULT_PARAMS;
 

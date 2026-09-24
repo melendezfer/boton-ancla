@@ -1,6 +1,6 @@
 # Botón-ancla — Especificación Fase 1: núcleo del gesto
 
-Versión 0.4 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
+Versión 0.5 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
 
 > Esta spec es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
 
@@ -9,6 +9,8 @@ Versión 0.4 · Primera app base: RUTEANDO · Destino: componente integrable en 
 - C-02: en reposo el ícono usa el color `text`; `terracota` solo cuando el ancla está activa (D-04).
 - C-03: "Deshacer" también se puede hacer solo deslizando (D-14, RF-08, HU-07, §6 "Distribución").
 - L-02: el margen lateral sube a 24 px; el inferior sigue en 16 px (§6, RF-12).
+
+**Cambios en 0.5:** hallazgo de prueba manual HM-01: el ancla sube; su altura es el parámetro `ANCLA_ALTURA` (§6, D-17, §12).
 
 **Cambios en 0.4:** "Atrás" va arriba (90°) aunque sea la única opción del abanico (C-22, §6, §7).
 
@@ -68,7 +70,7 @@ Versión 0.4 · Primera app base: RUTEANDO · Destino: componente integrable en 
 | D-14 | Las acciones sensibles no agregan esperas: las reversibles se ejecutan y ofrecen deshacer; las irreversibles se confirman deslizando más allá de la opción. Deshacer también se puede hacer solo deslizando: mientras el aviso está visible, "Deshacer" ocupa la posición de prioridad 1 del abanico. | H8, C-03 |
 | D-15 | **Todo debe poder hacerse solo deslizando**, sin toques. El toque es una alternativa, nunca un requisito. | H16 |
 | D-16 | Las formas de presentar las opciones (abanico, carrusel, submenú) serán **modos que el usuario elige**. En Fase 1 solo existe el abanico. | H16 |
-| D-17 | El ancla siempre queda en la parte inferior de la orientación actual, del lado que elija el usuario, y por encima de las hojas inferiores. | H14, H15 |
+| D-17 | El ancla siempre queda en la parte inferior de la orientación actual, del lado que elija el usuario, y por encima de las hojas inferiores. "Parte inferior" no es el borde: su altura es `ANCLA_ALTURA` (por defecto, 30 % del alto útil sobre el borde inferior), según HM-01. | H14, H15, HM-01 |
 | D-18 | El núcleo es TypeScript puro sin React (headless); cada framework se conecta con un adaptador. | H21 |
 | D-19 | El componente no trae colores fijos: recibe los tokens de la app. En RUTEANDO: `terracota`, `surface`, `border`, `text`, `text-muted`. | H23 |
 
@@ -282,7 +284,8 @@ Entonces el ancla no se activa
 | `ESCALA_PRESEL` | 1.25 | Escala de la opción preseleccionada |
 | `OPACIDAD_REPOSO` | fondo 60% + desenfoque | El ícono siempre al 100% |
 | `MARGEN_LATERAL` | 24 px + área segura | Aleja el ancla del gesto "atrás" de Android (~24 dp) |
-| `MARGEN_INFERIOR` | 16 px + área segura | Evita la barra de inicio y los gestos del borde inferior |
+| `MARGEN_INFERIOR` | 16 px + área segura | Distancia **mínima** al borde inferior (piso del ancla) |
+| `ANCLA_ALTURA` | 0.3 del alto útil | Altura del centro del ancla sobre el borde inferior útil. Limitada entre el piso (`MARGEN_INFERIOR`) y el techo que deja caber el abanico de 5 opciones (HM-01) |
 | `R_MUERTA` | 24 px | Radio de la zona muerta |
 | `R_ARCO` | 100 px | Radio **mínimo** del centro a las opciones |
 | `SEPARACION_MIN` | 0 px | Espacio mínimo entre opciones vecinas (a tamaño normal) |
@@ -408,3 +411,14 @@ La demo incluye una pantalla para exportar a JSON con los campos del Documento 8
 - **P-02** Con el teclado abierto, ¿el ancla se oculta o sube sobre el teclado?
 - **P-03** ¿Qué gesto rápido debería servir para cambiar de mano a quien usa ambas?
 - **P-04** ¿Cómo se ofrecerán los modos (abanico, carrusel, submenú) al usuario en la Fase 4?
+- **P-05** Con el ancla más arriba (HM-01) queda espacio libre debajo. ¿Conviene que el abanico se abra también hacia abajo cuando el ancla está alta? Se decide con datos (hoy el arco sigue siendo 90° → 180°).
+
+---
+
+## 12. Hallazgos de la prueba manual
+
+Lo que aparece al probar en dispositivos reales y cambia la spec. Cada hallazgo tiene un ID `HM-xx`.
+
+| ID | Fecha | Dispositivo / contexto | Hallazgo | Cambio |
+|---|---|---|---|---|
+| HM-01 | 24-09-2026 | Celular, una mano, demo T-12 | El ancla queda demasiado abajo; la posición cómoda está más arriba, hacia el centro-lateral. | Nuevo parámetro `ANCLA_ALTURA` (0,30 del alto útil) con piso y techo (§6); en la demo, un control deslizante para ajustarlo mientras se prueba. Arrastrar el ancla sigue siendo de la Fase 3 (D-12). |
