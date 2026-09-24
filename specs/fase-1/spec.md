@@ -1,8 +1,14 @@
 # Botón-ancla — Especificación Fase 1: núcleo del gesto
 
-Versión 0.1 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
+Versión 0.2 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
 
 > Esta spec es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
+
+**Cambios en 0.2** (decisiones de la revisión del diseño; detalle en `design.md` §0):
+- C-01: el radio del arco se adapta al número de opciones para que no se encimen (§6: `R_ARCO` pasa a ser el mínimo y se agrega `SEPARACION_MIN`).
+- C-02: en reposo el ícono usa el color `text`; `terracota` solo cuando el ancla está activa (D-04).
+- C-03: "Deshacer" también se puede hacer solo deslizando (D-14, RF-08, HU-07, §6 "Distribución").
+- L-02: el margen lateral sube a 24 px; el inferior sigue en 16 px (§6, RF-12).
 
 ---
 
@@ -40,7 +46,7 @@ Versión 0.1 · Primera app base: RUTEANDO · Destino: componente integrable en 
 | D-01 | El sistema es un componente dentro de cada app, no una superposición del sistema operativo. | C1 |
 | D-02 | La vibración es un extra que solo funciona en Android. Toda señal debe funcionar también solo con lo visual. | C2 |
 | D-03 | Las opciones se distribuyen en un **arco alcanzable**, nunca en un círculo completo. | C3 |
-| D-04 | El reposo es un fondo translúcido con desenfoque y un ícono con contraste pleno (mínimo 3:1). | C4 |
+| D-04 | El reposo es un fondo translúcido con desenfoque y un ícono con contraste pleno (mínimo 3:1). En reposo el ícono usa el color `text` (el `terracota` sobre fondo translúcido baja a 2,15:1 sobre contenido oscuro); en activo, `terracota`. | C4, C-02 |
 | D-05 | Se aprovechan los antecedentes (marking menus, zona del pulgar). El criterio es facilidad, agilidad y comodidad. | C5 |
 | D-06 | En RUTEANDO el ancla **reemplaza** la pila de círculos de la derecha. Las acciones cambian según la pantalla: por ejemplo, en el mapa no existe "eliminar". | C6 |
 | D-07 | El gesto y el toque conviven; el sistema los distingue por movimiento y tiempo. | H1 |
@@ -50,7 +56,7 @@ Versión 0.1 · Primera app base: RUTEANDO · Destino: componente integrable en 
 | D-11 | **Modo descanso**: dejar el pulgar quieto sobre el ancla no abre nada. Sirve para sostener el teléfono mientras se lee. | H5, H6 |
 | D-12 | Como mantener quieto significa descanso, **mover el ancla no puede activarse manteniendo presionado**. En Fase 1 se hace desde ajustes; el arrastre llega en la Fase 3. | H12 (cambia mi propuesta anterior) |
 | D-13 | Del estado sólido se vuelve al translúcido por gesto (cancelar o ejecutar) o por tiempo. Mientras está abierto, el ancla capta los toques de su zona para que no pasen al contenido. | H7 |
-| D-14 | Las acciones sensibles no agregan esperas: las reversibles se ejecutan y ofrecen deshacer; las irreversibles se confirman deslizando más allá de la opción. | H8 |
+| D-14 | Las acciones sensibles no agregan esperas: las reversibles se ejecutan y ofrecen deshacer; las irreversibles se confirman deslizando más allá de la opción. Deshacer también se puede hacer solo deslizando: mientras el aviso está visible, "Deshacer" ocupa la posición de prioridad 1 del abanico. | H8, C-03 |
 | D-15 | **Todo debe poder hacerse solo deslizando**, sin toques. El toque es una alternativa, nunca un requisito. | H16 |
 | D-16 | Las formas de presentar las opciones (abanico, carrusel, submenú) serán **modos que el usuario elige**. En Fase 1 solo existe el abanico. | H16 |
 | D-17 | El ancla siempre queda en la parte inferior de la orientación actual, del lado que elija el usuario, y por encima de las hojas inferiores. | H14, H15 |
@@ -162,6 +168,9 @@ Dado el perfil de mi negocio (dueño)
 Cuando ejecuto "Marcar no disponible" desde el ancla
 Entonces la acción se aplica de inmediato
 Y aparece un aviso "Marcado no disponible · Deshacer" durante 5 s
+Y mientras el aviso está visible, "Deshacer" ocupa la posición de prioridad 1 del abanico
+Cuando deslizo hasta "Deshacer" y suelto, o toco el aviso
+Entonces la acción se revierte y el aviso desaparece
 ```
 
 **HU-08 — Acción irreversible sin retraso**
@@ -222,11 +231,11 @@ Entonces el ancla no se activa
 - **RF-05** Los sectores de los extremos deben extenderse hasta ±`EXT_EXTREMOS` grados fuera del arco, para tolerar movimientos imprecisos.
 - **RF-06** Cuando cambie la preselección, el sistema debe agrandar la opción (`ESCALA_PRESEL`), mostrar la etiqueta **por encima del dedo** y, si hay soporte, vibrar `VIB_MS`.
 - **RF-07** Si la opción preseleccionada es `irreversible`, el sistema debe dibujar el anillo exterior y exigir cruzarlo para confirmar.
-- **RF-08** Si la opción ejecutada es `reversible`, el sistema debe mostrar un aviso con "Deshacer" durante `T_DESHACER`.
+- **RF-08** Si la opción ejecutada es `reversible`, el sistema debe mostrar un aviso con "Deshacer" durante `T_DESHACER`. Mientras el aviso esté visible, "Deshacer" debe ocupar la posición de prioridad 1 del abanico (para cumplir D-15), y tocar el aviso también debe deshacer.
 - **RF-09** Mientras haya un segundo puntero, un `pointercancel` o un cambio de orientación, el sistema debe cancelar.
 - **RF-10** Cuando la app cambie de sección, el sistema debe actualizar el ícono central y cancelar cualquier interacción abierta.
 - **RF-11** Mientras el menú esté abierto, los toques dentro del área del menú no deben llegar al contenido. En modo toque, un toque fuera cierra el menú y tampoco llega al contenido.
-- **RF-12** El sistema debe calcular el arco dentro del viewport, restando `MARGEN_BORDE` y `env(safe-area-inset-*)`. Ninguna opción puede quedar fuera de pantalla.
+- **RF-12** El sistema debe calcular el arco dentro del viewport, restando `MARGEN_LATERAL`, `MARGEN_INFERIOR` y `env(safe-area-inset-*)`. Ninguna opción puede quedar fuera de pantalla.
 - **RF-13** Mientras el teclado esté abierto (`visualViewport`), el sistema debe ubicar el ancla sobre el teclado o bien ocultarla (valor por defecto: ocultar).
 - **RF-14** El sistema debe mantener el ancla por encima de las hojas inferiores de la app. En RUTEANDO, su `z-index` debe ser mayor que `z-[1000]`.
 
@@ -252,10 +261,13 @@ Entonces el ancla no se activa
 | `D_OPCION` | 44 px | Mínimo táctil |
 | `ESCALA_PRESEL` | 1.25 | Escala de la opción preseleccionada |
 | `OPACIDAD_REPOSO` | fondo 60% + desenfoque | El ícono siempre al 100% |
-| `MARGEN_BORDE` | 16 px + área segura | Evita los gestos de borde del sistema |
+| `MARGEN_LATERAL` | 24 px + área segura | Aleja el ancla del gesto "atrás" de Android (~24 dp) |
+| `MARGEN_INFERIOR` | 16 px + área segura | Evita la barra de inicio y los gestos del borde inferior |
 | `R_MUERTA` | 24 px | Radio de la zona muerta |
-| `R_ARCO` | 100 px | Distancia del centro a las opciones |
-| `R_EXTERIOR` | `R_ARCO` + 48 px | Confirmación de irreversibles |
+| `R_ARCO` | 100 px | Radio **mínimo** del centro a las opciones |
+| `SEPARACION_MIN` | 0 px | Espacio mínimo entre opciones vecinas (a tamaño normal) |
+| Radio adaptativo | `max(R_ARCO, (D_OPCION + SEPARACION_MIN) / (2·sin(Δ/2)))`, Δ = 90°/(n−1) | 100 px con 2–4 opciones, 113 px con 5 |
+| `R_EXTERIOR` | radio adaptativo + 48 px | Confirmación de irreversibles (161 px con 5) |
 | `ARCO` | 90° → 180° (derecha); espejo para izquierda | De "arriba" a "izquierda" |
 | `EXT_EXTREMOS` | 20° | Tolerancia de los sectores extremos |
 | `HISTERESIS` | 8° | Evita parpadeo entre vecinas |
@@ -269,7 +281,7 @@ Entonces el ancla no se activa
 | `USOS_ETIQUETA` | 5 por opción | Bienvenida |
 | `MAX_OPCIONES` | 5 | Fase 1 |
 
-Distribución: las opciones se reparten en el arco ordenadas por `priority`. La prioridad 1 va en la **diagonal**, que es la posición más cómoda. Si la app habilita "Atrás", ocupa siempre el extremo **"arriba"** del arco, pegado al borde, para que sea fácil de memorizar.
+Distribución: las opciones se reparten en el arco ordenadas por `priority`. La prioridad 1 va en la **diagonal**, que es la posición más cómoda. Si la app habilita "Atrás", ocupa siempre el extremo **"arriba"** del arco, pegado al borde, para que sea fácil de memorizar. Las opciones se ubican en los extremos y a intervalos iguales del arco. Mientras el aviso de deshacer está visible, "Deshacer" ocupa la posición de prioridad 1 (qué pasa con la acción desplazada: C-21 en `decisiones-pendientes.md`).
 
 ---
 

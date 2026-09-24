@@ -17,15 +17,15 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 - **Commit:** `chore: monorepo con npm workspaces y paquete core`
 
 ### [ ] T-02 · Tipos, parámetros y validación de pantallas
-- **Cubre:** §6, §7, C-11, C-13, `MAX_OPCIONES`
+- **Cubre:** §6 (v0.2), §7, C-11, C-13, `MAX_OPCIONES`
 - **Hacer:** `types.ts`, `params.ts` (`DEFAULT_PARAMS` con los valores de §6), `validateScreen`.
 - **Prueba (Vitest):** `DEFAULT_PARAMS` coincide con §6; `validateScreen` rechaza más de 5 contando "Atrás", ids repetidos y reversible sin `onUndo`; acepta las 4 pantallas de §8.
 - **Commit:** `feat: tipos, parámetros y validación de pantallas del núcleo`
 
 ### [ ] T-03 · Geometría y posición del abanico
-- **Cubre:** D-03, D-17, RF-12, HU-11 (espejo), §6 `ARCO`/`MARGEN_BORDE` · **Bloqueada por C-01** (y L-02 para el margen lateral)
+- **Cubre:** D-03, D-17, RF-12, HU-11 (espejo), §6 `ARCO`/`MARGEN_LATERAL`/`MARGEN_INFERIOR`/radio adaptativo · C-01 y L-02 decididos
 - **Hacer:** `geometry.ts` (ángulo, distancia, espejo), `computeAnchorPosition`, `computeFanLayout` con radio efectivo.
-- **Prueba (Vitest):** para viewports de 320, 375, 412 y 430 px de ancho × mano derecha/izquierda × 1–5 opciones × áreas seguras (0 y 34 px abajo): ninguna opción escalada queda fuera; ángulos entre 90° y 180° (o su espejo); sin solape entre opciones a tamaño normal; la mano izquierda es el espejo exacto de la derecha.
+- **Prueba (Vitest):** para viewports de 320, 375, 412 y 430 px de ancho × mano derecha/izquierda × 1–5 opciones × áreas seguras (0 y 34 px abajo): ninguna opción escalada queda fuera; ángulos entre 90° y 180° (o su espejo); sin solape entre opciones a tamaño normal (radio 113 px con 5, 100 px con ≤4) y el radio crece al subir `SEPARACION_MIN`; la mano izquierda es el espejo exacto de la derecha.
 - **Commit:** `feat: posición del ancla y cálculo del abanico`
 
 ### [ ] T-04 · Asignación de acciones por prioridad
@@ -130,9 +130,9 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Commit:** `feat: modo toque con cierre por inactividad`
 
 ### [ ] T-19 · Acciones sensibles
-- **Cubre:** D-14, RF-07, RF-08, HU-07, HU-08, RNF-01 · **Bloqueada por C-03 y C-19**
-- **Hacer:** anillo exterior, aviso "Desliza más allá para confirmar", aviso con deshacer (5 s, `role="status"`), "Confirmar" en modo toque, deshacer sin toque según C-03.
-- **E2E:** HU-07 (se aplica al instante, aviso 5 s, deshacer revierte y registra `undo`), HU-08 (soltar sobre Eliminar no elimina; más allá sí), confirmación en modo toque.
+- **Cubre:** D-14, RF-07, RF-08, HU-07, HU-08, RNF-01 · C-03 decidido · **Bloqueada por C-21 y C-19**
+- **Hacer:** anillo exterior, aviso "Desliza más allá para confirmar", aviso con deshacer (5 s, `role="status"`), "Confirmar" en modo toque, "Deshacer" en la posición de prioridad 1 del abanico mientras dura el aviso (C-03).
+- **E2E:** HU-07 (se aplica al instante, aviso 5 s; deshacer deslizando hasta la posición de prioridad 1 **y** tocando el aviso revierte y registra `undo`), HU-08 (soltar sobre Eliminar no elimina; más allá sí), confirmación en modo toque.
 - **Commit:** `feat: deshacer y confirmación de acciones sensibles`
 
 ### [ ] T-20 · Cancelaciones del entorno y teclado virtual

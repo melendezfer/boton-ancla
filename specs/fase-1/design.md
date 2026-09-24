@@ -6,6 +6,23 @@ Deriva de `spec.md` v0.1, que sigue siendo la fuente de verdad. Aquí se decide 
 - `§n` = sección de `spec.md`. `HU/RF/RNF/D-xx` = IDs de `spec.md`.
 - **C-xx** = contradicción o ambigüedad de la spec (lista en §9). Cuando el diseño necesita una respuesta para avanzar, pone una **Propuesta** marcada con su C-xx. Las propuestas **no se implementan hasta que las apruebes**; si las cambias, se actualizan aquí y en `tasks.md`.
 - **L-xx** = límite de la plataforma web (sobre todo iOS Safari), lista en §10.
+- Los puntos que siguen abiertos y necesitan explicación larga están en `decisiones-pendientes.md`.
+
+---
+
+## 0. Decisiones tomadas
+
+Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en `spec.md` v0.2.
+
+| ID | Decisión | Dónde se refleja |
+|---|---|---|
+| C-01 | Radio adaptativo según el número de opciones (113 px con 5), ajustable con parámetros para la prueba manual: `R_ARCO` (mínimo, 100) y `SEPARACION_MIN` (0). | spec §6; aquí §2, §4.3 |
+| C-02 | Ícono oscuro (`text`) en reposo; `terracota` (`accent`) solo cuando el ancla está activa. | spec D-04; aquí §6 |
+| C-03 | Mientras el aviso de deshacer está visible, "Deshacer" ocupa la posición de prioridad 1 del abanico (se hace solo deslizando). Tocar el aviso también deshace. Qué pasa con la acción desplazada queda en **C-21**. | spec D-14, RF-08, HU-07, §6; aquí §4.4, §6 |
+| C-16 | `Heart` = marcar favorito; `ListHeart` = ver la lista de Favoritos. Solo en la demo; RUTEANDO no se toca. | aquí §8 |
+| L-02 | Margen lateral de 24 px (`MARGEN_LATERAL`); el inferior sigue en 16 px (`MARGEN_INFERIOR`). | spec §6, RF-12; aquí §2, §4.2 |
+| L-04 | La acción se ejecuta de forma **síncrona al soltar**, sin esperar la animación. | aquí §6 ("Ejecutar") |
+| L-09 | Se expone el 3002 igual que RUTEANDO expone el 3001: `portproxy` + regla del firewall, con comandos que ejecutas tú como administrador. | aquí §10 |
 
 ---
 
@@ -86,9 +103,11 @@ export type Params = {
   D_OPCION: number;        // 44
   ESCALA_PRESEL: number;   // 1.25
   OPACIDAD_REPOSO: number; // 0.6
-  MARGEN_BORDE: number;    // 16 (se suma el área segura)
+  MARGEN_LATERAL: number;  // 24 (se suma el área segura) — L-02
+  MARGEN_INFERIOR: number; // 16 (se suma el área segura)
   R_MUERTA: number;        // 24
-  R_ARCO: number;          // 100 (mínimo; ver radio efectivo en §4, C-01)
+  R_ARCO: number;          // 100 — radio MÍNIMO; ver radio adaptativo en §4.3 (C-01)
+  SEPARACION_MIN: number;  // 0 — espacio mínimo entre opciones vecinas (C-01)
   EXTRA_EXTERIOR: number;  // 48 → R_EXTERIOR = radioEfectivo + 48
   ARCO_DESDE: number;      // 90  (arriba)
   ARCO_HASTA: number;      // 180 (izquierda) — para la mano izquierda se refleja
@@ -264,9 +283,9 @@ Grados, 0° = derecha, 90° = arriba, 180° = izquierda (eje y hacia arriba, aun
 ### 4.2 Posición del ancla
 ```ts
 computeAnchorPosition({ viewport, safeArea, hand, params }): Point
-// x = right  : viewport.width  − safeArea.right − MARGEN_BORDE − D_ACTIVO/2
-//     left   : safeArea.left + MARGEN_BORDE + D_ACTIVO/2
-// y = viewport.height − safeArea.bottom − MARGEN_BORDE − D_ACTIVO/2
+// x = right  : viewport.width  − safeArea.right − MARGEN_LATERAL − D_ACTIVO/2
+//     left   : safeArea.left + MARGEN_LATERAL + D_ACTIVO/2
+// y = viewport.height − safeArea.bottom − MARGEN_INFERIOR − D_ACTIVO/2
 ```
 Se usa `D_ACTIVO` (no `D_REPOSO`) para que al crecer no se salga del margen.
 
@@ -281,9 +300,9 @@ type Slot = {
 };
 computeFanLayout({ anchor, viewport, safeArea, count, hand, params }): Slot[]
 ```
-**Propuesta (C-01):**
+**Decidido (C-01):**
 - Las opciones se reparten **en los extremos del arco**: con `n` opciones, ángulos `90° + i·90°/(n−1)` (con 1 opción: 135°).
-- **Radio efectivo** `R = max(R_ARCO, D_OPCION / (2·sin(Δ/2)))`, con `Δ = 90°/(n−1)`. Da 100 px con 2–4 opciones y 113 px con 5. `R_EXTERIOR = R + 48`.
+- **Radio adaptativo** `R = max(R_ARCO, (D_OPCION + SEPARACION_MIN) / (2·sin(Δ/2)))`, con `Δ = 90°/(n−1)`. Con los valores por defecto da 100 px con 2–4 opciones y 113 px con 5. `R_EXTERIOR = R + EXTRA_EXTERIOR`. Para la prueba manual se ajusta `R_ARCO` o `SEPARACION_MIN` desde `params` del Provider.
 - Sectores: bisectrices entre ángulos vecinos; el primero empieza en `90° − EXT_EXTREMOS` (70°) y el último termina en `180° + EXT_EXTREMOS` (200°).
 - Verificación RF-12: cada opción, con `ESCALA_PRESEL`, debe quedar dentro de `viewport − safeArea − MARGEN_BORDE`. En vertical siempre cabe (ancla a 48 px del borde, alcance máximo ~113+28 px). Si no cabe, la función lo indica (`fueraDePantalla`) en lugar de mover opciones en silencio; los tests lo prueban en 320/375/412/430 px.
 
@@ -297,6 +316,8 @@ assignActions(slots: Slot[], ordered): Slot[]   // devuelve slots con id
 3. Los slots libres se ordenan por cercanía a 135° (diagonal). Empate (número par de slots): **Propuesta:** gana el más cercano a 180° (más horizontal). Prioridad 1 → slot más cercano, prioridad 2 → siguiente, etc.
 
 Ejemplo, perfil visitante (5): Atrás 90°, Carta 135°, Cómo llegar 157,5°, Favorito 112,5°, Compartir 180°.
+
+**Deshacer en el abanico (C-03, decidido):** mientras hay un aviso de deshacer vivo, el adaptador pasa a `assignActions` una opción extra `{ id: "deshacer", kind: "normal" }` que toma **el slot de prioridad 1**. El resto de las posiciones depende de C-21 (propuesta: no se mueve nada; la acción de prioridad 1 queda oculta hasta que el aviso desaparece). Ejecutarla llama `onUndo` de la acción original y registra `undo {id}` (no `execute`). Ícono: `ArrowCounterClockwise`.
 
 ### 4.5 Selección — `resolveSelection` (firma de §7)
 ```ts
@@ -374,11 +395,11 @@ useAnchorScreen(screen: AnchorScreen): void;
 | Toques fuera en modo toque | `AnchorOverlay` transparente a pantalla completa bajo el abanico; se retira después del `click` compatible o a los 350 ms, para evitar el clic fantasma (L-06). | RF-11, D-13 |
 | CSS del gesto | `touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none` en ancla y opciones; `contextmenu` con `preventDefault`; `touchstart` no pasivo con `preventDefault` en iOS. | RNF-02, L-05 |
 | Animación | Solo `transform` y `opacity`, duración `T_ANIM`. `backdrop-filter` solo en el ancla. Con `prefers-reduced-motion: reduce`, solo `opacity`. | RNF-03, RNF-04 |
-| Reposo | Fondo `color-mix(in srgb, var(--ba-surface) 60%, transparent)` + `backdrop-filter: blur(12px)` + borde `--ba-border`; ícono de la sección. **Propuesta C-02:** ícono en color `--ba-text` en reposo y `--ba-accent` solo en activo. | D-04, RNF-06 |
+| Reposo | Fondo `color-mix(in srgb, var(--ba-surface) 60%, transparent)` + `backdrop-filter: blur(12px)` + borde `--ba-border`; ícono de la sección. **Decidido (C-02):** ícono en color `--ba-text` en reposo y `--ba-accent` solo en activo. | D-04, RNF-06 |
 | Preselección | Opción a `scale(1.25)`, etiqueta **sobre el punto del dedo** (limitada al viewport), centro con el ícono de la opción, `vibrar(VIB_MS)` si existe `navigator.vibrate`. | RF-06, D-09, D-02 |
 | Irreversible | Al preseleccionarla se dibuja el anillo `R_EXTERIOR`; en `confirmacion_armada` se rellena. | RF-07 |
 | Ejecutar | `onSelect()` se llama **de forma sincrónica** dentro del manejador de `pointerup`/`click`/`keydown`, antes de `COMPLETADO`. Necesario para que iOS abra el teclado en HU-01 (L-04). Primero se registra `execute` y después se llama `onSelect`, para que un cambio de sección provocado por la acción no se cuente como cancelación. | HU-01, RF-10 |
-| Aviso | `AnchorNotice` (`role="status"`, `aria-live="polite"`): deshacer (`T_DESHACER`), "Desliza más allá para confirmar", y "Confirmar" en modo toque. Se ubica encima del ancla, sin taparla. | RF-08, D-14, C-03 |
+| Aviso | `AnchorNotice` (`role="status"`, `aria-live="polite"`): deshacer (`T_DESHACER`; tocarlo deshace, y además "Deshacer" entra al abanico en la posición de prioridad 1, §4.4), "Desliza más allá para confirmar", y "Confirmar" en modo toque. Se ubica encima del ancla, sin taparla. | RF-08, D-14, C-03 |
 | Área segura | Elemento sonda oculto con `padding: env(safe-area-inset-*)` leído con `getComputedStyle`; requiere `viewport-fit=cover` en la app. | RF-12, L-03 |
 | Teclado virtual | `visualViewport` (`resize`/`scroll`): si `window.innerHeight − visualViewport.height > 150 px` → ocultar el ancla (por defecto) y cancelar. | RF-13, L-04 |
 | Orientación | `screen.orientation` `change`, con respaldo `matchMedia("(orientation: portrait)")`. | RF-09 |
@@ -425,22 +446,22 @@ Estado simulado en memoria (`demo-store.tsx`): rol (visitante/dueño), favoritos
 
 | ID | Tema | Problema | Propuesta |
 |---|---|---|---|
-| **C-01** | Abanico (§6, D-03) | Con `R_ARCO` 100 px y 90° de arco, 5 opciones de 44 px **se solapan**: entre centros hay 31 px (reparto por sectores) o 39 px (en los extremos). Con 4 opciones por sectores, 39 px. Sin solape hacen falta 113 px (5 en extremos) o 141 px (5 por sectores); con la escala 1,25, 141 y 176 px. | Opciones en los extremos del arco + radio efectivo `max(100, D_OPCION/(2·sin(Δ/2)))` → 113 px con 5, 100 px con ≤4; `R_EXTERIOR` = 161 px. La preseleccionada se solapa un poco con sus vecinas y se dibuja encima. |
-| **C-02** | Contraste (D-04, RNF-06) | Con fondo `surface` al 60 %, el ícono `terracota` (#5B3DF5) queda en **2,15:1 sobre contenido negro** y 3,81:1 sobre gris; solo cumple sobre blanco (6,12). "Fondo real" arbitrario (fotos) no se puede garantizar. | Ícono `text` (#1B1B1B) en reposo: 6,05:1 en el peor caso. `terracota` solo en activo (fondo sólido). Se verifica a mano sobre mapa y foto. |
-| **C-03** | Deshacer (RF-08 vs D-15/RNF-01/HU-09) | "Deshacer" en el aviso es un **toque**, y todo debe poder hacerse solo deslizando. | Elegir: **(a)** el aviso acepta deslizarlo hacia el lado del pulgar para deshacer, además del toque; **(b)** mientras dura el aviso, el centro del ancla muestra ↺ y "presionar y soltar sin moverse" deshace (pero choca con el modo toque); **(c)** aceptar la excepción. Recomiendo (a). |
+| **C-01** | Abanico (§6, D-03) | Con `R_ARCO` 100 px y 90° de arco, 5 opciones de 44 px **se solapan**: entre centros hay 31 px (reparto por sectores) o 39 px (en los extremos). Con 4 opciones por sectores, 39 px. Sin solape hacen falta 113 px (5 en extremos) o 141 px (5 por sectores); con la escala 1,25, 141 y 176 px. | ✅ **Decidido** (§0): radio adaptativo con `R_ARCO` y `SEPARACION_MIN` como parámetros. La preseleccionada se solapa un poco con sus vecinas y se dibuja encima. |
+| **C-02** | Contraste (D-04, RNF-06) | Con fondo `surface` al 60 %, el ícono `terracota` (#5B3DF5) queda en **2,15:1 sobre contenido negro** y 3,81:1 sobre gris; solo cumple sobre blanco (6,12). "Fondo real" arbitrario (fotos) no se puede garantizar. | ✅ **Decidido** (§0): ícono `text` en reposo (6,05:1 en el peor caso), `terracota` en activo. Se verifica a mano sobre mapa y foto. |
+| **C-03** | Deshacer (RF-08 vs D-15/RNF-01/HU-09) | "Deshacer" en el aviso es un **toque**, y todo debe poder hacerse solo deslizando. | ✅ **Decidido** (§0): "Deshacer" ocupa la posición de prioridad 1 del abanico mientras dura el aviso; tocar el aviso también deshace. Queda abierto C-21. |
 | **C-04** | Métrica `open {mode: experto}` (§9) | Al abrir no se sabe si será experto; se sabe al soltar. Tampoco existe el modo teclado. | `open {mode: gesto \| toque \| teclado}`; experto solo en `execute.expert` (experto = soltar menos de `T_ANIM` después de abrir). |
-| **C-05** | Deslizamiento rápido | §3 no cubre `armado` + soltar con movimiento ≥ `UMBRAL_MOV` sin `pointermove` intermedio (un deslizamiento rápido puede llegar así). Sin esto, HU-06 falla. | Tratarlo como MOVE + UP (fila 7). |
-| **C-06** | `abierto_toque` | No se define: presionar el centro y quedarse quieto (¿descanso?), ni presionar una opción y arrastrar. | Soltar en el centro sin moverse = cancelar a cualquier tiempo; en una opción solo cuenta si se suelta sobre la misma sin moverse; si arrastra desde una opción, no pasa nada. |
+| **C-05** | Deslizamiento rápido | §3 no cubre `armado` + soltar con movimiento ≥ `UMBRAL_MOV` sin `pointermove` intermedio (un deslizamiento rápido puede llegar así). Sin esto, HU-06 falla. | ⏳ Explicado en `decisiones-pendientes.md`. Propuesta: tratarlo como MOVE + UP (fila 7). |
+| **C-06** | `abierto_toque` | No se define: presionar el centro y quedarse quieto (¿descanso?), ni presionar una opción y arrastrar. | ⏳ Explicado en `decisiones-pendientes.md`. |
 | **C-07** | Descanso | El pulgar que descansa se desliza solo unos milímetros; medido desde `inicio`, puede superar 10 px y abrir el menú sin querer. | Medir desde el punto donde empezó el descanso. Revisar con las pruebas si hace falta un umbral mayor en descanso. |
 | **C-08** | Soltar fuera del arco | No se define qué pasa si el dedo apunta fuera de 70°–200° (abajo o a la derecha). | Cancelar con motivo `fuera_de_arco`. |
 | **C-09** | `disabled` | No se define cómo se ve ni qué pasa al soltar. | Atenuada, se puede preseleccionar (etiqueta "… · no disponible"), soltar = cancelar. Conserva su posición (memoria muscular). |
-| **C-10** | Prioridad 1 "en la diagonal" | Con número par de posiciones no hay ninguna a 135°. Tampoco se define el orden del resto. | Por cercanía a 135°; empate → la más horizontal. Validar en pruebas. |
+| **C-10** | Prioridad 1 "en la diagonal" | Con número par de posiciones no hay ninguna a 135°. Tampoco se define el orden del resto. | ⏳ Explicado en `decisiones-pendientes.md`. |
 | **C-11** | API §7 | `computeFanLayout` recibe solo `count`, pero "Atrás" debe ir arriba; `resolveSelection` no recibe la mano; `Params`, `Machine`, `Slot`, `Point`, `Rect`, `Insets` no están definidos. | Separar geometría (`computeFanLayout`) de asignación (`assignActions`); añadir `hand` a `resolveSelection`; tipos definidos en §2–§5. |
 | **C-12** | Teclado y lectores de pantalla (RNF-05) | La máquina de §3 no tiene teclado. `T_INACTIVO` (4 s) cerraría el menú a quien navega con teclado o lector de pantalla (choca con WCAG 2.2.1). Con VoiceOver/TalkBack el ancla recibe un `click` sin secuencia de puntero. | Estado `abierto_teclado` **sin** cierre por tiempo; evento `ACTIVAR` → `abierto_toque`, también sin cierre por tiempo cuando viene de lector. Flechas: ↑/→ hacia "arriba", ↓/← hacia el extremo lateral, Home/End a los extremos. |
 | **C-13** | `onUndo` "obligatorio" | El tipo de §7 no lo obliga. | Mantener el tipo y validarlo con `validateScreen`. Alternativa (cambia la spec): unión discriminada por `kind`. |
 | **C-14** | Pantallas de §8 | "Carta" es una sección (HU-10) pero §8 no le da acciones; el detalle de producto solo existe para el dueño. | Carta: Compartir (1) + Atrás. Producto como visitante: fuera de la demo. |
 | **C-15** | "Marcar no disponible" | ¿Es el **negocio** ("hoy no estoy vendiendo", contrario a `confirmedSelling`/`SealCheck`) o un **plato**? Cambia el ícono y el texto. `Prohibit` ya se usa en RUTEANDO; hay que revisar su significado. | Decidir entidad e ícono antes de T-24. |
-| **C-16** | Íconos (RNF-09) | "Favoritos" (lista, Mapa) y "Favorito" (marcar, Perfil) son dos significados. **RUTEANDO ya usa `Heart` para ambos** (`main-floating-nav.tsx` y `favorite-button.tsx`). Los íconos de sección de Perfil y Producto no pueden ser `Storefront` (= local fijo) ni `Package` (= Combo). | `Heart` = marcar favorito; `ListHeart` = lista de favoritos. Secciones: `IdentificationCard` (perfil) y `Cube` (producto). |
+| **C-16** | Íconos (RNF-09) | "Favoritos" (lista, Mapa) y "Favorito" (marcar, Perfil) son dos significados. **RUTEANDO ya usa `Heart` para ambos** (`main-floating-nav.tsx` y `favorite-button.tsx`). Los íconos de sección de Perfil y Producto no pueden ser `Storefront` (= local fijo) ni `Package` (= Combo). | ✅ **Decidido** (§0): `Heart` = marcar favorito; `ListHeart` = lista, solo en la demo. ⏳ Falta confirmar los íconos de sección: `IdentificationCard` (perfil) y `Cube` (producto). |
 | **C-17** | "Primeros 5 usos" (HU-12) | ¿Uso = ejecutar la opción o también preseleccionarla? | Contar ejecuciones. |
 | **C-18** | Preferencias por orientación | §0 dice que la posición se guarda por orientación, pero `AnchorPrefs` solo tiene `hand`. | Fase 1: solo `hand`; la clave de almacenamiento incluye la orientación para no migrar en la Fase 3. |
 | **C-19** | `onSelect` asíncrono | Si una acción reversible devuelve una promesa rechazada, ¿se muestra "Deshacer"? | El aviso con deshacer aparece al resolver; si falla, aviso de error y sin deshacer. |
@@ -453,14 +474,14 @@ Estado simulado en memoria (`demo-store.tsx`): rol (visitante/dueño), favoritos
 | ID | Límite | Consecuencia / mitigación |
 |---|---|---|
 | **L-01** | iOS Safari no tiene `navigator.vibrate` (ya previsto en D-02). En Chrome Android, vibrar exige activación del usuario, que en táctil llega con el primer `pointerup`. | En el **primer arrastre** de la sesión la preselección no vibra. Aceptable; la señal visual basta. |
-| **L-02** | La web **no puede excluir zonas de gestos del sistema** (no hay equivalente a `setSystemGestureExclusionRects`). La barra de inicio de iOS y el "atrás" de Android ganan siempre. | Solo alejarse del borde. Con `MARGEN_BORDE` 16 px, el ancla en reposo empieza a ~22 px del borde, dentro de la zona de "atrás" de Android (~24 dp por defecto). **Propuesta:** margen lateral 24 px; confirmarlo en la prueba manual. |
+| **L-02** | La web **no puede excluir zonas de gestos del sistema** (no hay equivalente a `setSystemGestureExclusionRects`). La barra de inicio de iOS y el "atrás" de Android ganan siempre. | Solo alejarse del borde. ✅ **Decidido:** `MARGEN_LATERAL` 24 px (el ancla en reposo empieza a ~30 px del borde); se confirma en la prueba manual. |
 | **L-03** | En Safari (pestaña, no PWA) la barra inferior aparece y desaparece y cambia el alto visible; `safe-area-inset-bottom` puede valer 0 con la barra visible, y la barra flotante de las versiones recientes de iOS puede quedar encima de la esquina. `env()` no se lee desde JS. | Posición recalculada con `visualViewport`; sonda CSS para el área segura; `viewport-fit=cover`. Probar en Safari **y** como "Agregar a inicio". |
-| **L-04** | Teclado virtual: no hay API estándar en iOS; `visualViewport` es heurística (falla con zoom). iOS solo muestra el teclado si `focus()` ocurre **dentro** del manejador del gesto. | `onSelect` sincrónico; en la demo, el campo de búsqueda debe existir ya en el DOM cuando se llama `focus()` (no montarlo tras la animación). Probar HU-01 en iPhone real. |
+| **L-04** | Teclado virtual: no hay API estándar en iOS; `visualViewport` es heurística (falla con zoom). iOS solo muestra el teclado si `focus()` ocurre **dentro** del manejador del gesto. | ✅ **Decidido:** `onSelect` síncrono al soltar, sin esperar la animación. En la demo, el campo de búsqueda debe existir ya en el DOM cuando se llama `focus()` (no montarlo tras la animación). Probar HU-01 en iPhone real. |
 | **L-05** | Lupa, selección de texto y menú contextual de iOS al mantener presionado. | Combinación de CSS + `preventDefault` en `touchstart` no pasivo. Solo se verifica a mano (§10.3). |
 | **L-06** | `preventDefault` en `pointerdown` **no evita** el `click` posterior: al cerrar el modo toque con un toque fuera, ese click puede llegar al contenido. | El overlay se mantiene hasta el `click` o 350 ms (RF-11). |
 | **L-07** | Playwright no es un iPhone: el proyecto "iPhone 14" es WebKit de escritorio en Linux con tamaño y agente de iPhone. No reproduce lupa, gestos del sistema, barra de Safari, teclado ni vibración. `touchscreen` solo tiene `tap()`. Con eventos sintéticos, `setPointerCapture` puede lanzar error y `touch-action` no se ejerce. `page.clock` no controla `event.timeStamp`. | Arrastres por CDP en Chromium y sintéticos en WebKit; `try/catch` en la captura; la máquina usa `performance.now()`. **La prueba manual en iPhone real no es opcional.** |
 | **L-08** | 60 fps en gama baja (RNF-03) no se mide de forma fiable en E2E. | Manual: Chrome DevTools con CPU ×4–×6 y, si hay, un Android de gama baja. |
-| **L-09** | WSL2 está en modo NAT (IP `172.28.23.49`): `-H 0.0.0.0` no basta para que el celular llegue a la demo. Además, Next 16 en desarrollo bloquea recursos de otro origen si la IP no está en `allowedDevOrigins`. | Modo `networkingMode=mirrored` en `.wslconfig` de Windows, o `netsh interface portproxy` + regla del firewall para el 3002. ¿Cómo lo hiciste con el 3001 de RUTEANDO? |
+| **L-09** | WSL2 está en modo NAT (IP interna `172.28.23.49`): el celular no ve esa IP. Además, en RUTEANDO `next dev` por la IP de la LAN no llega a hidratar: el WebSocket de recarga en vivo (`/_next/hmr`) falla con `ERR_INVALID_HTTP_RESPONSE`. | ✅ **Decidido:** igual que RUTEANDO, con `netsh interface portproxy` (Windows escucha en `0.0.0.0:3002` y reenvía a `172.28.23.49:3002`) + regla del firewall; comandos para PowerShell como administrador en T-12. La IP interna cambia tras `wsl --shutdown` o al reiniciar: hay que rehacer el reenvío. Para el problema del HMR, en T-12 se prueba `allowedDevOrigins` (hipótesis sin confirmar); si no alcanza, se prueba desde el celular con `next build && next start -p 3002`. |
 | **L-10** | `http://192.168.x.x` no es un contexto seguro: no hay `navigator.clipboard` ni `navigator.share`. | Exportar métricas = descargar archivo + texto seleccionable. "Compartir" en la demo es simulado. |
 | **L-11** | `screen.orientation` existe en iOS solo desde 16.4. | Respaldo con `matchMedia`. |
 | **L-12** | El indicador de Next.js en desarrollo ocupa una esquina inferior, justo donde va el ancla. | `devIndicators: false`, como en RUTEANDO. |
