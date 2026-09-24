@@ -104,7 +104,7 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 
 A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; las demás se conectan en T-24.
 
-### [ ] T-15 · Provider y ancla en reposo
+### [x] T-15 · Provider y ancla en reposo
 - **Cubre:** D-04, D-09, D-17, D-19, RF-12, RF-14, RNF-05 (nombre), RNF-06 · C-02 decidido
 - **Hacer:** `AnchorProvider`, `useAnchorScreen` (cambio por `screen.id`), portal, `anchor.css` con `--ba-*`, sonda de área segura, botón translúcido con ícono de sección.
 - **E2E:** el botón tiene nombre "Menú, sección Mapa", `aria-haspopup="menu"`, `aria-expanded="false"`; queda dentro del viewport en ambos dispositivos; está por encima de una hoja `z-[1000]` abierta.

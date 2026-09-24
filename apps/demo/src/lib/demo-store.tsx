@@ -17,8 +17,6 @@ export type Preferencias = {
   fondo: Fondo;
   /** Parámetro ANCLA_ALTURA (HM-01), ajustable con el control deslizante de Ajustes. */
   anclaAltura: number;
-  /** Mostrar el abanico de referencia (fantasma) además del ancla. */
-  mostrarAbanico: boolean;
 };
 
 export const PREFERENCIAS_INICIALES: Preferencias = {
@@ -26,7 +24,6 @@ export const PREFERENCIAS_INICIALES: Preferencias = {
   rol: "visitante",
   fondo: "claro",
   anclaAltura: DEFAULT_PARAMS.ANCLA_ALTURA,
-  mostrarAbanico: true,
 };
 
 /** Hojas inferiores de la demo; solo una abierta a la vez. */
@@ -60,7 +57,7 @@ type Demo = {
   aviso: string | null;
   avisar: (texto: string) => void;
 
-  /** Pantalla actual, para la vista previa del ancla (en T-15 lo reemplaza useAnchorScreen). */
+  /** Pantalla actual, para el título de la barra de la demo (el ancla usa useAnchorScreen). */
   pantalla: AnchorScreen | null;
   setPantalla: (pantalla: AnchorScreen | null) => void;
 
@@ -81,7 +78,6 @@ function leerPrefs(): Preferencias {
       rol: d.rol === "dueno" ? "dueno" : "visitante",
       fondo: d.fondo === "foto" || d.fondo === "oscuro" ? d.fondo : "claro",
       anclaAltura: typeof d.anclaAltura === "number" && Number.isFinite(d.anclaAltura) ? d.anclaAltura : PREFERENCIAS_INICIALES.anclaAltura,
-      mostrarAbanico: d.mostrarAbanico !== false,
     };
   } catch {
     return PREFERENCIAS_INICIALES;
@@ -176,9 +172,8 @@ export function useDemo(): Demo {
 }
 
 /**
- * Registra la pantalla actual para la vista previa del ancla. Detecta el cambio
- * por id y por las etiquetas y estados de las acciones, no por identidad del objeto
- * (cada render crea uno nuevo). En T-15 lo reemplaza useAnchorScreen del adaptador.
+ * Registra la pantalla actual para la barra de la demo. Detecta el cambio por id y
+ * por las etiquetas y estados de las acciones, no por identidad del objeto.
  */
 export function useRegistrarPantalla(pantalla: AnchorScreen) {
   const { setPantalla } = useDemo();

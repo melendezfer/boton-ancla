@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { BarraDemo } from "@/components/barra-demo";
 import { AvisoDemo, HojasDemo } from "@/components/hojas";
-import { VistaPreviaAncla } from "@/components/vista-previa-ancla";
+import { ProveedorAncla } from "@/components/proveedor-ancla";
 import { DemoProvider } from "@/lib/demo-store";
+import "@boton-ancla/react/anchor.css";
 import "./globals.css";
 
 // Mismas tipografías que RUTEANDO.
@@ -28,11 +29,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={`${inter.variable} ${plusJakartaSans.variable} h-full antialiased`}>
       <body className="min-h-full">
         <DemoProvider>
-          <BarraDemo />
-          {children}
-          <HojasDemo />
-          <AvisoDemo />
-          <VistaPreviaAncla />
+          <ProveedorAncla>
+            <BarraDemo />
+            {children}
+            <HojasDemo />
+            <AvisoDemo />
+          </ProveedorAncla>
         </DemoProvider>
       </body>
     </html>

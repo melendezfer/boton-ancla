@@ -1,6 +1,7 @@
 "use client";
 
 import type { AnchorScreen } from "@boton-ancla/core";
+import { useAnchorScreen } from "@boton-ancla/react";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { NEGOCIO_DEMO } from "@/lib/datos";
@@ -16,7 +17,13 @@ import {
 } from "@/lib/pantallas";
 
 // Conecta las definiciones puras de lib/pantallas.ts con la demo (router y estado).
-// Hoy solo alimentan la vista previa; en T-24 las ejecuta el ancla real.
+// Cada hook registra su pantalla en el ancla (useAnchorScreen) y en la barra de la demo.
+
+/** Registra la pantalla en el ancla y en la barra de la demo. */
+function useRegistrar(p: AnchorScreen) {
+  useAnchorScreen(p);
+  useRegistrarPantalla(p);
+}
 
 function useVolver() {
   const router = useRouter();
@@ -34,7 +41,7 @@ export function usePantallaMapa(): AnchorScreen {
     ofertasCerca: () => abrirHoja({ tipo: "ofertas" }),
     favoritos: () => abrirHoja({ tipo: "favoritos" }),
   });
-  useRegistrarPantalla(p);
+  useRegistrar(p);
   return p;
 }
 
@@ -60,7 +67,7 @@ export function usePantallaPerfil(): AnchorScreen {
           },
           esFavorito,
         );
-  useRegistrarPantalla(p);
+  useRegistrar(p);
   return p;
 }
 
@@ -79,7 +86,7 @@ export function usePantallaCarta(): AnchorScreen {
     },
     esFavorito,
   );
-  useRegistrarPantalla(p);
+  useRegistrar(p);
   return p;
 }
 
@@ -101,7 +108,7 @@ export function usePantallaProducto(productoId: string, disponible: boolean): An
     },
     disponible,
   );
-  useRegistrarPantalla(p);
+  useRegistrar(p);
   return p;
 }
 
@@ -115,6 +122,6 @@ export function usePantallaDemo(id: keyof typeof SECCIONES_DEMO): AnchorScreen {
   const atras = useVolver();
   const { label, icon } = SECCIONES_DEMO[id];
   const p = pantallaSoloAtras(id, label, icon, atras);
-  useRegistrarPantalla(p);
+  useRegistrar(p);
   return p;
 }

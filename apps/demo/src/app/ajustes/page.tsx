@@ -1,10 +1,10 @@
 "use client";
 
 import { computeAnchorPosition, DEFAULT_PARAMS } from "@boton-ancla/core";
+import { useMedidas } from "@boton-ancla/react";
 import { EspacioBarra } from "@/components/barra-demo";
 import { usePantallaDemo } from "@/components/pantallas-conectadas";
 import { useDemo, type Fondo, type Preferencias, type Rol } from "@/lib/demo-store";
-import { useMedidas } from "@/lib/use-medidas";
 
 const ALTURA_MIN = 0;
 const ALTURA_MAX = 0.6;
@@ -30,7 +30,7 @@ export default function PaginaAjustes() {
       <section className="flex flex-col gap-2 rounded-card border border-terracota/40 bg-surface p-4">
         <h2 className="font-heading text-title-2 font-semibold text-text">Altura del ancla</h2>
         <p className="font-sans text-body-sm text-text-muted">
-          Hallazgo HM-01. Desliza para subir o bajar el ancla y mira el círculo punteado. Se guarda en este dispositivo.
+          Hallazgo HM-01. Desliza para subir o bajar el ancla y mírala moverse. Se guarda en este dispositivo.
         </p>
         <label htmlFor="altura-ancla" className="flex items-baseline justify-between font-sans text-body text-text">
           <span>
@@ -65,13 +65,6 @@ export default function PaginaAjustes() {
           Si el abanico no cabe arriba, el ancla deja de subir sola (techo). Moverla arrastrándola llega en la Fase 3.
         </p>
       </section>
-
-      <Casilla
-        etiqueta="Mostrar el abanico de referencia"
-        detalle="Círculos punteados donde irá cada opción de esta pantalla."
-        marcado={prefs.mostrarAbanico}
-        alCambiar={(v) => setPref("mostrarAbanico", v)}
-      />
 
       <Opciones<Preferencias["mano"]>
         titulo="Mano"
@@ -141,17 +134,5 @@ function Opciones<T extends string>({
         ))}
       </div>
     </fieldset>
-  );
-}
-
-function Casilla({ etiqueta, detalle, marcado, alCambiar }: { etiqueta: string; detalle: string; marcado: boolean; alCambiar: (v: boolean) => void }) {
-  return (
-    <label className="flex cursor-pointer items-start gap-3">
-      <input type="checkbox" checked={marcado} onChange={(e) => alCambiar(e.target.checked)} className="mt-1 size-5 accent-terracota" />
-      <span className="flex flex-col">
-        <span className="font-sans text-body font-semibold text-text">{etiqueta}</span>
-        <span className="font-sans text-body-sm text-text-muted">{detalle}</span>
-      </span>
-    </label>
   );
 }

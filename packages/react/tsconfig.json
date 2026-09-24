@@ -1,0 +1,10 @@
+{
+  // El adaptador SÍ usa el DOM (a diferencia de packages/core).
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": []
+  },
+  "include": ["src"]
+}

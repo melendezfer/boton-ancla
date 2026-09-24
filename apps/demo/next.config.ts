@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // El núcleo publica su código TypeScript sin compilar (packages/core/src);
   // Next lo compila junto con la demo.
-  transpilePackages: ["@boton-ancla/core"],
+  transpilePackages: ["@boton-ancla/core", "@boton-ancla/react"],
 
   // Raíz del monorepo: ahí está el package-lock.json de los workspaces.
   turbopack: {

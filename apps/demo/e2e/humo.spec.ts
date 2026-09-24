@@ -60,7 +60,7 @@ test("tocar un pin abre la hoja del negocio, por debajo del ancla (RF-14)", asyn
   const hoja = page.getByRole("dialog", { name: "Arepas Doña Rosa" });
   await expect(hoja).toBeVisible();
   const zHoja = await page.getByTestId("hoja-inferior").evaluate((el) => Number(getComputedStyle(el).zIndex));
-  const zAncla = await page.getByTestId("vista-previa-ancla").evaluate((el) => Number(getComputedStyle(el).zIndex));
+  const zAncla = await page.locator(".ba-raiz").evaluate((el) => Number(getComputedStyle(el).zIndex));
   expect(zHoja).toBe(1000);
   expect(zAncla).toBeGreaterThan(zHoja);
   await hoja.getByRole("link", { name: "Ver perfil" }).tap();
@@ -69,7 +69,7 @@ test("tocar un pin abre la hoja del negocio, por debajo del ancla (RF-14)", asyn
 
 test("HM-01: el ancla queda al 38 % del alto sobre el borde inferior", async ({ page }) => {
   await page.goto("/mapa");
-  const ancla = page.getByTestId("ancla-fantasma");
+  const ancla = page.getByTestId("ancla");
   await expect(ancla).toBeVisible();
   const { y } = await centro(ancla);
   const alto = page.viewportSize()!.height;
@@ -79,7 +79,7 @@ test("HM-01: el ancla queda al 38 % del alto sobre el borde inferior", async ({ 
 test("HM-01: deslizar el control de Ajustes sube el ancla (solo deslizando)", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "Un <input type=range> nativo no reacciona a PointerEvent sintéticos (L-07).");
   await page.goto("/ajustes");
-  const ancla = page.getByTestId("ancla-fantasma");
+  const ancla = page.getByTestId("ancla");
   await expect(ancla).toBeVisible();
   const antes = (await centro(ancla)).y;
 
@@ -104,9 +104,9 @@ for (const [ruta, seccion] of [
   ["/metricas", "Métricas"],
   ["/diagnostico", "Diagnóstico"],
 ] as const) {
-  test(`${ruta} muestra la sección "${seccion}" y el ancla fantasma`, async ({ page }) => {
+  test(`${ruta} muestra la sección "${seccion}" y el ancla`, async ({ page }) => {
     await page.goto(ruta);
     await expect(page.getByRole("banner").getByText(seccion, { exact: true })).toBeVisible();
-    await expect(page.getByTestId("ancla-fantasma")).toBeVisible();
+    await expect(page.getByTestId("ancla")).toBeVisible();
   });
 }
