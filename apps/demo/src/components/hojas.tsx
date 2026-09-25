@@ -1,6 +1,6 @@
 "use client";
 
-import { useAnchorLayer } from "@boton-ancla/react";
+import { useAnchorLayer, useMedidas, useTeclado } from "@boton-ancla/react";
 import Link from "next/link";
 import { createRef } from "react";
 import { NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos } from "@/lib/datos";
@@ -9,6 +9,22 @@ import { ANCHOR_ICONS, SEMANTIC_ICONS } from "@/lib/icons/semantic-icons";
 
 const X = ANCHOR_ICONS.close;
 
+/**
+ * HM-05: ubica la hoja sobre el teclado virtual. `bottom` = lo que tapa el teclado; el alto
+ * máximo = lo visible menos la barra superior. Funciona en Chrome Android y en iOS (que
+ * ignora interactive-widget), porque solo usa visualViewport.
+ */
+function usePosicionHoja() {
+  const { alto } = useTeclado();
+  const medidas = useMedidas();
+  const visible = (medidas?.viewport.height ?? 0) - alto;
+  return {
+    contenedor: { bottom: alto } as React.CSSProperties,
+    // 3,5rem de la barra superior + margen; nunca más del 60 % del alto (como antes).
+    hoja: { maxHeight: visible > 0 ? `min(60vh, calc(${visible}px - 4.5rem - env(safe-area-inset-top)))` : undefined } as React.CSSProperties,
+  };
+}
+
 // Hojas inferiores de la demo, con z-[1000] como en RUTEANDO: el ancla debe
 // quedar por encima (RF-14). Solo una abierta a la vez (useDemo().hoja).
 
@@ -16,11 +32,13 @@ export function HojaInferior({ titulo, onCerrar, children }: { titulo: string; o
   // HM-03: la hoja es una capa: el ancla ofrece "Cerrar" y el atrás del sistema la cierra.
   // Su X usa el `cerrar` que devuelve el hook, para que el historial quede limpio.
   const cerrar = useAnchorLayer(true, onCerrar);
+  const pos = usePosicionHoja();
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[1000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" data-testid="hoja-inferior">
+    <div className="fixed inset-x-0 bottom-0 z-[1000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" data-testid="hoja-inferior" style={pos.contenedor}>
       <section
         role="dialog"
         aria-label={titulo}
+        style={pos.hoja}
         className="mx-auto flex max-h-[60vh] max-w-lg flex-col overflow-hidden rounded-card border border-border bg-surface shadow-lg motion-safe:animate-[subir_160ms_ease-out]"
       >
         <header className="flex items-center gap-2 border-b border-border px-4 py-3">
@@ -64,13 +82,15 @@ function BuscadorPersistente() {
     cerrarHoja();
   };
   const cerrar = useAnchorLayer(abierta, cerrarEstado); // HM-03: su X cierra por el historial
+  const pos = usePosicionHoja(); // HM-05: sobre el teclado
   return (
     <div
       className={`fixed inset-x-0 bottom-0 z-[1000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] ${abierta ? "" : "pointer-events-none translate-y-[120%] opacity-0"}`}
       data-testid={abierta ? "hoja-inferior" : undefined}
       aria-hidden={!abierta || undefined}
+      style={pos.contenedor}
     >
-      <section role="dialog" aria-label="Buscar" className="mx-auto flex max-w-lg flex-col overflow-hidden rounded-card border border-border bg-surface shadow-lg">
+      <section role="dialog" aria-label="Buscar" style={pos.hoja} className="mx-auto flex max-w-lg flex-col overflow-hidden rounded-card border border-border bg-surface shadow-lg">
         <header className="flex items-center gap-2 border-b border-border px-4 py-3">
           <h2 className="flex-1 font-heading text-title-2 font-semibold text-text">Buscar</h2>
           <button type="button" onClick={cerrar} aria-label="Cerrar" tabIndex={abierta ? 0 : -1} className="flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-background">
