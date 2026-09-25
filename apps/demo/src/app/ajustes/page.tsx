@@ -66,6 +66,22 @@ export default function PaginaAjustes() {
         </p>
       </section>
 
+      <label className="flex cursor-pointer items-start gap-3 rounded-card border border-border bg-surface p-4">
+        <input
+          type="checkbox"
+          checked={prefs.desplazar}
+          onChange={(e) => setPref("desplazar", e.target.checked)}
+          className="mt-1 size-5 accent-terracota"
+          data-testid="interruptor-desplazar"
+        />
+        <span className="flex flex-col">
+          <span className="font-sans text-body font-semibold text-text">Desplazar con el ancla (experimental)</span>
+          <span className="font-sans text-body-sm text-text-muted">
+            Presiona el ancla y desliza hacia abajo: la carta, el perfil o la lista abierta se mueven como con un joystick (HM-09).
+          </span>
+        </span>
+      </label>
+
       <section className="flex flex-col gap-2">
         <h2 className="font-heading text-title-2 font-semibold text-text">Bienvenida</h2>
         <p className="font-sans text-body-sm text-text-muted">

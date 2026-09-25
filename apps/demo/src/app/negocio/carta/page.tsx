@@ -3,12 +3,14 @@
 import { CaretRight } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { EspacioBarra } from "@/components/barra-demo";
+import { useAnchorScroll } from "@boton-ancla/react";
 import { usePantallaCarta } from "@/components/pantallas-conectadas";
 import { NEGOCIO_DEMO, formatoPesos, type Producto } from "@/lib/datos";
 import { useDemo } from "@/lib/demo-store";
 
 export default function PaginaCarta() {
   usePantallaCarta();
+  useAnchorScroll("ventana"); // HM-09: la carta se desplaza con el ancla
   const { productos, prefs } = useDemo();
   const visibles = productos.filter((p) => !p.eliminado);
   const esDueno = prefs.rol === "dueno";

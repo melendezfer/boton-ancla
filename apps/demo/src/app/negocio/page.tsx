@@ -1,5 +1,6 @@
 "use client";
 
+import { useAnchorScroll } from "@boton-ancla/react";
 import Link from "next/link";
 import { EspacioBarra } from "@/components/barra-demo";
 import { usePantallaPerfil } from "@/components/pantallas-conectadas";
@@ -14,6 +15,7 @@ const Favorito = ANCHOR_ICONS.favoriteToggle;
 
 export default function PaginaPerfil() {
   usePantallaPerfil();
+  useAnchorScroll("ventana"); // HM-09: el perfil se desplaza con el ancla
   const { prefs, favoritos } = useDemo();
   const esFavorito = favoritos.includes(NEGOCIO_DEMO.id);
 
@@ -54,6 +56,22 @@ export default function PaginaPerfil() {
           <p>Este texto largo existe para que la página se pueda desplazar: sirve para probar el modo descanso (dejar el pulgar sobre el ancla mientras se lee) cuando el ancla real exista.</p>
           <p>Arepa de queso, arepa rellena, chocolate caliente y empanadas de pipián. Pregunta por las promociones del día.</p>
           <p>Pagos en efectivo y transferencia. Domicilios en un radio de 800 m.</p>
+        </section>
+        <section className="flex flex-col gap-3 font-sans text-body text-text">
+          <h2 className="font-heading text-title-2 font-semibold">Reseñas</h2>
+          {[
+            ["Carolina", "Las mejores arepas de queso del barrio. El chocolate, espeso como debe ser."],
+            ["Andrés", "Atienden rápido aunque haya fila. La arepa rellena mixta vale cada peso."],
+            ["María Fernanda", "Paso todos los días antes del trabajo. Siempre amables."],
+            ["Jorge", "Buen precio. A veces se acaban las empanadas temprano."],
+            ["Luz Dary", "El caldo de costilla de los domingos es una bendición."],
+            ["Camilo", "Pedí a domicilio y llegó caliente. Repetiré."],
+          ].map(([quien, texto]) => (
+            <blockquote key={quien} className="rounded-card border border-border bg-surface p-3">
+              <p>{texto}</p>
+              <footer className="mt-1 text-body-sm text-text-muted">— {quien}</footer>
+            </blockquote>
+          ))}
         </section>
       </div>
     </main>

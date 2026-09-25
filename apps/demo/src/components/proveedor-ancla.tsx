@@ -27,6 +27,7 @@ export function ProveedorAncla({ children }: { children: React.ReactNode }) {
       icons={ICONOS}
       params={{ ANCLA_ALTURA: prefs.anclaAltura }}
       onEvent={registrarMetrica}
+      desplazar={prefs.desplazar}
     >
       {children}
     </AnchorProvider>

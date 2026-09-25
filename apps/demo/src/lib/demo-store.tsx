@@ -2,7 +2,7 @@
 
 import { DEFAULT_PARAMS, type AnchorScreen, type Hand, type MetricEvent } from "@boton-ancla/core";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { PRODUCTOS_INICIALES, type Producto } from "./datos";
+import { FAVORITOS_INICIALES, PRODUCTOS_INICIALES, type Producto } from "./datos";
 import type { RegistroMetrica } from "./exportar";
 
 // Estado simulado de la demo (design.md §8).
@@ -18,6 +18,8 @@ export type Preferencias = {
   fondo: Fondo;
   /** Parámetro ANCLA_ALTURA (HM-01), ajustable con el control deslizante de Ajustes. */
   anclaAltura: number;
+  /** HM-09 (experimental): desplazar con el ancla. Activado por defecto en la demo. */
+  desplazar: boolean;
 };
 
 export const PREFERENCIAS_INICIALES: Preferencias = {
@@ -25,6 +27,7 @@ export const PREFERENCIAS_INICIALES: Preferencias = {
   rol: "visitante",
   fondo: "claro",
   anclaAltura: DEFAULT_PARAMS.ANCLA_ALTURA,
+  desplazar: true,
 };
 
 /** Hojas inferiores de la demo; solo una abierta a la vez. */
@@ -104,6 +107,7 @@ function leerPrefs(): Preferencias {
       rol: d.rol === "dueno" ? "dueno" : "visitante",
       fondo: d.fondo === "foto" || d.fondo === "oscuro" ? d.fondo : "claro",
       anclaAltura: typeof d.anclaAltura === "number" && Number.isFinite(d.anclaAltura) ? d.anclaAltura : PREFERENCIAS_INICIALES.anclaAltura,
+      desplazar: d.desplazar !== false,
     };
   } catch {
     return PREFERENCIAS_INICIALES;
@@ -123,7 +127,7 @@ const DemoContext = createContext<Demo | null>(null);
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [prefs, setPrefs] = useState<Preferencias>(PREFERENCIAS_INICIALES);
   const [prefsListas, setPrefsListas] = useState(false);
-  const [favoritos, setFavoritos] = useState<string[]>(["jugos-el-parque", "tinto-y-pan"]);
+  const [favoritos, setFavoritos] = useState<string[]>(FAVORITOS_INICIALES);
   const [productos, setProductos] = useState<Producto[]>(PRODUCTOS_INICIALES);
   const [hoja, setHoja] = useState<Hoja | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);

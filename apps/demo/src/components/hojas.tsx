@@ -42,12 +42,15 @@ export function HojaInferior({
   onCerrar,
   icono,
   acciones,
+  desplazable = false,
   children,
 }: {
   titulo: string;
   onCerrar: () => void;
   /** Ícono de la capa: lo muestra el centro del ancla mientras está abierta (HM-08). */
   icono?: CapaAncla["icon"];
+  /** HM-09: su lista se puede desplazar con el ancla. */
+  desplazable?: boolean;
   /**
    * Acciones propias de la capa en el abanico (HM-08). Como función, recibe `cerrar`
    * (cierra por el historial, igual que la X) para acciones que además cierran la hoja.
@@ -63,7 +66,13 @@ export function HojaInferior({
   const cerrarDesdeAccion = useCallback(() => cerrarRef.current(), []);
   // eslint-disable-next-line react-hooks/refs -- cerrarDesdeAccion solo se ejecuta al elegir la acción, nunca durante el render
   const lista = typeof acciones === "function" ? acciones(cerrarDesdeAccion) : acciones;
-  const cerrar = useAnchorLayer(true, onCerrar, { label: titulo, icon: icono, actions: lista });
+  const contenido = useRef<HTMLDivElement>(null);
+  const cerrar = useAnchorLayer(true, onCerrar, {
+    label: titulo,
+    icon: icono,
+    actions: lista,
+    scrollRef: desplazable ? contenido : undefined, // HM-09
+  });
   useLayoutEffect(() => {
     cerrarRef.current = cerrar;
   });
@@ -83,7 +92,9 @@ export function HojaInferior({
               <X size={20} />
             </button>
           </header>
-          <div className="overflow-y-auto px-4 py-3">{children}</div>
+          <div ref={contenido} className="overflow-y-auto px-4 py-3" data-testid="hoja-contenido">
+            {children}
+          </div>
         </div>
       </section>
     </div>
@@ -248,7 +259,7 @@ function HojaOfertas({ cerrar }: { cerrar: () => void }) {
     },
   ];
   return (
-    <HojaInferior titulo="Ofertas cerca" onCerrar={cerrar} icono={SEMANTIC_ICONS.offer} acciones={acciones}>
+    <HojaInferior titulo="Ofertas cerca" onCerrar={cerrar} icono={SEMANTIC_ICONS.offer} acciones={acciones} desplazable>
       <p className="mb-1 font-sans text-caption text-text-muted" data-testid="estado-ofertas">
         {filtro} · {porDistancia ? "por distancia" : "sin ordenar"}
       </p>
@@ -280,6 +291,7 @@ function HojaFavoritos({ cerrar, favoritos }: { cerrar: () => void; favoritos: s
       titulo="Favoritos"
       onCerrar={cerrar}
       icono={ANCHOR_ICONS.favoritesList}
+      desplazable
       acciones={(cerrarCapa) => [
         { id: "ordenar", label: "Ordenar", icon: ANCHOR_ICONS.sort, priority: 1, onSelect: () => setZA((v) => !v) },
         {
@@ -302,8 +314,9 @@ function HojaFavoritos({ cerrar, favoritos }: { cerrar: () => void; favoritos: s
       ) : (
         <ul className="flex flex-col divide-y divide-border" data-testid="lista-favoritos">
           {lista.map((n) => (
-            <li key={n.id} className="py-2 font-sans text-body text-text">
-              {n.nombre}
+            <li key={n.id} className="py-2">
+              <p className="font-sans text-body text-text">{n.nombre}</p>
+              <p className="font-sans text-body-sm text-text-muted">{n.categoria}</p>
             </li>
           ))}
         </ul>
