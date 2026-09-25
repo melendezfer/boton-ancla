@@ -19,7 +19,7 @@ import {
   type MetricEvent,
   type Params,
 } from "@boton-ancla/core";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
 import { useBienvenida } from "../dom/bienvenida";
 import { useCambioOrientacion, useTecladoAbierto } from "../dom/entorno";
@@ -51,7 +51,17 @@ const DURACION_AVISO_MS = 2500;
 export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEventRef }: PropsAncla) {
   const medidas = useMedidas();
   const [machine] = useState(() => createAnchorMachine());
-  const estado = useSyncExternalStore(machine.subscribe, machine.getState, machine.getState);
+  // RNF-03: el estado de la máquina cambia en CADA pointermove (última posición, recorrido),
+  // pero en pantalla solo cambia algo con la preselección, el foco, el dedo apoyado, etc.
+  // React solo se entera de los cambios visibles: evita redibujar el ancla en cada movimiento.
+  const vista = useRef<AnchorState | null>(null);
+  const leerVista = useCallback(() => {
+    const actual = machine.getState();
+    if (vista.current && mismaVista(vista.current, actual)) return vista.current;
+    vista.current = actual;
+    return actual;
+  }, [machine]);
+  const estado = useSyncExternalStore(machine.subscribe, leerVista, leerVista);
 
   // --- Avisos y deshacer (T-19) ---
   const [aviso, setAviso] = useState<Aviso | null>(null);
@@ -483,6 +493,21 @@ function ZonaAviso({ geo, medidas, children }: { geo: Geometry; medidas: Medidas
     <div ref={ref} className="ba-zona-aviso" role="status" aria-live="polite" style={{ left: pos.x, top: abajo - 44, maxWidth: pos.derecha - pos.izquierda }}>
       {children}
     </div>
+  );
+}
+
+/** ¿Dos estados se dibujan igual? (Todo lo que el render usa de `estado` tiene que estar aquí.) */
+function mismaVista(a: AnchorState, b: AnchorState): boolean {
+  if (a === b) return true;
+  if (a.tipo !== b.tipo) return false;
+  if (("geo" in a ? a.geo : null) !== ("geo" in b ? b.geo : null)) return false;
+  const presion = (e: AnchorState) =>
+    e.tipo === "abierto_toque" && e.presion ? (e.presion.sobre === "centro" ? "centro" : e.presion.sobre.id) : "";
+  return (
+    opcionActiva(a) === opcionActiva(b) &&
+    presion(a) === presion(b) &&
+    (a.tipo !== "confirmacion_toque" || (b.tipo === "confirmacion_toque" && a.modo === b.modo)) &&
+    (a.tipo !== "abierto_teclado" || (b.tipo === "abierto_teclado" && a.foco === b.foco))
   );
 }
 

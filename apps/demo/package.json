@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "e2e:rendimiento": "MEDIR_RENDIMIENTO=1 playwright test e2e/rendimiento.spec.ts --project=pixel-7 --reporter=line"
   },
   "dependencies": {
     "@boton-ancla/core": "*",
