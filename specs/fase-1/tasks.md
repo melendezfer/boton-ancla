@@ -163,7 +163,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 
 ## Bloque D — Integración, métricas y cierre
 
-### [ ] T-24 · Ancla en todas las pantallas de §8
+### [x] T-24 · Ancla en todas las pantallas de §8
 - **Cubre:** D-06, HU-10, §8 · C-14, C-15 decididos
 - **E2E:** HU-10 (Carta desde el perfil cambia el ícono a Carta; Compartir no lo cambia); cada pantalla muestra exactamente sus acciones.
 - **Manual:** ejecutar las 4–5 opciones de cada pantalla con una sola mano.
