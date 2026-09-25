@@ -1,6 +1,6 @@
 # Botón-ancla — Especificación Fase 1: núcleo del gesto
 
-Versión 0.9 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
+Versión 0.10 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
 
 > Esta spec es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
 
@@ -9,6 +9,8 @@ Versión 0.9 · Primera app base: RUTEANDO · Destino: componente integrable en 
 - C-02: en reposo el ícono usa el color `text`; `terracota` solo cuando el ancla está activa (D-04).
 - C-03: "Deshacer" también se puede hacer solo deslizando (D-14, RF-08, HU-07, §6 "Distribución").
 - L-02: el margen lateral sube a 24 px; el inferior sigue en 16 px (§6, RF-12).
+
+**Cambios en 0.10:** HM-08 decidido: acciones propias de cada capa, ícono y nombre de la capa en el centro, Deshacer en la capa y "Ocultar teclado" del ancla a 180° (RF-13, RF-15, RF-17, §7).
 
 **Cambios en 0.9:** HM-06 aceptado (propuesta A, integrado en HM-08) y HM-08 registrado (acciones propias de cada capa), pendiente de 3 preguntas (§12).
 
@@ -278,9 +280,10 @@ Entonces el ancla no se activa
 - **RF-10** Cuando la app cambie de sección, el sistema debe actualizar el ícono central y cancelar cualquier interacción abierta.
 - **RF-11** Mientras el menú esté abierto, los toques dentro del área del menú no deben llegar al contenido. En modo toque, un toque fuera cierra el menú y tampoco llega al contenido.
 - **RF-12** El sistema debe calcular el arco dentro del viewport, restando `MARGEN_LATERAL`, `MARGEN_INFERIOR` y `env(safe-area-inset-*)`. Ninguna opción puede quedar fuera de pantalla.
-- **RF-13** Mientras el teclado esté abierto (`visualViewport`), el sistema debe ubicar el ancla sobre el teclado o bien ocultarla (valor por defecto: ocultar).
+- **RF-13** (HM-06) Mientras el teclado esté abierto (`visualViewport`), el ancla **no se oculta**: se ubica sobre el teclado (`ANCLA_ALTURA` se aplica al alto visible) y ofrece "Ocultar teclado" (RF-17).
 - **RF-14** El sistema debe mantener el ancla por encima de las hojas inferiores de la app. En RUTEANDO, su `z-index` debe ser mayor que `z-[1000]`.
-- **RF-15** (HM-03) La app puede declarar **capas** (hojas, listas, búsqueda abiertas encima del contenido) con su `onClose`. Mientras haya una, la posición de 90° muestra "Cerrar" y reemplaza temporalmente lo que haya ahí, sin mover nada más. Las capas forman una pila: "Cerrar", el botón atrás del sistema y `Escape` cierran la de arriba, **sin navegar**.
+- **RF-15** (HM-03, HM-08) La app puede declarar **capas** (hojas, listas, búsqueda abiertas encima del contenido) con su `onClose` y, opcionalmente, **ícono, nombre y acciones propias** (`AnchorAction[]`, máx. 4). Mientras haya una, el abanico muestra "Cerrar" a 90° + las acciones de la capa de arriba; las de la pantalla de fondo se ocultan y vuelven al cerrar, en sus mismas posiciones. El centro, el nombre accesible y la banda muestran el ícono y el nombre de la capa. "Deshacer" reemplaza a la prioridad 1 de la capa (C-21). Las capas forman una pila: "Cerrar", el botón atrás del sistema y `Escape` cierran la de arriba, **sin navegar**.
+- **RF-17** (HM-06, HM-08) Con un teclado abierto, el ancla agrega "Ocultar teclado" **fijo a 180°** (quita el foco del campo). Se agrega como "Atrás" a 90°; si ya hubiera 5 opciones, reemplaza a la de menor prioridad.
 - **RF-16** (HM-04, HM-05, HM-07) El teclado virtual se detecta con `visualViewport` (no por el foco). Las hojas de la app se ubican sobre el teclado y reservan del lado del ancla el espacio `MARGEN_LATERAL + D_ACTIVO`, para que sus controles no queden debajo del ancla.
 
 ### No funcionales
@@ -381,10 +384,11 @@ validateScreen(screen: AnchorScreen, params: Params): string[];      // lo que e
 // icons: íconos de las opciones fijas "Atrás" y "Deshacer"; los pone la app porque los íconos
 // se registran en la app (RNF-09) y AnchorScreen no los trae (agregado en T-16).
 useAnchorScreen(screen: AnchorScreen): void;
-useAnchorLayer(abierta: boolean, onClose: () => void): () => void;   // capa encima del contenido (HM-03, RF-15);
+useAnchorLayer(abierta: boolean, onClose: () => void, capa?: { icon?: AnchorIcon; label?: string; actions?: AnchorAction[] }): () => void;
+                                        // capa encima del contenido (HM-03, HM-08, RF-15);
                                         // devuelve `cerrar` para la X propia de la capa (cierra por el historial)
 useAnchorReserva(): { lado: "right" | "left"; ancho: number }; // espacio a reservar del lado del ancla (HM-07)
-// icons: { back, undo, close }  (close = "Cerrar" de las capas, HM-03)
+// icons: { back, undo, close, hideKeyboard }  (close = "Cerrar" de las capas, HM-03; hideKeyboard = RF-17)
 ```
 
 ---
@@ -458,4 +462,4 @@ Lo que aparece al probar en dispositivos reales y cambia la spec. Cada hallazgo 
 | HM-05 | 25-09-2026 | Nubia Neo 3 GT | **Error:** con el teclado abierto, la hoja de búsqueda queda detrás del teclado y no se ve lo que se escribe. | Las hojas inferiores se ubican sobre el borde de abajo del `visualViewport` (funciona en Chrome Android y en iOS, que ignora `interactive-widget`). |
 | HM-06 | 25-09-2026 | Nubia Neo 3 GT | **Decisión (cierra P-02):** con el teclado abierto, el ancla **no** se oculta: sube y queda sobre el teclado, con "Cerrar" (90°) y "Ocultar teclado" (blur del campo). Motivo: el botón atrás de Android exige un toque y D-15 pide que todo se pueda hacer solo deslizando. | **Aceptada la propuesta A ("modo escritura"), integrada en HM-08.** Cambia RF-13. Falta un detalle, ver HM-08 pregunta 3. |
 | HM-07 | 25-09-2026 | Nubia Neo 3 GT | **Error:** en "Ofertas cerca", el ancla tapa la esquina del encabezado de la hoja y puede esconder su X. | Las hojas reservan una franja del lado del ancla (`MARGEN_LATERAL + D_ACTIVO`) para que su X quede visible y alcanzable; el adaptador expone ese espacio con `useAnchorReserva`. |
-| HM-08 | 25-09-2026 | Nubia Neo 3 GT | Con una capa abierta el abanico no debe quedar solo con "Cerrar": **cada capa declara sus acciones**. Mientras la capa está abierta: "Cerrar" a 90° + las acciones de la capa; las de la pantalla de fondo se ocultan y vuelven al cerrar, en sus mismas posiciones. Sin acciones de capa, solo "Cerrar". API: `useAnchorLayer` acepta `AnchorAction[]` (con prioridad). Demo: Buscar con teclado abierto (Ocultar teclado, Borrar texto) y cerrado (Escribir, Borrar texto); Ofertas cerca (Ordenar por distancia, Filtrar por categoría); Favoritos (Ordenar, Ver en el mapa). | **Pendiente de 3 preguntas** (choques con C-21, D-09 y HM-06): `decisiones-pendientes.md`. |
+| HM-08 | 25-09-2026 | Nubia Neo 3 GT | Con una capa abierta el abanico no debe quedar solo con "Cerrar": **cada capa declara sus acciones**. Mientras la capa está abierta: "Cerrar" a 90° + las acciones de la capa; las de la pantalla de fondo se ocultan y vuelven al cerrar, en sus mismas posiciones. Sin acciones de capa, solo "Cerrar". API: `useAnchorLayer` acepta `AnchorAction[]` (con prioridad). Demo: Buscar con teclado abierto (Ocultar teclado, Borrar texto) y cerrado (Escribir, Borrar texto); Ofertas cerca (Ordenar por distancia, Filtrar por categoría); Favoritos (Ordenar, Ver en el mapa). | **Decidido** (25-09-2026, todas A): (1) "Deshacer" reemplaza a la prioridad 1 **de la capa**, sin mover nada más (C-21). (2) La capa declara ícono y nombre; el centro, el nombre accesible y la banda los muestran mientras está abierta (D-09; reemplaza lo dicho en HM-03 sobre el centro). (3) "Ocultar teclado" lo pone el ancla, **fijo a 180°**, siempre que haya un teclado abierto, en cualquier campo; se **agrega** como "Atrás" a 90° y, solo si ya hubiera 5 opciones, reemplaza a la de menor prioridad. Buscar con teclado: Cerrar (90°) · Borrar texto · Ocultar teclado (180°). RF-13, RF-15, RF-17. |
