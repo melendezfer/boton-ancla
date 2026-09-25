@@ -1,6 +1,6 @@
 # Botón-ancla — Especificación Fase 1: núcleo del gesto
 
-Versión 0.8 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
+Versión 0.9 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
 
 > Esta spec es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
 
@@ -9,6 +9,8 @@ Versión 0.8 · Primera app base: RUTEANDO · Destino: componente integrable en 
 - C-02: en reposo el ícono usa el color `text`; `terracota` solo cuando el ancla está activa (D-04).
 - C-03: "Deshacer" también se puede hacer solo deslizando (D-14, RF-08, HU-07, §6 "Distribución").
 - L-02: el margen lateral sube a 24 px; el inferior sigue en 16 px (§6, RF-12).
+
+**Cambios en 0.9:** HM-06 aceptado (propuesta A, integrado en HM-08) y HM-08 registrado (acciones propias de cada capa), pendiente de 3 preguntas (§12).
 
 **Cambios en 0.8:** hallazgos de prueba manual HM-03 a HM-07: capas y "Cerrar" (D-10, RF-15, HU-14, §7), detección del teclado por `visualViewport`, hojas sobre el teclado, reserva del espacio del ancla; HM-06 (el ancla sobre el teclado) queda pendiente de un detalle (§12).
 
@@ -454,5 +456,6 @@ Lo que aparece al probar en dispositivos reales y cambia la spec. Cada hallazgo 
 | HM-03 | 25-09-2026 | Nubia Neo 3 GT, demo del Bloque D | Cuando algo se abre encima del contenido (lista de Favoritos, búsqueda, hoja inferior), el ancla no permite cerrarlo: solo existe "Atrás", que navega. | **Decidido** (25-09-2026): *capas*. Con una capa abierta, la posición de 90° muestra "Cerrar" (X), que **reemplaza temporalmente** lo que haya ahí ("Atrás" o, sin "Atrás", la opción a 90°) sin mover nada más, igual que C-21. Pila de capas: cierra la de arriba. El atrás del sistema y Escape también cierran la capa, sin navegar. API: `useAnchorLayer` e `icons.close`. RF-15, HU-14, D-10. |
 | HM-04 | 25-09-2026 | Nubia Neo 3 GT | **Error:** en Buscar, si se baja el teclado con el botón atrás del celular, el ancla no vuelve a aparecer. Causa: se detectaba el teclado por el foco del campo, y el campo sigue enfocado con el teclado cerrado. | Detectar el teclado solo con `visualViewport` (alto visible frente al máximo visto en esa orientación), con prueba. |
 | HM-05 | 25-09-2026 | Nubia Neo 3 GT | **Error:** con el teclado abierto, la hoja de búsqueda queda detrás del teclado y no se ve lo que se escribe. | Las hojas inferiores se ubican sobre el borde de abajo del `visualViewport` (funciona en Chrome Android y en iOS, que ignora `interactive-widget`). |
-| HM-06 | 25-09-2026 | Nubia Neo 3 GT | **Decisión (cierra P-02):** con el teclado abierto, el ancla **no** se oculta: sube y queda sobre el teclado, con "Cerrar" (90°) y "Ocultar teclado" (blur del campo). Motivo: el botón atrás de Android exige un toque y D-15 pide que todo se pueda hacer solo deslizando. | **Pendiente**: falta decidir dónde va "Ocultar teclado" en el abanico (`decisiones-pendientes.md`). Cambia RF-13. |
+| HM-06 | 25-09-2026 | Nubia Neo 3 GT | **Decisión (cierra P-02):** con el teclado abierto, el ancla **no** se oculta: sube y queda sobre el teclado, con "Cerrar" (90°) y "Ocultar teclado" (blur del campo). Motivo: el botón atrás de Android exige un toque y D-15 pide que todo se pueda hacer solo deslizando. | **Aceptada la propuesta A ("modo escritura"), integrada en HM-08.** Cambia RF-13. Falta un detalle, ver HM-08 pregunta 3. |
 | HM-07 | 25-09-2026 | Nubia Neo 3 GT | **Error:** en "Ofertas cerca", el ancla tapa la esquina del encabezado de la hoja y puede esconder su X. | Las hojas reservan una franja del lado del ancla (`MARGEN_LATERAL + D_ACTIVO`) para que su X quede visible y alcanzable; el adaptador expone ese espacio con `useAnchorReserva`. |
+| HM-08 | 25-09-2026 | Nubia Neo 3 GT | Con una capa abierta el abanico no debe quedar solo con "Cerrar": **cada capa declara sus acciones**. Mientras la capa está abierta: "Cerrar" a 90° + las acciones de la capa; las de la pantalla de fondo se ocultan y vuelven al cerrar, en sus mismas posiciones. Sin acciones de capa, solo "Cerrar". API: `useAnchorLayer` acepta `AnchorAction[]` (con prioridad). Demo: Buscar con teclado abierto (Ocultar teclado, Borrar texto) y cerrado (Escribir, Borrar texto); Ofertas cerca (Ordenar por distancia, Filtrar por categoría); Favoritos (Ordenar, Ver en el mapa). | **Pendiente de 3 preguntas** (choques con C-21, D-09 y HM-06): `decisiones-pendientes.md`. |
