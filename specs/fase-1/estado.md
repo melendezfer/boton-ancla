@@ -1,6 +1,6 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **25-09-2026**, después de HM-08 (y HM-09 registrado).
+Última actualización: **25-09-2026**, después de HM-09 (desplazar con el ancla, experimental).
 Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`"* y dile qué resultados trajiste de las sesiones de prueba (§2).
 
 ---
@@ -16,11 +16,11 @@ Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`
 | C — Adaptador | T-15 … T-23 ✅ | `packages/react`: el ancla completa (gesto, toque, descanso, deshacer, irreversibles, teclado, mano izquierda, bienvenida). |
 | D — Cierre | T-24, T-25, T-26, T-28 ✅ · T-27 ⚠️ | Métricas con exportación, recorrido E2E solo deslizando, contraste y rendimiento medidos, README. Falta la prueba con personas (§2). |
 
-**Pruebas (todas en verde):** 406 del núcleo, 53 de la demo (Vitest) y 245 E2E (Playwright, Pixel 7 + iPhone 14; 7 se saltan a propósito: 6 mediciones opcionales de rendimiento y el control deslizante en WebKit).
+**Pruebas (todas en verde):** 437 del núcleo, 53 de la demo (Vitest) y 257 E2E (Playwright, Pixel 7 + iPhone 14; 7 se saltan a propósito: 6 mediciones opcionales de rendimiento y el control deslizante en WebKit).
 
-**Después del Bloque D** (spec v0.8, §12): HM-03 capas y "Cerrar" ✅, HM-04 teclado por `visualViewport` ✅, HM-05 hojas sobre el teclado ✅, HM-07 reserva del espacio del ancla ✅. **HM-06 + HM-08** ✅ (spec v0.10): cada capa declara ícono, nombre y acciones; el ancla sube sobre el teclado con "Ocultar teclado" a 180°. Guías: `prueba-hm03-hm07.md`, `prueba-hm08.md`. **HM-09** (desplazar con el ancla) registrado y **pendiente de visto bueno**.
+**Después del Bloque D** (spec v0.8, §12): HM-03 capas y "Cerrar" ✅, HM-04 teclado por `visualViewport` ✅, HM-05 hojas sobre el teclado ✅, HM-07 reserva del espacio del ancla ✅. **HM-06 + HM-08** ✅ (spec v0.10): cada capa declara ícono, nombre y acciones; el ancla sube sobre el teclado con "Ocultar teclado" a 180°. Guías: `prueba-hm03-hm07.md`, `prueba-hm08.md`. **HM-09** ✅ experimental (spec v0.11, RF-18): el ancla como joystick para desplazar; interruptor en Ajustes (activado en la demo, apagado por defecto en el componente). Guía: `prueba-hm09.md`.
 
-**Spec:** `spec.md` v0.7. Decisiones clave recientes:
+**Spec:** `spec.md` v0.11. Decisiones clave recientes:
 - `ANCLA_ALTURA` = **0,44** (HM-01, dos pruebas manuales).
 - Una sola etiqueta en una **banda encima del abanico** (HM-02).
 - `AnchorProvider` recibe `icons: { back, undo }`.
@@ -38,6 +38,7 @@ Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`
 | `guion-sesiones.md` | Guion en lenguaje sencillo para las sesiones con 3 personas. |
 | `prueba-hm03-hm07.md` | Guía de prueba de los hallazgos HM-03 a HM-07. |
 | `prueba-hm08.md` | Guía de prueba de HM-08 (acciones de capa) y HM-06 (ancla sobre el teclado). |
+| `prueba-hm09.md` | Guía de prueba de HM-09 (desplazar con el ancla): pasos con el pulgar en carta, Ofertas y Favoritos. |
 | `estado.md` | Este archivo. |
 
 ---
@@ -56,7 +57,7 @@ Tareas T-01…T-26 y T-28: hechas (ver `tasks.md`).
 
 ## 3. Pendientes y cabos sueltos
 
-**Decisiones pendientes:** **HM-09** (desplazar con el ancla tipo joystick): visto bueno y 4 preguntas en `decisiones-pendientes.md` §4.
+**Decisiones pendientes:** ninguna. **HM-09** espera tu prueba en el Nubia (`prueba-hm09.md` §4) para ajustar velocidad y zona muerta, y decidir si deja de ser experimental.
 
 **Preguntas abiertas para fases siguientes** (spec §11, no bloquean): P-01 descanso + mover (en estudio con HM-09); P-02 teclado (cerrada por HM-06/HM-08); P-03 cambiar de mano rápido; P-04 modos del abanico; P-05 ¿abrir el abanico hacia abajo cuando el ancla está alta?
 
