@@ -373,14 +373,14 @@ export function Ancla({
       )}
 
       {desplazando && guiaDesplazar === "ancla" && (
-        // HM-10 B: anillo alrededor del ancla que se llena con la velocidad (lo llena el bucle con --ba-llenado).
+        // HM-10 B: anillo sobre el borde del ancla (no por fuera: no sale de su columna) que se llena con la velocidad (--ba-llenado).
         <svg
           className="ba-anillo-desplazar"
           data-testid="guia-desplazar"
           data-variante="ancla"
           aria-hidden
           viewBox="0 0 100 100"
-          style={{ left: geoDibujo.centro.x, top: geoDibujo.centro.y, width: params.D_ACTIVO + 12, height: params.D_ACTIVO + 12 }}
+          style={{ left: geoDibujo.centro.x, top: geoDibujo.centro.y, width: params.D_ACTIVO, height: params.D_ACTIVO }}
         >
           <circle className="ba-anillo-desplazar-fondo" cx="50" cy="50" r="46" pathLength={1} />
           <circle className="ba-anillo-desplazar-lleno" cx="50" cy="50" r="46" pathLength={1} />

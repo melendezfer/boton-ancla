@@ -34,6 +34,14 @@ describe("variante 'arriba': la cápsula no queda bajo el pulgar", () => {
     expect(posicionGuiaArriba({ centro: { x: 40, y: 500 }, origen, hand: "left", params: P, alto, techo: 0 }).x).toBe(40 + P.GUIA_CORRIMIENTO);
   });
 
+  it("no sale de la columna del ancla (MARGEN_LATERAL + D_ACTIVO desde el borde): no le quita ancho a la lista", () => {
+    const ANCHO_CAPSULA = 28; // anchor.css
+    const ancho = 412;
+    const eje = ancho - P.MARGEN_LATERAL - P.D_ACTIVO / 2;
+    const g = posicionGuiaArriba({ centro: { x: eje, y: 500 }, origen, hand: "right", params: P, alto, techo: 0 });
+    expect(g.x - ANCHO_CAPSULA / 2).toBeGreaterThanOrEqual(ancho - P.MARGEN_LATERAL - P.D_ACTIVO);
+  });
+
   it("su borde de abajo queda GUIA_SEPARACION sobre lo más alto que llega el pulgar", () => {
     const g = posicionGuiaArriba({ centro, origen, hand: "right", params: P, alto, techo: 0 });
     const alcance = Math.min(centro.y - P.D_ACTIVO / 2, origen.y - P.R_MAX_DESPLAZAR);
