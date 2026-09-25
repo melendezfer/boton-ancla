@@ -15,6 +15,8 @@ export type Geometry = {
   hand: Hand;
   /** Id de la acción de prioridad 1: donde empieza el foco con teclado. */
   prioridad1?: string;
+  /** Hay algo registrado para desplazar con el ancla (HM-09, RF-18). */
+  desplazable?: boolean;
 };
 
 export function crearGeometria(input: {
@@ -26,11 +28,13 @@ export function crearGeometria(input: {
   deshacer?: boolean;
   capa?: boolean;
   teclado?: boolean;
+  /** HM-09: hay algo registrado para desplazar (y el desplazamiento está activado). */
+  desplazable?: boolean;
 }): Geometry {
   const { anchor, ordered, slots } = layoutParaPantalla(input);
   // La prioridad 1 es la primera acción propia (no "Atrás") de orderActions.
   const prioridad1 = ordered.find((a) => ![ID_ATRAS, ID_CERRAR, ID_OCULTAR_TECLADO].includes(a.id))?.id;
-  return { centro: anchor, slots, params: input.params, hand: input.hand, prioridad1 };
+  return { centro: anchor, slots, params: input.params, hand: input.hand, prioridad1, desplazable: input.desplazable ?? false };
 }
 
 /** Datos de un dedo apoyado desde que tocó el ancla. */
@@ -84,6 +88,8 @@ export type AnchorState =
   | ({ tipo: "armado" } & ConPuntero)
   | ({ tipo: "descanso"; puntoDescanso: Point } & ConPuntero)
   | ({ tipo: "abierto_gesto" } & Gesto)
+  /** HM-09: desplazando el contenido con el pulgar, hasta soltar. `origen` = donde empezó el modo. */
+  | ({ tipo: "desplazando"; origen: Point; tInicio: number } & ConPuntero)
   | ({ tipo: "confirmacion_armada"; presel: string } & Gesto)
   | {
       tipo: "abierto_toque";

@@ -1,4 +1,4 @@
-import { distancia } from "../geometry";
+import { anguloDesde, anguloParaMano, distancia } from "../geometry";
 import { resolveSelection } from "../selection";
 import type { Point } from "../types";
 import { ESTADOS_TRANSITORIOS, REPOSO, type AnchorEvent, type AnchorState, type Geometry } from "./states";
@@ -24,6 +24,8 @@ export function transition(estado: AnchorState, evento: AnchorEvent): AnchorStat
     case "abierto_gesto":
     case "confirmacion_armada":
       return desdeGesto(estado, evento);
+    case "desplazando":
+      return desdeDesplazando(estado, evento);
     case "abierto_toque":
       return desdeToque(estado, evento);
     case "confirmacion_toque":
@@ -92,8 +94,11 @@ function desdeArmado(estado: Estado<"armado">, evento: AnchorEvent): AnchorState
     // después se aplica el movimiento desde ahí (fila 10).
     if (evento.t - estado.t0 >= P.T_DESCANSO) return transition(aDescanso(estado), evento);
     const movido = avanzar(estado, evento.punto);
-    // Fila 4
-    if (distancia(estado.inicio, evento.punto) > P.UMBRAL_MOV) return abrirGesto(movido, evento.t, "gesto");
+    if (distancia(estado.inicio, evento.punto) > P.UMBRAL_MOV) {
+      // Fila 41 (HM-09): la primera dirección decide; hacia abajo = desplazar.
+      if (haciaDesplazamiento(estado.geo, estado.inicio, evento.punto)) return aDesplazando(movido, evento);
+      return abrirGesto(movido, evento.t, "gesto"); // fila 4
+    }
     return { ...estado, ...movido };
   }
 
@@ -134,7 +139,11 @@ function desdeDescanso(estado: Estado<"descanso">, evento: AnchorEvent): AnchorS
   if (evento.tipo === "POINTER_MOVE" && evento.pointerId === estado.pointerId) {
     const movido = avanzar(estado, evento.punto);
     // Fila 10 (C-07): se mide desde donde empezó el descanso, no desde el primer toque.
-    if (distancia(estado.puntoDescanso, evento.punto) > P.UMBRAL_MOV) return abrirGesto(movido, evento.t, "gesto");
+    if (distancia(estado.puntoDescanso, evento.punto) > P.UMBRAL_MOV) {
+      // Fila 42 (HM-09, cierra P-01): desde el descanso, hacia abajo también desplaza.
+      if (haciaDesplazamiento(estado.geo, estado.puntoDescanso, evento.punto)) return aDesplazando(movido, evento);
+      return abrirGesto(movido, evento.t, "gesto");
+    }
     return { ...estado, ...movido };
   }
 
@@ -350,6 +359,8 @@ function punteroActivo(estado: AnchorState): number | undefined {
     case "abierto_gesto":
     case "confirmacion_armada":
       return estado.pointerId;
+    case "desplazando":
+      return estado.pointerId;
     case "abierto_toque":
       return estado.presion?.pointerId;
     default:
@@ -436,4 +447,40 @@ function desdeTeclado(estado: Estado<"abierto_teclado">, evento: AnchorEvent): A
     default:
       return estado;
   }
+}
+
+// ---------------------------------------------------------------------------
+// desplazando (filas 41–44; HM-09, RF-18)
+// ---------------------------------------------------------------------------
+
+/** ¿El primer movimiento va hacia abajo (ARCO_DESPLAZAR) y hay algo que desplazar? */
+function haciaDesplazamiento(geo: Geometry, desde: Point, hasta: Point): boolean {
+  if (!geo.desplazable) return false;
+  const P = geo.params;
+  const a = anguloParaMano(anguloDesde(desde, hasta), geo.hand);
+  return a >= P.ARCO_DESPLAZAR_DESDE && a <= P.ARCO_DESPLAZAR_HASTA;
+}
+
+function aDesplazando(datos: DatosPuntero, evento: Evento<"POINTER_MOVE">): AnchorState {
+  return {
+    tipo: "desplazando",
+    pointerId: datos.pointerId,
+    inicio: datos.inicio,
+    ultimo: evento.punto,
+    recorridoPx: datos.recorridoPx,
+    t0: datos.t0,
+    geo: datos.geo,
+    origen: evento.punto, // la velocidad se mide desde aquí
+    tInicio: evento.t,
+  };
+}
+
+function desdeDesplazando(estado: Estado<"desplazando">, evento: AnchorEvent): AnchorState {
+  if (evento.tipo === "POINTER_MOVE" && evento.pointerId === estado.pointerId) {
+    return avanzar(estado, evento.punto); // fila 43: la velocidad la calcula el adaptador
+  }
+  if (evento.tipo === "POINTER_UP" && evento.pointerId === estado.pointerId) {
+    return REPOSO; // fila 44: parada en seco, sin inercia
+  }
+  return estado;
 }

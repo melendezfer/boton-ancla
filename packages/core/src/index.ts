@@ -72,3 +72,4 @@ export {
   type PosicionBanda,
   type TextoBanda,
 } from "./banda";
+export { velocidadDesplazamiento } from "./desplazamiento";

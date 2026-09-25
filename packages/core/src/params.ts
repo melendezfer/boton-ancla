@@ -63,6 +63,19 @@ export type Params = {
   MAX_OPCIONES: number;
   /** Si dos posiciones quedan igual de cerca de la diagonal, cuál gana (C-10). */
   DESEMPATE: Desempate;
+  /** HM-09: direcciones (mano derecha; se reflejan) que activan el modo desplazamiento. */
+  ARCO_DESPLAZAR_DESDE: number;
+  ARCO_DESPLAZAR_HASTA: number;
+  /** HM-09: zona muerta vertical alrededor del punto donde empezó el modo. */
+  R_MUERTA_DESPLAZAR: number;
+  /** HM-09: distancia vertical a la que se alcanza la velocidad máxima. */
+  R_MAX_DESPLAZAR: number;
+  /** HM-09: velocidad máxima, en px/s. */
+  V_MAX_DESPLAZAR: number;
+  /** HM-09: exponente de la curva (más alto = más lento cerca del centro). */
+  CURVA_DESPLAZAR: number;
+  /** HM-09: velocidad máxima con prefers-reduced-motion, en px/s. */
+  V_MAX_REDUCIDO: number;
 };
 
 /** "horizontal" = gana la más cercana al extremo lateral; "vertical" = la más cercana a "arriba". */
@@ -97,4 +110,11 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   USOS_ETIQUETA: 5,
   MAX_OPCIONES: 5,
   DESEMPATE: "horizontal",
+  ARCO_DESPLAZAR_DESDE: 210,
+  ARCO_DESPLAZAR_HASTA: 330,
+  R_MUERTA_DESPLAZAR: 8,
+  R_MAX_DESPLAZAR: 72,
+  V_MAX_DESPLAZAR: 1400,
+  CURVA_DESPLAZAR: 2.2,
+  V_MAX_REDUCIDO: 500,
 });

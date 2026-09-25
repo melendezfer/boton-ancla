@@ -13,7 +13,10 @@ export type MetricEvent =
   | { type: "sensitive_blocked"; id: string }
   | { type: "undo"; id: string }
   /** Una capa se cerró sin el abanico: botón atrás del sistema o Escape (HM-03). */
-  | { type: "layer_close"; via: "sistema" | "teclado" };
+  | { type: "layer_close"; via: "sistema" | "teclado" }
+  /** HM-09: empezó y terminó el modo desplazamiento. */
+  | { type: "scroll_start" }
+  | { type: "scroll_end"; ms: number };
 
 type Tipo = AnchorState["tipo"];
 
@@ -50,6 +53,12 @@ export function derivarMetricas(prev: AnchorState, next: AnchorState, evento: An
   // --- preselect ---
   const presel = preseleccion(next);
   if (presel !== undefined && presel !== preseleccion(prev)) metricas.push({ type: "preselect", id: presel });
+
+  // --- desplazamiento (HM-09) ---
+  if (next.tipo === "desplazando" && prev.tipo !== "desplazando") metricas.push({ type: "scroll_start" });
+  if (prev.tipo === "desplazando" && next.tipo === "reposo" && evento.tipo === "POINTER_UP") {
+    metricas.push({ type: "scroll_end", ms: Math.round(evento.t - prev.tInicio) });
+  }
 
   // --- rest_enter ---
   if (prev.tipo === "armado" && next.tipo === "descanso") metricas.push({ type: "rest_enter" });

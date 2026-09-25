@@ -143,6 +143,10 @@ function detalle(m: RegistroMetrica): string {
       return m.pantalla;
     case "layer_close":
       return `capa cerrada con ${e.via === "sistema" ? "el botón atrás" : "Escape"}`;
+    case "scroll_start":
+      return `desplazar · ${m.pantalla}`;
+    case "scroll_end":
+      return `${Math.round(e.ms)} ms`;
   }
 }
 
