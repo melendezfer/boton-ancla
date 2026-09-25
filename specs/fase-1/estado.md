@@ -1,22 +1,22 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **24-09-2026**, al cerrar el Bloque C.
-Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md` y sigue con T-24."*
+Última actualización: **25-09-2026**, al cerrar el Bloque D.
+Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`"* y dile qué resultados trajiste de las sesiones de prueba (§2).
 
 ---
 
 ## 1. Dónde quedamos
 
-**Bloques A, B y C terminados.** El botón-ancla funciona en la demo, en el PC y en el celular (probado en un Nubia Neo 3 GT: "todo va muy bien; se puede tocar y también arrastrar para seleccionar").
+**Bloques A, B, C y D terminados**, salvo la parte humana de T-27. El botón-ancla funciona en la demo, en el PC y en el celular (probado en un Nubia Neo 3 GT: "todo va muy bien; se puede tocar y también arrastrar para seleccionar").
 
 | Bloque | Tareas | Qué hay |
 |---|---|---|
 | A — Núcleo | T-01 … T-11 ✅ | `packages/core`: TypeScript puro. Geometría, selección, máquina de estados (40 filas), métricas, bienvenida y banda de etiqueta. |
 | B — Demo | T-12 … T-14 ✅ | `apps/demo`: Next 16.3.4 en el puerto 3002, pantallas simuladas de RUTEANDO, mapa falso y Playwright. |
 | C — Adaptador | T-15 … T-23 ✅ | `packages/react`: el ancla completa (gesto, toque, descanso, deshacer, irreversibles, teclado, mano izquierda, bienvenida). |
-| D — Cierre | T-24 … T-28 ⏳ | Ver §2. |
+| D — Cierre | T-24, T-25, T-26, T-28 ✅ · T-27 ⚠️ | Métricas con exportación, recorrido E2E solo deslizando, contraste y rendimiento medidos, README. Falta la prueba con personas (§2). |
 
-**Pruebas (todas en verde):** 380 del núcleo, 24 de la demo (Vitest) y 129 E2E (Playwright, Pixel 7 + iPhone 14; 1 se salta a propósito).
+**Pruebas (todas en verde):** 380 del núcleo, 53 de la demo (Vitest) y 193 E2E (Playwright, Pixel 7 + iPhone 14; 7 se saltan a propósito: 6 mediciones opcionales de rendimiento y el control deslizante en WebKit).
 
 **Spec:** `spec.md` v0.7. Decisiones clave recientes:
 - `ANCLA_ALTURA` = **0,44** (HM-01, dos pruebas manuales).
@@ -31,22 +31,23 @@ Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`
 | `tasks.md` | Tareas con estado `[x]` / `[ ]`. |
 | `decisiones-pendientes.md` | Vacío hoy. Aquí van las preguntas nuevas. |
 | `prueba-t12.md` | Red del celular (portproxy) y el hallazgo de Next 16. |
-| `prueba-bloque-b.md`, `prueba-bloque-c.md` | Guías de prueba manual por bloque. |
+| `prueba-bloque-b.md`, `prueba-bloque-c.md`, `prueba-bloque-d.md` | Guías de prueba manual por bloque. |
+| `pruebas-manuales.md` | Registro de sesiones con personas, contraste y rendimiento (T-27). |
 | `estado.md` | Este archivo. |
 
 ---
 
-## 2. Qué sigue (Bloque D, en orden)
+## 2. Qué sigue
 
-| ID | Tarea | Qué falta concretamente |
+La Fase 1 se cierra con el **criterio de salida** (spec §10): pruebas en verde (✅ hoy), lista manual completa y **3 personas**, una solo deslizando.
+
+| ID | Qué falta | Quién |
 |---|---|---|
-| **T-24** | Ancla en todas las pantallas de §8 | Casi hecha de paso: todas las pantallas ya están conectadas. Faltan sus E2E: **HU-10** (Carta desde el perfil cambia el ícono; Compartir no) y "cada pantalla muestra exactamente sus acciones". |
-| **T-25** | Registro y exportación de métricas | Los eventos ya se generan (`onEvent` del proveedor), pero la demo no los guarda. Falta: guardarlos en `localStorage`, la pantalla `/metricas` con la lista, un formulario (versión, dispositivo, mano, posición, nº de opciones, observaciones) y exportar JSON por descarga (L-10: por HTTP no hay portapapeles). |
-| **T-26** | E2E "solo deslizando" y matriz completa | Una prueba que recorre **todas** las acciones de **todas** las pantallas solo con arrastres (HU-09), y una tabla HU → prueba en `apps/demo/e2e/README.md`. |
-| **T-27** | Prueba manual, contraste y rendimiento | `pruebas-manuales.md` con la lista de spec §10.3 y resultados; contraste sobre los 3 fondos (RNF-06); rendimiento con CPU ×4–×6 (RNF-03); **3 personas**, una usando solo deslizamiento (criterio de salida de la Fase 1). |
-| **T-28** | README | Cómo instalar, correr, probar y dónde está cada documento. |
+| **T-27** | Sesiones con **3 personas** (una solo deslizando): procedimiento y tabla en `pruebas-manuales.md` §1 y §3. Cada sesión termina exportando el JSON desde Métricas. | Usuario (Claude puede preparar un guion) |
+| **T-27** | Medir rendimiento en un **Android de gama baja real** (`pruebas-manuales.md` §5). Hay cuadros sueltos largos con la CPU frenada ×6. | Usuario |
+| — | Cuando estén: completar `pruebas-manuales.md`, marcar T-27 `[x]`, registrar hallazgos como HM-xx y decidir si hay Fase 1.1 o se pasa a la Fase 2 (P-01…P-05). | Juntos |
 
----
+Tareas T-01…T-26 y T-28: hechas (ver `tasks.md`).
 
 ## 3. Pendientes y cabos sueltos
 
@@ -55,9 +56,11 @@ Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`
 **Preguntas abiertas para fases siguientes** (spec §11, no bloquean): P-01 descanso + mover; P-02 teclado (hoy se oculta); P-03 cambiar de mano rápido; P-04 modos del abanico; P-05 ¿abrir el abanico hacia abajo cuando el ancla está alta?
 
 **Cabos sueltos conocidos:**
-- **git push:** el remoto `origin` apunta a `https://github.com/melendezfer/NOMBRE.git` y GitHub responde "Repository not found". O el nombre real no es `NOMBRE`, o el repositorio es privado y esta terminal no tiene credenciales. Hay que confirmar la URL correcta (y `gh auth login` o un token si es privado) antes de volver a subir. Ver el resultado del último push en el historial de la conversación.
-- **C-19** (aviso de error cuando una acción asíncrona falla): implementado, pero **sin E2E**, porque ninguna acción de la demo es asíncrona. Se puede cubrir en T-26 con una acción de prueba.
-- **Rendimiento en gama baja** (RNF-03) y **contraste real sobre fotos** (RNF-06): sin medir todavía (T-27).
+- **Remoto:** `origin` = `https://github.com/melendezfer/boton-ancla.git` (corregido por el usuario el 25-09-2026). Push solo con autorización explícita.
+- **C-19** (aviso de error cuando una acción asíncrona falla): implementado, pero **sin E2E**, porque ninguna acción de la demo es asíncrona.
+- **Interpretación de métricas (C-20)**: "errores" = cancelaciones y bloqueos desde la ejecución anterior; "posición" = altura + lado. A confirmar con el Documento 8 (`prueba-bloque-d.md` §2).
+- **Rendimiento**: con la CPU frenada ×6 quedan cuadros sueltos de 100–170 ms, probablemente al abrir el menú. Si se confirma en un celular real, la idea es montar el abanico de antemano, oculto.
+- **Historial**: el commit `f999b4d` quedó con una E2E en rojo (una carrera con la hidratación); se corrigió en `7e5859f`. Desde ahí, el commit se hace solo si las pruebas pasan.
 - En RUTEANDO: el "Cargando…" desde el celular con `next dev` se arreglaría con `allowedDevOrigins` (explicado en `prueba-t12.md` §2). **No se tocó RUTEANDO.**
 
 ---
@@ -81,6 +84,7 @@ Otros comandos útiles (desde `~/boton-ancla`):
 | `npm run typecheck` | Revisa los tipos de todos los paquetes. |
 | `npm run e2e` | Playwright (reutiliza la demo si ya está corriendo). |
 | `npm run lint -w demo` | ESLint de la demo. |
+| `npm run e2e:rendimiento -w demo` | Medición opcional de cuadros con la CPU frenada (Chromium). |
 
 Si Playwright dice que faltan librerías (pasa en un equipo nuevo): `cd apps/demo && sudo npx playwright install-deps chromium webkit` (pide tu contraseña).
 
