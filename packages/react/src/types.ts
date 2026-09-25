@@ -46,5 +46,7 @@ export type AnchorProviderProps = {
   onEvent?: (evento: MetricEvent) => void;
   /** Ajustes de parámetros para las pruebas (por ejemplo ANCLA_ALTURA, HM-01). */
   params?: Partial<Params>;
+  /** HM-09 (experimental): desplazar el contenido con el ancla. Por defecto false. */
+  desplazar?: boolean;
   children: ReactNode;
 };

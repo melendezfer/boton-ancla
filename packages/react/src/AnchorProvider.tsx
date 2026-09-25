@@ -4,7 +4,7 @@ import { DEFAULT_PARAMS, pantallaDeCapa, validateScreen, type AnchorScreen, type
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Ancla } from "./components/Ancla";
-import { useCapas, type ControlCapas } from "./dom/capas";
+import { useCapas, type CapaReact, type ControlCapas } from "./dom/capas";
 import type { AnchorProviderProps } from "./types";
 
 // Proveedor del botón-ancla (spec §7). Guarda la pantalla actual y dibuja el
@@ -23,11 +23,20 @@ type Registro = {
 const ContextoRegistro = createContext<Registro | null>(null);
 const ContextoCapas = createContext<ControlCapas | null>(null);
 
+/** Contenido principal que desplaza el ancla (HM-09): un elemento o la ventana. */
+export type ObjetivoDesplazar = HTMLElement | "ventana";
+type RegistroDesplazar = {
+  objetivo: RefObject<ObjetivoDesplazar | null>;
+  /** Avisa que se registró o quitó un objetivo (para recalcular si hay algo desplazable). */
+  avisar: () => void;
+};
+const ContextoDesplazar = createContext<RegistroDesplazar | null>(null);
+
 /** Espacio que ocupa el ancla desde el borde de su lado (HM-07). */
 export type ReservaAncla = { lado: "right" | "left"; ancho: number };
 const ContextoReserva = createContext<ReservaAncla | null>(null);
 
-export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, children }: AnchorProviderProps) {
+export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, desplazar = false, children }: AnchorProviderProps) {
   const pantallaRef = useRef<AnchorScreen | null>(null);
   const duenoRef = useRef<symbol | null>(null);
   // Copia para DIBUJAR. Para EJECUTAR se usa pantallaRef (siempre la más reciente).
@@ -51,6 +60,12 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
 
   const registro = useMemo<Registro>(() => ({ pantallaRef, duenoRef, publicar }), []);
   const capas = useCapas(onEventRef);
+  const objetivoDesplazar = useRef<ObjetivoDesplazar | null>(null);
+  const [versionObjetivo, setVersionObjetivo] = useState(0);
+  const registroDesplazar = useMemo<RegistroDesplazar>(
+    () => ({ objetivo: objetivoDesplazar, avisar: () => setVersionObjetivo((v) => v + 1) }),
+    [],
+  );
   const reserva = useMemo<ReservaAncla>(
     () => ({ lado: prefs.hand, ancho: params.MARGEN_LATERAL + params.D_ACTIVO }),
     [prefs.hand, params.MARGEN_LATERAL, params.D_ACTIVO],
@@ -59,6 +74,7 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
   return (
     <ContextoRegistro.Provider value={registro}>
       <ContextoReserva.Provider value={reserva}>
+      <ContextoDesplazar.Provider value={registroDesplazar}>
       <ContextoCapas.Provider value={capas}>
         {children}
         {montado &&
@@ -72,13 +88,41 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
               params={params}
               onEventRef={onEventRef}
               capas={capas}
+              desplazar={desplazar}
+              objetivoDesplazar={objetivoDesplazar}
+              versionObjetivo={versionObjetivo}
             />,
             document.body,
           )}
       </ContextoCapas.Provider>
+      </ContextoDesplazar.Provider>
       </ContextoReserva.Provider>
     </ContextoRegistro.Provider>
   );
+}
+
+/**
+ * HM-09: registra el contenido principal que desplaza el ancla (el perfil, una lista, un
+ * documento). "ventana" = la página entera. Sin registro no hay modo desplazamiento: así
+ * el mapa, que no se registra, sigue igual (HU-13). Mientras una capa esté abierta, se
+ * desplaza la capa (su `scrollRef`), no esto.
+ */
+export function useAnchorScroll(objetivo: RefObject<HTMLElement | null> | "ventana"): void {
+  const registro = useContext(ContextoDesplazar);
+  if (!registro) throw new Error("useAnchorScroll debe usarse dentro de <AnchorProvider>.");
+  const { objetivo: ref, avisar } = registro;
+  useLayoutEffect(() => {
+    const el = objetivo === "ventana" ? "ventana" : objetivo.current;
+    if (!el) return;
+    ref.current = el;
+    avisar();
+    return () => {
+      if (ref.current === el) {
+        ref.current = null;
+        avisar();
+      }
+    };
+  }, [objetivo, ref, avisar]);
 }
 
 /**
@@ -102,12 +146,12 @@ export function useAnchorReserva(): ReservaAncla {
  * historial, así el "atrás" siguiente navega normal. Si la capa se cierra porque se
  * navega (un enlace dentro de ella), basta con cerrar el estado como siempre.
  */
-export function useAnchorLayer(abierta: boolean, onClose: () => void, capa: CapaAncla = {}): () => void {
+export function useAnchorLayer(abierta: boolean, onClose: () => void, capa: CapaReact = {}): () => void {
   const capas = useContext(ContextoCapas);
   if (!capas) throw new Error("useAnchorLayer debe usarse dentro de <AnchorProvider>.");
   const { agregar, quitar, cerrar, actualizar } = capas;
   const onCloseRef = useRef(onClose);
-  const datosRef = useRef<CapaAncla>(capa);
+  const datosRef = useRef<CapaReact>(capa);
   useLayoutEffect(() => {
     onCloseRef.current = onClose;
     datosRef.current = capa;
@@ -119,6 +163,7 @@ export function useAnchorLayer(abierta: boolean, onClose: () => void, capa: Capa
     ...(capa.actions ?? []).map((a) => `${a.id}:${a.label}:${a.kind ?? "normal"}:${a.disabled ? 1 : 0}:${a.priority ?? ""}`),
   ].join("|");
   const icono = capa.icon;
+  const conDesplazar = Boolean(capa.scrollRef);
   useLayoutEffect(() => {
     if (!abierta) return;
     if (process.env.NODE_ENV !== "production") {
@@ -128,7 +173,7 @@ export function useAnchorLayer(abierta: boolean, onClose: () => void, capa: Capa
       if (errores.length > 0) throw new Error(`Capa del ancla inválida:\n- ${errores.join("\n- ")}`);
     }
     actualizar();
-  }, [abierta, firma, icono, actualizar]);
+  }, [abierta, firma, icono, conDesplazar, actualizar]);
   const claveRef = useRef<symbol | null>(null);
   useLayoutEffect(() => {
     if (!abierta) return;

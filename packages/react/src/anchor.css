@@ -314,3 +314,53 @@
     opacity: 1;
   }
 }
+
+/* --- Guía de desplazamiento (HM-09, RF-18): translúcida, del lado del contenido. --- */
+.ba-guia-desplazar {
+  position: absolute;
+  width: 28px;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--ba-surface) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ba-border) 80%, transparent);
+  pointer-events: none;
+}
+
+.ba-guia-flecha {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--ba-text-muted);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.ba-guia-flecha--arriba {
+  top: 4px;
+}
+
+.ba-guia-flecha--abajo {
+  bottom: 4px;
+}
+
+/* Línea del punto de inicio (velocidad cero). */
+.ba-guia-centro {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 2px;
+  background: color-mix(in srgb, var(--ba-text-muted) 50%, transparent);
+}
+
+/* El punto sigue al dedo (lo mueve el bucle de desplazamiento). */
+.ba-guia-punto {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--ba-accent);
+  transform: translate(-50%, -50%);
+}

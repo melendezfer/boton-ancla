@@ -1,6 +1,9 @@
 "use client";
 
 import type { CapaAncla, MetricEvent } from "@boton-ancla/core";
+
+/** Lo que declara una capa en React: lo del núcleo + qué desplaza el ancla (HM-09). */
+export type CapaReact = CapaAncla & { scrollRef?: RefObject<HTMLElement | null> };
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 // Capas (HM-03, spec RF-15): lo que la app abre ENCIMA del contenido (hojas, listas,
@@ -22,7 +25,7 @@ type Capa = {
   clave: symbol;
   onClose: RefObject<() => void>;
   /** Ícono, nombre y acciones de la capa (HM-08); siempre la versión más reciente. */
-  datos: RefObject<CapaAncla>;
+  datos: RefObject<CapaReact>;
 };
 export type ViaCierre = "ancla" | "teclado" | "app";
 
@@ -40,7 +43,7 @@ export type ControlCapas = {
   /** Avisa que los datos de alguna capa cambiaron. */
   actualizar: () => void;
   /** Datos de la capa de arriba (la que se ve), o null si no hay capas. */
-  datosArriba: () => CapaAncla | null;
+  datosArriba: () => CapaReact | null;
   agregar: (capa: Capa) => void;
   quitar: (clave: symbol) => void;
   /** Cierra la capa de arriba (por el historial, si tiene su entrada). */

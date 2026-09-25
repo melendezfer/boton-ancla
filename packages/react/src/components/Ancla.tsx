@@ -24,7 +24,9 @@ import {
 } from "@boton-ancla/core";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
+import type { ObjetivoDesplazar } from "../AnchorProvider";
 import { useBienvenida } from "../dom/bienvenida";
+import { useBucleDesplazamiento } from "../dom/desplazar";
 import type { ControlCapas } from "../dom/capas";
 import { useCambioOrientacion, useTeclado } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
@@ -44,6 +46,12 @@ export type PropsAncla = {
   onEventRef: RefObject<((evento: MetricEvent) => void) | undefined>;
   /** Capas abiertas encima del contenido (HM-03). */
   capas: ControlCapas;
+  /** HM-09 (experimental): desplazar con el ancla. */
+  desplazar: boolean;
+  /** Contenido principal registrado con useAnchorScroll. */
+  objetivoDesplazar: RefObject<ObjetivoDesplazar | null>;
+  /** Cambia cuando se registra o quita el contenido principal. */
+  versionObjetivo: number;
 };
 
 /** Avisos del ancla (T-19): deshacer (RF-08), irreversible bloqueada (HU-08) o error (C-19). */
@@ -54,7 +62,19 @@ type Aviso =
 
 const DURACION_AVISO_MS = 2500;
 
-export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEventRef, capas }: PropsAncla) {
+export function Ancla({
+  pantalla,
+  pantallaRef,
+  prefs,
+  theme,
+  icons,
+  params,
+  onEventRef,
+  capas,
+  desplazar,
+  objetivoDesplazar,
+  versionObjetivo,
+}: PropsAncla) {
   const medidas = useMedidas();
   const [machine] = useState(() => createAnchorMachine());
   // RNF-03: el estado de la máquina cambia en CADA pointermove (última posición, recorrido),
@@ -138,6 +158,19 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pantalla, hayCapa, versionCapas, datosArriba]);
 
+  // HM-09: ¿hay algo que desplazar? Con una capa abierta, solo la capa (su scrollRef); si no,
+  // el contenido principal (useAnchorScroll). El mapa no se registra: HU-13 intacta.
+  const obtenerObjetivo = useCallback((): ObjetivoDesplazar | null => {
+    if (capas.cantidad > 0) return capas.datosArriba()?.scrollRef?.current ?? null;
+    return objetivoDesplazar.current;
+  }, [capas, objetivoDesplazar]);
+  const desplazable = useMemo(
+    () => desplazar && (hayCapa ? Boolean(datosArriba()?.scrollRef) : objetivoDesplazar.current !== null),
+    // versionCapas y versionObjetivo: se recalcula al registrar o quitar objetivos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [desplazar, hayCapa, versionCapas, versionObjetivo, datosArriba, objetivoDesplazar],
+  );
+
   // HM-06 / RF-13: con el teclado abierto el ancla NO se oculta: se ubica en el alto visible
   // (sobre el teclado) y agrega "Ocultar teclado" a 180° (RF-17).
   const teclado = useTeclado();
@@ -158,8 +191,9 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
       // HM-03/HM-08: el "Atrás" de la capa se convierte en "Cerrar" a 90°.
       capa: hayCapa,
       teclado: teclado.abierto,
+      desplazable,
     });
-  }, [vista, medidas, prefs.hand, params, aviso?.tipo, hayCapa, teclado.abierto, teclado.alto]);
+  }, [vista, medidas, prefs.hand, params, aviso?.tipo, hayCapa, teclado.abierto, teclado.alto, desplazable]);
 
   // Pantalla más reciente para EJECUTAR (acciones de la capa o de la sección, siempre al día).
   const vistaRef = useRef<AnchorScreen | null>(null);
@@ -193,6 +227,10 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
   useEffect(() => () => controlador.destruir(), [controlador]);
 
   const velo = useVelo(estado);
+
+  // HM-09: bucle de desplazamiento y punto de la guía (sin redibujar React en cada cuadro).
+  const puntoGuia = useRef<HTMLDivElement>(null);
+  useBucleDesplazamiento({ machine, estado, params, obtenerObjetivo, puntoGuia });
 
   // RF-09: un cambio de orientación cancela la interacción.
   useCambioOrientacion(() => controlador.enviar({ tipo: "ORIENTACION" }));
@@ -294,6 +332,25 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
           medidas={medidas}
           bienvenida={bienvenidaActiva}
         />
+      )}
+
+      {estado.tipo === "desplazando" && (
+        // HM-09: guía translúcida del lado del contenido (no tapa el ancla ni el centro del texto).
+        <div
+          className="ba-guia-desplazar"
+          data-testid="guia-desplazar"
+          aria-hidden
+          style={{
+            left: geoDibujo.centro.x + (prefs.hand === "right" ? -1 : 1) * (params.D_ACTIVO / 2 + 26),
+            top: estado.origen.y,
+            height: 2 * params.R_MAX_DESPLAZAR + 36,
+          }}
+        >
+          <span className="ba-guia-flecha ba-guia-flecha--arriba">↑</span>
+          <span className="ba-guia-centro" />
+          <div ref={puntoGuia} className="ba-guia-punto" />
+          <span className="ba-guia-flecha ba-guia-flecha--abajo">↓</span>
+        </div>
       )}
 
       {demostrar && slotDemostracion && (
