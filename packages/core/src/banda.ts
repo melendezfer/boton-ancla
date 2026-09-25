@@ -3,7 +3,7 @@ import type { FanLayout } from "./layout";
 import type { AnchorState } from "./machine/states";
 import type { Params } from "./params";
 import type { AnchorScreen, Hand, Insets, Point, Rect } from "./types";
-import { ID_ATRAS, ID_DESHACER } from "./validate";
+import { ID_ATRAS, ID_CERRAR, ID_DESHACER } from "./validate";
 
 // Banda de etiqueta (HM-02, spec RF-06b, design.md §4.6): una sola etiqueta,
 // en una franja fija encima del abanico, fuera del alcance del pulgar.
@@ -49,6 +49,7 @@ export type TextoBanda = {
 export function etiquetaOpcion(screen: AnchorScreen, id: string): string {
   if (id === ID_ATRAS) return "Atrás";
   if (id === ID_DESHACER) return "Deshacer";
+  if (id === ID_CERRAR) return "Cerrar";
   return screen.actions.find((a) => a.id === id)?.label ?? id;
 }
 

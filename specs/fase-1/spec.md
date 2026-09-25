@@ -379,7 +379,8 @@ validateScreen(screen: AnchorScreen, params: Params): string[];      // lo que e
 // icons: íconos de las opciones fijas "Atrás" y "Deshacer"; los pone la app porque los íconos
 // se registran en la app (RNF-09) y AnchorScreen no los trae (agregado en T-16).
 useAnchorScreen(screen: AnchorScreen): void;
-useAnchorLayer(abierta: boolean, onClose: () => void): void;   // capa encima del contenido (HM-03, RF-15)
+useAnchorLayer(abierta: boolean, onClose: () => void): () => void;   // capa encima del contenido (HM-03, RF-15);
+                                        // devuelve `cerrar` para la X propia de la capa (cierra por el historial)
 useAnchorReserva(): { lado: "right" | "left"; ancho: number }; // espacio a reservar del lado del ancla (HM-07)
 // icons: { back, undo, close }  (close = "Cerrar" de las capas, HM-03)
 ```

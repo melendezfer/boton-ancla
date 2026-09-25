@@ -29,6 +29,7 @@ import {
   TextAa,
   Trash,
   Umbrella,
+  X,
 } from "@phosphor-icons/react/dist/ssr";
 
 /**
@@ -88,6 +89,9 @@ export const ANCHOR_ICONS = {
   addDish: PlusCircle,
   /** Marcar un plato/producto como no disponible (C-15). Libre en RUTEANDO. */
   markUnavailable: MinusCircle,
+
+  /** Cerrar lo que está abierto encima (hojas, listas): la X de las hojas y "Cerrar" del ancla (HM-03). */
+  close: X,
 
   // Solo de la demo.
   /** Pin de un negocio en el mapa falso. */

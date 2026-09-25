@@ -1,7 +1,7 @@
 import { anguloParaMano, puntoEnDireccion, radioParaCuerda } from "./geometry";
 import type { Params } from "./params";
 import type { ActionKind, AnchorScreen, Hand, Insets, Point, Rect } from "./types";
-import { ID_ATRAS, ID_DESHACER } from "./validate";
+import { ID_ATRAS, ID_CERRAR, ID_DESHACER } from "./validate";
 
 // Posición del ancla y geometría del abanico (design.md §4.2 y §4.3).
 
@@ -168,6 +168,10 @@ export type Slot = FanSlot & OrderedAction;
 
 const ATRAS: OrderedAction = { id: ID_ATRAS, kind: "normal", disabled: false };
 const DESHACER: OrderedAction = { id: ID_DESHACER, kind: "normal", disabled: false };
+const CERRAR: OrderedAction = { id: ID_CERRAR, kind: "normal", disabled: false };
+
+/** Opciones fijas que van siempre arriba (90°): "Atrás" y, con una capa abierta, "Cerrar". */
+const FIJAS_ARRIBA = [ID_ATRAS, ID_CERRAR];
 
 /**
  * Ordena las acciones de una pantalla: "Atrás" primero (si existe) y después
@@ -213,7 +217,7 @@ export function assignActions(layout: FanLayout, ordered: OrderedAction[], param
   let pendientes = ordered;
   const asignadas: Slot[] = [];
 
-  const atras = ordered.find((a) => a.id === ID_ATRAS);
+  const atras = ordered.find((a) => FIJAS_ARRIBA.includes(a.id));
   if (atras) {
     // El extremo "arriba" es la posición de menor ángulo base (index 0).
     const arriba = libres.reduce((min, s) => (s.anguloBase < min.anguloBase ? s : min));
@@ -245,19 +249,25 @@ type EntradaPantalla = {
   params: Params;
   /** Hay un aviso de deshacer vivo (C-21). */
   deshacer?: boolean;
+  /** Hay una capa abierta encima del contenido (HM-03): "Cerrar" va a 90°. */
+  capa?: boolean;
 };
 
 /**
  * Atajo para el adaptador: ordena las acciones, calcula el ancla y el abanico
  * (con unicaArriba cuando la única opción es "Atrás", C-22) y asigna cada acción.
  */
-export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, deshacer = false }: EntradaPantalla): {
+export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, deshacer = false, capa = false }: EntradaPantalla): {
   anchor: Point;
   layout: FanLayout;
   ordered: OrderedAction[];
   slots: Slot[];
 } {
-  const ordered = orderActions(screen, { deshacer });
+  let ordered = orderActions(screen, { deshacer });
+  // HM-03, casos borde: sin opciones, "Cerrar" va sola arriba; con una única acción que no
+  // es "Atrás" (esa va en la diagonal), "Cerrar" se agrega arriba y la acción pasa al extremo.
+  const agregarCerrar = capa && (ordered.length === 0 || (ordered.length === 1 && ordered[0]!.id !== ID_ATRAS));
+  if (agregarCerrar) ordered = [CERRAR, ...ordered];
   const anchor = computeAnchorPosition({ viewport, safeArea, hand, params });
   const layout = computeFanLayout({
     anchor,
@@ -266,7 +276,13 @@ export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, d
     count: ordered.length,
     hand,
     params,
-    unicaArriba: ordered.length === 1 && ordered[0]!.id === ID_ATRAS,
+    unicaArriba: ordered.length === 1 && FIJAS_ARRIBA.includes(ordered[0]!.id),
   });
-  return { anchor, layout, ordered, slots: assignActions(layout, ordered, params) };
+  let slots = assignActions(layout, ordered, params);
+  // HM-03: "Cerrar" REEMPLAZA lo que esté a 90° ("Atrás" o la opción de arriba) y nada más se
+  // mueve, igual que "Deshacer" (C-21). El total no cambia: nunca pasa de MAX_OPCIONES.
+  if (capa && !agregarCerrar) {
+    slots = slots.map((s) => (s.index === 0 ? { ...s, ...CERRAR } : s));
+  }
+  return { anchor, layout, ordered, slots };
 }

@@ -6,9 +6,10 @@ import {
   distancia,
   etiquetaOpcion,
   ID_ATRAS,
+  ID_CERRAR,
+  ID_DESHACER,
   mostrarEtiqueta,
   necesitaDemostracion,
-  ID_DESHACER,
   posicionBanda,
   radioDe,
   textoBanda,
@@ -22,6 +23,7 @@ import {
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
 import { useBienvenida } from "../dom/bienvenida";
+import type { ControlCapas } from "../dom/capas";
 import { useCambioOrientacion, useTecladoAbierto } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
 import type { AnchorIcons, AnchorTheme, ReactAnchorIcon } from "../types";
@@ -38,6 +40,8 @@ export type PropsAncla = {
   icons: AnchorIcons;
   params: Params;
   onEventRef: RefObject<((evento: MetricEvent) => void) | undefined>;
+  /** Capas abiertas encima del contenido (HM-03). */
+  capas: ControlCapas;
 };
 
 /** Avisos del ancla (T-19): deshacer (RF-08), irreversible bloqueada (HU-08) o error (C-19). */
@@ -48,7 +52,7 @@ type Aviso =
 
 const DURACION_AVISO_MS = 2500;
 
-export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEventRef }: PropsAncla) {
+export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEventRef, capas }: PropsAncla) {
   const medidas = useMedidas();
   const [machine] = useState(() => createAnchorMachine());
   // RNF-03: el estado de la máquina cambia en CADA pointermove (última posición, recorrido),
@@ -113,6 +117,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
     alBloquear: () =>
       setAviso({ tipo: "bloqueado", texto: "Desliza más allá para confirmar", hasta: performance.now() + DURACION_AVISO_MS }),
     alDeshacer: deshacer,
+    alCerrarCapa: () => capas.cerrarArriba("ancla"),
   };
   const efectosRef = useRef(efectos);
   useLayoutEffect(() => {
@@ -131,8 +136,10 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
       params,
       // C-21: mientras hay algo para deshacer, "Deshacer" reemplaza a la prioridad 1.
       deshacer: aviso?.tipo === "deshacer",
+      // HM-03: con una capa abierta, "Cerrar" reemplaza lo que esté a 90°.
+      capa: capas.cantidad > 0,
     });
-  }, [pantalla, medidas, prefs.hand, params, aviso?.tipo]);
+  }, [pantalla, medidas, prefs.hand, params, aviso?.tipo, capas.cantidad]);
 
   const geoRef = useRef<Geometry | null>(geo);
   useLayoutEffect(() => {
@@ -151,6 +158,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
           alEjecutar: (...a) => efectosRef.current.alEjecutar?.(...a),
           alBloquear: (...a) => efectosRef.current.alBloquear?.(...a),
           alDeshacer: () => efectosRef.current.alDeshacer?.(),
+          alCerrarCapa: () => efectosRef.current.alCerrarCapa?.(),
         },
       }),
   );
@@ -171,6 +179,19 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
       controlador.enviar({ tipo: "CAMBIO_SECCION" });
     }
   }, [idSeccion, controlador]);
+
+  // HM-03 (sub-pregunta D): con una capa abierta y el menú cerrado, Escape cierra la capa.
+  const { cantidad: cantidadCapas, cerrarArriba } = capas;
+  useEffect(() => {
+    if (cantidadCapas === 0) return;
+    const alTeclado = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || machine.getState().tipo !== "reposo") return;
+      e.preventDefault();
+      cerrarArriba("teclado");
+    };
+    window.addEventListener("keydown", alTeclado);
+    return () => window.removeEventListener("keydown", alTeclado);
+  }, [cantidadCapas, cerrarArriba, machine]);
 
   // RF-13: con el teclado abierto el ancla se oculta (valor por defecto de la spec).
   const teclado = useTecladoAbierto();
@@ -207,6 +228,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
   const iconoDe = (id: string): ReactAnchorIcon | undefined => {
     if (id === ID_ATRAS) return icons.back;
     if (id === ID_DESHACER) return icons.undo;
+    if (id === ID_CERRAR) return icons.close;
     return pantalla.actions.find((a) => a.id === id)?.icon as ReactAnchorIcon | undefined;
   };
   // D-09: el centro muestra la sección; con una opción activa, anticipa su ícono.

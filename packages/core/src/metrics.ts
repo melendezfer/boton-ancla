@@ -11,7 +11,9 @@ export type MetricEvent =
   | { type: "cancel"; reason: CancelReason }
   | { type: "rest_enter" }
   | { type: "sensitive_blocked"; id: string }
-  | { type: "undo"; id: string };
+  | { type: "undo"; id: string }
+  /** Una capa se cerró sin el abanico: botón atrás del sistema o Escape (HM-03). */
+  | { type: "layer_close"; via: "sistema" | "teclado" };
 
 type Tipo = AnchorState["tipo"];
 

@@ -32,6 +32,8 @@ export type AnchorIcons = {
   back: ReactAnchorIcon;
   /** Opción temporal "Deshacer" (C-21). */
   undo: ReactAnchorIcon;
+  /** Opción temporal "Cerrar" mientras hay una capa abierta (HM-03). */
+  close: ReactAnchorIcon;
 };
 
 export type AnchorProviderProps = {

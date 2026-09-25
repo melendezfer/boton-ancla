@@ -1,9 +1,10 @@
 "use client";
 
 import { DEFAULT_PARAMS, validateScreen, type AnchorScreen, type Params } from "@boton-ancla/core";
-import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Ancla } from "./components/Ancla";
+import { useCapas, type ControlCapas } from "./dom/capas";
 import type { AnchorProviderProps } from "./types";
 
 // Proveedor del botón-ancla (spec §7). Guarda la pantalla actual y dibuja el
@@ -20,6 +21,7 @@ type Registro = {
 };
 
 const ContextoRegistro = createContext<Registro | null>(null);
+const ContextoCapas = createContext<ControlCapas | null>(null);
 
 export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, children }: AnchorProviderProps) {
   const pantallaRef = useRef<AnchorScreen | null>(null);
@@ -44,17 +46,63 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
   }, []);
 
   const registro = useMemo<Registro>(() => ({ pantallaRef, duenoRef, publicar }), []);
+  const capas = useCapas(onEventRef);
 
   return (
     <ContextoRegistro.Provider value={registro}>
-      {children}
-      {montado &&
-        createPortal(
-          <Ancla pantalla={pantalla} pantallaRef={pantallaRef} prefs={prefs} theme={theme} icons={icons} params={params} onEventRef={onEventRef} />,
-          document.body,
-        )}
+      <ContextoCapas.Provider value={capas}>
+        {children}
+        {montado &&
+          createPortal(
+            <Ancla
+              pantalla={pantalla}
+              pantallaRef={pantallaRef}
+              prefs={prefs}
+              theme={theme}
+              icons={icons}
+              params={params}
+              onEventRef={onEventRef}
+              capas={capas}
+            />,
+            document.body,
+          )}
+      </ContextoCapas.Provider>
     </ContextoRegistro.Provider>
   );
+}
+
+/**
+ * Declara una capa abierta encima del contenido (HM-03, RF-15): una hoja, una lista,
+ * la búsqueda. Mientras `abierta` sea true, el ancla ofrece "Cerrar" a 90°, y el botón
+ * atrás del sistema y Escape llaman `onClose` en vez de navegar.
+ *
+ * Devuelve `cerrar`: úsala en el botón de cerrar propio de la capa (su X). Cierra por el
+ * historial, así el "atrás" siguiente navega normal. Si la capa se cierra porque se
+ * navega (un enlace dentro de ella), basta con cerrar el estado como siempre.
+ */
+export function useAnchorLayer(abierta: boolean, onClose: () => void): () => void {
+  const capas = useContext(ContextoCapas);
+  if (!capas) throw new Error("useAnchorLayer debe usarse dentro de <AnchorProvider>.");
+  const { agregar, quitar, cerrar } = capas;
+  const onCloseRef = useRef(onClose);
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  });
+  const claveRef = useRef<symbol | null>(null);
+  useLayoutEffect(() => {
+    if (!abierta) return;
+    const clave = Symbol("capa");
+    claveRef.current = clave;
+    agregar({ clave, onClose: onCloseRef });
+    return () => {
+      quitar(clave);
+      if (claveRef.current === clave) claveRef.current = null;
+    };
+  }, [abierta, agregar, quitar]);
+  return useCallback(() => {
+    if (claveRef.current) cerrar(claveRef.current);
+    else onCloseRef.current();
+  }, [cerrar]);
 }
 
 /**

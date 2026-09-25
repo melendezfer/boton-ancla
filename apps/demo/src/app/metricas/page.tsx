@@ -141,6 +141,8 @@ function detalle(m: RegistroMetrica): string {
       return e.reason;
     case "rest_enter":
       return m.pantalla;
+    case "layer_close":
+      return `capa cerrada con ${e.via === "sistema" ? "el botón atrás" : "Escape"}`;
   }
 }
 

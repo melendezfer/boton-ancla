@@ -1,0 +1,107 @@
+import { expect, test, type Page } from "@playwright/test";
+import { sinBienvenida } from "./helpers/almacen";
+import { haciaOpcion, leerGeometria } from "./helpers/ancla";
+import { crearGestos } from "./helpers/gestos";
+
+// HM-03: capas y "Cerrar" (spec RF-15, HU-14, D-10).
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      if (!window.sessionStorage.getItem("prueba-limpia")) {
+        window.localStorage.clear();
+        window.sessionStorage.setItem("prueba-limpia", "1");
+      }
+    } catch {}
+  });
+  await sinBienvenida(page);
+});
+
+/** Llega al mapa DESDE otra página: si "atrás" navegara, se notaría (volvería a /diagnostico). */
+async function mapaConFavoritosAbierto(page: Page) {
+  await page.goto("/diagnostico");
+  await expect(page.getByText("React cargó en este dispositivo")).toBeVisible();
+  await page.goto("/mapa");
+  await expect(page.getByTestId("mapa-lienzo")).toHaveAttribute("data-offset-x", /-?\d+/);
+  const g = await leerGeometria(page);
+  const gestos = await crearGestos(page);
+  await gestos.deslizar(g.centro, haciaOpcion(g, "favoritos"), { pasos: 8, ms: 150 });
+  await expect(page.getByRole("dialog", { name: "Favoritos" })).toBeVisible();
+  return { antes: g, gestos };
+}
+
+test("HU-14: con una capa abierta, 'Cerrar' reemplaza a Favoritos a 90° y nada más se mueve", async ({ page }) => {
+  const { antes } = await mapaConFavoritosAbierto(page);
+  const ahora = await leerGeometria(page);
+  const angulo = (g: typeof ahora, id: string) => g.slots.find((s) => s.id === id)?.angulo;
+  expect(angulo(ahora, "cerrar")).toBeCloseTo(90, 5);
+  expect(angulo(ahora, "favoritos")).toBeUndefined();
+  for (const id of ["mi-ubicacion", "buscar", "ofertas-cerca"]) expect(angulo(ahora, id)).toBeCloseTo(angulo(antes, id)!, 5);
+});
+
+test("HU-14: deslizar a 'Cerrar' cierra la capa, solo deslizando", async ({ page }) => {
+  const { gestos } = await mapaConFavoritosAbierto(page);
+  const g = await leerGeometria(page);
+  await gestos.deslizar(g.centro, haciaOpcion(g, "cerrar"), { pasos: 8, ms: 150 });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/mapa$/);
+  // Sin capas, vuelve Favoritos a 90°.
+  expect((await leerGeometria(page)).slots.find((s) => s.id === "favoritos")?.angulo).toBeCloseTo(90, 5);
+});
+
+test("RF-15: el botón atrás del sistema cierra la capa SIN navegar", async ({ page }) => {
+  await mapaConFavoritosAbierto(page);
+  await page.goBack();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/mapa$/); // no volvió a /diagnostico
+  await expect(page.getByRole("button", { name: "Menú, sección Mapa" })).toBeVisible();
+  // Sin capas, el siguiente "atrás" sí navega.
+  await page.goBack();
+  await expect(page).toHaveURL(/\/diagnostico$/);
+});
+
+test("RF-15: si la capa se cierra con su X, el historial queda limpio (el atrás siguiente navega)", async ({ page }) => {
+  await mapaConFavoritosAbierto(page);
+  await page.getByRole("dialog", { name: "Favoritos" }).getByRole("button", { name: "Cerrar" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.waitForTimeout(300); // el historial se sincroniza en un paso diferido
+  await expect(page).toHaveURL(/\/mapa$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/diagnostico$/);
+});
+
+test("HM-03 D: Escape cierra la capa con el menú cerrado", async ({ page }) => {
+  await mapaConFavoritosAbierto(page);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/mapa$/);
+});
+
+test("con 'Atrás' (perfil del dueño): 'Cerrar' lo reemplaza y cierra la hoja sin salir del perfil", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify({ rol: "dueno" })));
+  await page.goto("/mapa");
+  await expect(page.getByTestId("ancla")).toBeVisible();
+  await page.goto("/negocio");
+  const g = await leerGeometria(page);
+  const gestos = await crearGestos(page);
+  await gestos.deslizar(g.centro, haciaOpcion(g, "agregar-plato"), { pasos: 8, ms: 150 });
+  await expect(page.getByRole("dialog", { name: "Agregar plato (simulado)" })).toBeVisible();
+  const conCapa = await leerGeometria(page);
+  expect(conCapa.slots.find((s) => s.id === "cerrar")?.angulo).toBeCloseTo(90, 5);
+  expect(conCapa.slots.find((s) => s.id === "atras")).toBeUndefined();
+  await gestos.deslizar(conCapa.centro, haciaOpcion(conCapa, "cerrar"), { pasos: 8, ms: 150 });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/negocio$/);
+});
+
+test("HM-03 E: el atrás del sistema queda registrado en las métricas (layer_close)", async ({ page }) => {
+  await mapaConFavoritosAbierto(page);
+  await page.goBack();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const tipos = await page.evaluate(() =>
+    (JSON.parse(window.localStorage.getItem("boton-ancla-demo:v1:metricas") ?? "[]") as { evento: { type: string; via?: string } }[]).map(
+      (r) => `${r.evento.type}${r.evento.via ? `:${r.evento.via}` : ""}`,
+    ),
+  );
+  expect(tipos).toContain("layer_close:sistema");
+});

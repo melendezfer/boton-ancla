@@ -5,7 +5,7 @@ import { useDemo } from "@/lib/demo-store";
 import { ANCHOR_ICONS } from "@/lib/icons/semantic-icons";
 
 // Íconos de las opciones fijas, desde el registro de la demo (RNF-09).
-const ICONOS = { back: ANCHOR_ICONS.back, undo: ANCHOR_ICONS.undo };
+const ICONOS = { back: ANCHOR_ICONS.back, undo: ANCHOR_ICONS.undo, close: ANCHOR_ICONS.close };
 
 // Tokens de RUTEANDO para el ancla (D-19). El componente no trae colores propios.
 const TEMA: AnchorTheme = {

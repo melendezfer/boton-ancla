@@ -6,7 +6,10 @@ export const ID_ATRAS = "atras";
 /** Id de la opción temporal "Deshacer" que ocupa la prioridad 1 mientras hay aviso (C-03). */
 export const ID_DESHACER = "deshacer";
 
-const IDS_RESERVADOS = [ID_ATRAS, ID_DESHACER];
+/** Id de la opción temporal "Cerrar" que ocupa la posición de 90° mientras hay una capa abierta (HM-03). */
+export const ID_CERRAR = "cerrar";
+
+const IDS_RESERVADOS = [ID_ATRAS, ID_DESHACER, ID_CERRAR];
 
 /**
  * Revisa lo que el tipo AnchorScreen no puede imponer por sí solo (C-13).

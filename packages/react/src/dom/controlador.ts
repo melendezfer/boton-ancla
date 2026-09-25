@@ -2,6 +2,7 @@ import {
   derivarMetricas,
   distancia,
   ID_ATRAS,
+  ID_CERRAR,
   ID_DESHACER,
   type AnchorEvent,
   type AnchorScreen,
@@ -30,6 +31,8 @@ export type EfectosAncla = {
   alBloquear?: (id: string) => void;
   /** Ejecuta "deshacer" (C-21): lo resuelve el adaptador, que conoce la acción original. */
   alDeshacer?: () => void;
+  /** Ejecuta "cerrar" (HM-03): cierra la capa de arriba. */
+  alCerrarCapa?: () => void;
 };
 
 type Opciones = {
@@ -230,6 +233,7 @@ export class Controlador {
       let resultado: unknown;
       if (id === ID_ATRAS) pantalla.back?.onSelect();
       else if (id === ID_DESHACER) this.o.efectos.alDeshacer?.();
+      else if (id === ID_CERRAR) this.o.efectos.alCerrarCapa?.();
       else {
         const accion = pantalla.actions.find((a) => a.id === id);
         if (!accion || accion.disabled) return;

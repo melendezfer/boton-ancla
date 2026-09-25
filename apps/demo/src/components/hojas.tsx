@@ -1,16 +1,21 @@
 "use client";
 
-import { X } from "@phosphor-icons/react/dist/ssr";
+import { useAnchorLayer } from "@boton-ancla/react";
 import Link from "next/link";
 import { createRef } from "react";
 import { NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos } from "@/lib/datos";
 import { useDemo, type Hoja } from "@/lib/demo-store";
 import { ANCHOR_ICONS, SEMANTIC_ICONS } from "@/lib/icons/semantic-icons";
 
+const X = ANCHOR_ICONS.close;
+
 // Hojas inferiores de la demo, con z-[1000] como en RUTEANDO: el ancla debe
 // quedar por encima (RF-14). Solo una abierta a la vez (useDemo().hoja).
 
 export function HojaInferior({ titulo, onCerrar, children }: { titulo: string; onCerrar: () => void; children: React.ReactNode }) {
+  // HM-03: la hoja es una capa: el ancla ofrece "Cerrar" y el atrás del sistema la cierra.
+  // Su X usa el `cerrar` que devuelve el hook, para que el historial quede limpio.
+  const cerrar = useAnchorLayer(true, onCerrar);
   return (
     <div className="fixed inset-x-0 bottom-0 z-[1000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" data-testid="hoja-inferior">
       <section
@@ -20,7 +25,7 @@ export function HojaInferior({ titulo, onCerrar, children }: { titulo: string; o
       >
         <header className="flex items-center gap-2 border-b border-border px-4 py-3">
           <h2 className="flex-1 font-heading text-title-2 font-semibold text-text">{titulo}</h2>
-          <button type="button" onClick={onCerrar} aria-label="Cerrar" className="flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-background">
+          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-background">
             <X size={20} />
           </button>
         </header>
@@ -54,10 +59,11 @@ export function enfocarBuscador() {
 function BuscadorPersistente() {
   const { hoja, cerrarHoja } = useDemo();
   const abierta = hoja?.tipo === "buscar";
-  const cerrar = () => {
+  const cerrarEstado = () => {
     refBuscador.current?.blur();
     cerrarHoja();
   };
+  const cerrar = useAnchorLayer(abierta, cerrarEstado); // HM-03: su X cierra por el historial
   return (
     <div
       className={`fixed inset-x-0 bottom-0 z-[1000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] ${abierta ? "" : "pointer-events-none translate-y-[120%] opacity-0"}`}
