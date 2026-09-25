@@ -181,7 +181,8 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Prueba:** toda la suite E2E pasa en Pixel 7 e iPhone 14; tabla HU → archivo de prueba en `e2e/README.md`.
 - **Commit:** `test: recorrido completo solo deslizando`
 
-### [ ] T-27 · Prueba manual, contraste y rendimiento
+### [~] T-27 · Prueba manual, contraste y rendimiento
+> **Estado (25-09-2026):** hecho lo automático: contraste RNF-06 (Vitest), medición de rendimiento con CPU ×4/×6 (y una optimización que la mejoró) y `pruebas-manuales.md` con la lista y el procedimiento. **Falta** la parte humana: sesiones con 3 personas (una solo deslizando) y medir en un Android de gama baja real. Se marca `[x]` cuando esté la tabla §3 completa.
 - **Cubre:** §10.3, RNF-03, RNF-06, criterio de salida · L-02, L-05, L-08
 - **Hacer:** `specs/fase-1/pruebas-manuales.md` con la lista de §10.3 y tabla de resultados (dispositivo, navegador, persona, fecha, observaciones); medición de contraste sobre los 3 fondos; perfil de rendimiento con CPU ×4–×6.
 - **Manual:** la lista completa en PC, Android e iPhone; 3 personas, una usando solo deslizamiento.
