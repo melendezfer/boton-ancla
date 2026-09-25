@@ -1,4 +1,5 @@
 import type { Params } from "./params";
+import type { Hand, Point } from "./types";
 
 // HM-09, RF-18: velocidad del desplazamiento según cuánto se alejó el pulgar (en vertical)
 // del punto donde empezó el modo. Función pura: el adaptador la aplica cuadro a cuadro.
@@ -17,4 +18,41 @@ export function velocidadDesplazamiento(dy: number, params: Params, reducido = f
   const recorrido = Math.min(1, (distancia - params.R_MUERTA_DESPLAZAR) / (params.R_MAX_DESPLAZAR - params.R_MUERTA_DESPLAZAR));
   const maxima = reducido ? params.V_MAX_REDUCIDO : params.V_MAX_DESPLAZAR;
   return Math.sign(dy) * maxima * recorrido ** params.CURVA_DESPLAZAR;
+}
+
+/** HM-10, variante "ancla": qué muestra el propio ancla mientras se desplaza. */
+export type IndicadorDesplazamiento = {
+  /** 1 = el contenido baja (flecha ↓), -1 = sube (flecha ↑), 0 = quieto (zona muerta). */
+  direccion: -1 | 0 | 1;
+  /** Cuánto se llena el anillo: 0 en la zona muerta, 1 a la velocidad máxima. */
+  llenado: number;
+};
+
+export function indicadorDesplazamiento(dy: number, params: Params): IndicadorDesplazamiento {
+  const v = velocidadDesplazamiento(dy, params);
+  return { direccion: v > 0 ? 1 : v < 0 ? -1 : 0, llenado: Math.abs(v) / params.V_MAX_DESPLAZAR };
+}
+
+/**
+ * HM-10, variante "arriba": dónde va la cápsula. Arriba del ancla, corrida GUIA_CORRIMIENTO
+ * hacia el centro de la pantalla, y con su borde de abajo GUIA_SEPARACION por encima de lo
+ * más alto que llega el pulgar (el ancla, o R_MAX_DESPLAZAR sobre el inicio): así el pulgar
+ * no la tapa al subir. Si no cabe entera, se achica en vez de bajar hacia el dedo.
+ */
+export function posicionGuiaArriba(opciones: {
+  centro: Point;
+  origen: Point;
+  hand: Hand;
+  params: Params;
+  /** Alto deseado de la cápsula, en px. */
+  alto: number;
+  /** Primer y visible (área segura de arriba), en px. */
+  techo: number;
+}): { x: number; top: number; alto: number } {
+  const { centro, origen, hand, params, alto, techo } = opciones;
+  const x = centro.x + (hand === "right" ? -1 : 1) * params.GUIA_CORRIMIENTO;
+  const alcance = Math.min(centro.y - params.D_ACTIVO / 2, origen.y - params.R_MAX_DESPLAZAR);
+  const fondo = alcance - params.GUIA_SEPARACION;
+  const top = Math.max(techo, fondo - alto);
+  return { x, top, alto: Math.max(0, fondo - top) };
 }
