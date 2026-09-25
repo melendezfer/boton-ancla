@@ -51,7 +51,7 @@ Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en 
 | HM-04 | Teclado detectado por `visualViewport`: abierto si el alto visible cae más de 150 px bajo el máximo visto en esa orientación. Ya no depende del foco. | spec RF-16 |
 | HM-05 | Las hojas se ubican sobre el borde inferior del `visualViewport` (`useTeclado().alto`). No se usa `interactive-widget`. | spec RF-16 |
 | HM-06 / HM-08 | ✅ Todas A. Con capa: pantalla efectiva = la capa ("Cerrar" a 90° como si fuera "Atrás" + sus acciones); el fondo se oculta. Ícono y nombre de la capa en el centro, `aria-label` y banda. Deshacer reemplaza la prioridad 1 de la capa. Con teclado: id reservado `ocultar-teclado`, fijo a 180° (se agrega; con 5 opciones reemplaza a la de menor prioridad); `icons.hideKeyboard`; el ancla ya no se oculta y se ubica en el alto visible. | spec RF-13, RF-15, RF-17 |
-| HM-09 | ⏳ Propuesta (desplazar tipo joystick), pendiente de visto bueno: `decisiones-pendientes.md`. | spec §12, P-01 |
+| HM-09 | ✅ Desplazar tipo joystick (experimental). Estado `desplazando`; `Geometry.desplazable`; `velocidadDesplazamiento(dy, params, reducido)` pura; el adaptador desplaza cuadro a cuadro (`requestAnimationFrame`) y dibuja la guía sin redibujar React. Objetivo: `scrollRef` de la capa de arriba o `useAnchorScroll`. Prop `desplazar` del proveedor. Respuestas a §4: solo vertical; guía del lado del contenido; interruptor en Ajustes (activado en la demo); objetivos en la demo: perfil, carta, Ofertas cerca y Favoritos (el mapa no). | spec RF-18, §6, §7, §9 |
 | HM-07 | `useAnchorReserva()` = lado del ancla y ancho `MARGEN_LATERAL + D_ACTIVO`; las hojas de la demo reservan ese espacio. | spec RF-16 |
 | L-02 | Margen lateral de 24 px (`MARGEN_LATERAL`); el inferior sigue en 16 px (`MARGEN_INFERIOR`). | spec §6, RF-12; aquí §2, §4.2 |
 | L-04 | La acción se ejecuta de forma **síncrona al soltar**, sin esperar la animación. | aquí §6 ("Ejecutar") |
@@ -280,6 +280,10 @@ Notación: `d` = distancia del puntero a `inicio` (movimiento); `r` = distancia 
 | 38 | abierto_toque | TECLA Escape | — | cancelado(escape) | RNF-05 (Escape cierra el menú) |
 | 39 | abierto_toque | TECLA flecha | — | abierto_teclado (foco = prioridad 1) | RNF-05 (se navega con flechas) |
 | 40 | abierto_teclado | POINTER_DOWN fuera | — | cancelado(toque_fuera) | RF-11 |
+| 41 | armado | POINTER_MOVE | `d > UMBRAL_MOV`, `geo.desplazable` y dirección (desde `inicio`) en `ARCO_DESPLAZAR` | desplazando (`origen` = punto actual) | RF-18, HM-09 |
+| 42 | descanso | POINTER_MOVE | ídem, dirección medida desde `puntoDescanso` | desplazando | RF-18 (cierra P-01) |
+| 43 | desplazando | POINTER_MOVE | — | desplazando (actualiza `ultimo`) | RF-18 |
+| 44 | desplazando | POINTER_UP | — | reposo (parada en seco) | RF-18 |
 
 `abierto_toque` y `confirmacion_toque` actualizan `ultimaActividad = t` con cualquier evento de puntero o teclado.
 

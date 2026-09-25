@@ -1,6 +1,6 @@
 # Botón-ancla — Especificación Fase 1: núcleo del gesto
 
-Versión 0.10 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
+Versión 0.11 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
 
 > Esta spec es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
 
@@ -9,6 +9,8 @@ Versión 0.10 · Primera app base: RUTEANDO · Destino: componente integrable en
 - C-02: en reposo el ícono usa el color `text`; `terracota` solo cuando el ancla está activa (D-04).
 - C-03: "Deshacer" también se puede hacer solo deslizando (D-14, RF-08, HU-07, §6 "Distribución").
 - L-02: el margen lateral sube a 24 px; el inferior sigue en 16 px (§6, RF-12).
+
+**Cambios en 0.11:** HM-09 decidido: desplazar con el ancla tipo joystick, experimental (RF-18, §6, §7, §9); cierra P-01.
 
 **Cambios en 0.10:** HM-08 decidido: acciones propias de cada capa, ícono y nombre de la capa en el centro, Deshacer en la capa y "Ocultar teclado" del ancla a 180° (RF-13, RF-15, RF-17, §7).
 
@@ -284,6 +286,7 @@ Entonces el ancla no se activa
 - **RF-14** El sistema debe mantener el ancla por encima de las hojas inferiores de la app. En RUTEANDO, su `z-index` debe ser mayor que `z-[1000]`.
 - **RF-15** (HM-03, HM-08) La app puede declarar **capas** (hojas, listas, búsqueda abiertas encima del contenido) con su `onClose` y, opcionalmente, **ícono, nombre y acciones propias** (`AnchorAction[]`, máx. 4). Mientras haya una, el abanico muestra "Cerrar" a 90° + las acciones de la capa de arriba; las de la pantalla de fondo se ocultan y vuelven al cerrar, en sus mismas posiciones. El centro, el nombre accesible y la banda muestran el ícono y el nombre de la capa. "Deshacer" reemplaza a la prioridad 1 de la capa (C-21). Las capas forman una pila: "Cerrar", el botón atrás del sistema y `Escape` cierran la de arriba, **sin navegar**.
 - **RF-17** (HM-06, HM-08) Con un teclado abierto, el ancla agrega "Ocultar teclado" **fijo a 180°** (quita el foco del campo). Se agrega como "Atrás" a 90°; si ya hubiera 5 opciones, reemplaza a la de menor prioridad.
+- **RF-18** (HM-09, experimental) Si el desplazamiento está activado y hay algo registrado para desplazar (la capa de arriba o el contenido principal), un primer movimiento **hacia abajo** (`ARCO_DESPLAZAR_DESDE`–`ARCO_DESPLAZAR_HASTA`, espejo en la izquierda) desde armado o descanso entra en **modo desplazamiento** hasta soltar: la distancia vertical al punto donde empezó el modo da dirección y velocidad (zona muerta `R_MUERTA_DESPLAZAR`, curva `CURVA_DESPLAZAR`, máximo `V_MAX_DESPLAZAR` al llegar a `R_MAX_DESPLAZAR`, y sigue mientras el dedo esté ahí). Al soltar se detiene en seco. Guía translúcida del lado del contenido; vibración al llegar al inicio o al final (Android); con `prefers-reduced-motion`, máximo `V_MAX_REDUCIDO`. Solo vertical.
 - **RF-16** (HM-04, HM-05, HM-07) El teclado virtual se detecta con `visualViewport` (no por el foco). Las hojas de la app se ubican sobre el teclado y reservan del lado del ancla el espacio `MARGEN_LATERAL + D_ACTIVO`, para que sus controles no queden debajo del ancla.
 
 ### No funcionales
@@ -330,6 +333,13 @@ Entonces el ancla no se activa
 | `VIB_MS` | 10 ms | Solo Android |
 | `USOS_ETIQUETA` | 5 por opción | Bienvenida |
 | `MAX_OPCIONES` | 5 | Fase 1 |
+| `ARCO_DESPLAZAR_DESDE` | 210° | Inicio de las direcciones que activan el desplazamiento (HM-09) |
+| `ARCO_DESPLAZAR_HASTA` | 330° | Fin de esas direcciones (10° de margen con el arco del menú y su tolerancia) |
+| `R_MUERTA_DESPLAZAR` | 8 px | Zona muerta vertical alrededor del punto donde empezó el modo |
+| `R_MAX_DESPLAZAR` | 72 px | Distancia a la que se alcanza la velocidad máxima |
+| `V_MAX_DESPLAZAR` | 1400 px/s | Velocidad máxima de desplazamiento |
+| `CURVA_DESPLAZAR` | 2.2 | Exponente de la curva: lento cerca del centro, para leer |
+| `V_MAX_REDUCIDO` | 500 px/s | Velocidad máxima con `prefers-reduced-motion` |
 | `DESEMPATE` | horizontal | Si dos posiciones quedan igual de cerca de la diagonal, gana la más horizontal (`vertical` = la más cercana a "arriba") (C-10) |
 
 Distribución: las opciones se reparten en el arco ordenadas por `priority`. La prioridad 1 va en la **diagonal**, que es la posición más cómoda. Si la app habilita "Atrás", ocupa siempre el extremo **"arriba"** del arco, pegado al borde, para que sea fácil de memorizar, **incluso cuando es la única opción** (C-22). Cualquier otra opción única va en la diagonal. Las opciones se ubican en los extremos y a intervalos iguales del arco. Las posiciones libres se ordenan de la más cercana a la diagonal (135° con la mano derecha) a la más lejana, desempatando según `DESEMPATE`; la prioridad 1 toma la primera, la 2 la segunda, y así. Las acciones sin `priority` van al final, en orden de declaración (C-10). Mientras el aviso de deshacer está visible, "Deshacer" reemplaza a la acción de prioridad 1 en su misma posición y nada más se mueve (C-21).
@@ -388,6 +398,9 @@ useAnchorLayer(abierta: boolean, onClose: () => void, capa?: { icon?: AnchorIcon
                                         // capa encima del contenido (HM-03, HM-08, RF-15);
                                         // devuelve `cerrar` para la X propia de la capa (cierra por el historial)
 useAnchorReserva(): { lado: "right" | "left"; ancho: number }; // espacio a reservar del lado del ancla (HM-07)
+useAnchorScroll(objetivo: RefObject<HTMLElement | null> | "ventana"): void;  // contenido principal que desplaza el ancla (HM-09)
+// useAnchorLayer(..., { scrollRef }) = lo que desplaza el ancla mientras esa capa está arriba (HM-09)
+// <AnchorProvider desplazar={true}>  experimental; por defecto false (HM-09)
 // icons: { back, undo, close, hideKeyboard }  (close = "Cerrar" de las capas, HM-03; hideKeyboard = RF-17)
 ```
 
@@ -414,7 +427,7 @@ useAnchorReserva(): { lado: "right" | "left"; ancho: number }; // espacio a rese
 
 ## 9. Métricas locales (Documento 8)
 
-Eventos que se registran: `open {mode: gesto|toque|teclado}`, `preselect {id}`, `execute {id, ms, pathPx, expert}`, `cancel {reason}`, `rest_enter`, `sensitive_blocked {id}`, `undo {id}`. "Experto" no se sabe al abrir, solo al soltar: se registra en `execute.expert` (soltar menos de `T_ANIM` después de abrir) (C-04).
+Eventos que se registran: `open {mode: gesto|toque|teclado}`, `preselect {id}`, `execute {id, ms, pathPx, expert}`, `cancel {reason}`, `rest_enter`, `sensitive_blocked {id}`, `undo {id}`, `layer_close {via}`, `scroll_start`, `scroll_end {ms}`. "Experto" no se sabe al abrir, solo al soltar: se registra en `execute.expert` (soltar menos de `T_ANIM` después de abrir) (C-04).
 La demo incluye una pantalla para exportar a JSON con los campos del Documento 8 §13: versión, dispositivo, mano, posición, número de opciones, acción, tiempo, errores y observaciones. Como los Documentos 1, 7 y 8 no están en este repositorio, esta lista es la referencia; si el Documento 8 pide más campos, se agregan aquí primero (C-20). Interpretación usada en T-25 (**aceptada** el 25-09-2026; si el Documento 8 dice otra cosa, se ajusta): **posición** = altura del ancla (`ANCLA_ALTURA`) y lado; **errores** de una acción = cancelaciones y bloqueos de irreversibles desde la ejecución anterior; el JSON incluye además todos los eventos crudos, para poder reinterpretarlos.
 
 ---
@@ -441,7 +454,7 @@ La demo incluye una pantalla para exportar a JSON con los campos del Documento 8
 ---
 
 ## 11. Preguntas abiertas (para las siguientes fases)
-- **P-01** ¿"Descanso + mover" debe desplazar el contenido en lugar de abrir el menú? → En estudio con **HM-09** (§12): la primera dirección decide (arco = menú, abajo = desplazar), también desde el descanso.
+- **P-01** ~~¿"Descanso + mover" debe desplazar el contenido?~~ **Cerrada por HM-09** (§12, RF-18): la primera dirección decide (arco = menú, abajo = desplazar), también desde el descanso.
 - **P-02** Con el teclado abierto, ¿el ancla se oculta o sube sobre el teclado?
 - **P-03** ¿Qué gesto rápido debería servir para cambiar de mano a quien usa ambas?
 - **P-04** ¿Cómo se ofrecerán los modos (abanico, carrusel, submenú) al usuario en la Fase 4?
@@ -463,4 +476,4 @@ Lo que aparece al probar en dispositivos reales y cambia la spec. Cada hallazgo 
 | HM-06 | 25-09-2026 | Nubia Neo 3 GT | **Decisión (cierra P-02):** con el teclado abierto, el ancla **no** se oculta: sube y queda sobre el teclado, con "Cerrar" (90°) y "Ocultar teclado" (blur del campo). Motivo: el botón atrás de Android exige un toque y D-15 pide que todo se pueda hacer solo deslizando. | **Aceptada la propuesta A ("modo escritura"), integrada en HM-08.** Cambia RF-13. Falta un detalle, ver HM-08 pregunta 3. |
 | HM-07 | 25-09-2026 | Nubia Neo 3 GT | **Error:** en "Ofertas cerca", el ancla tapa la esquina del encabezado de la hoja y puede esconder su X. | Las hojas reservan una franja del lado del ancla (`MARGEN_LATERAL + D_ACTIVO`) para que su X quede visible y alcanzable; el adaptador expone ese espacio con `useAnchorReserva`. |
 | HM-08 | 25-09-2026 | Nubia Neo 3 GT | Con una capa abierta el abanico no debe quedar solo con "Cerrar": **cada capa declara sus acciones**. Mientras la capa está abierta: "Cerrar" a 90° + las acciones de la capa; las de la pantalla de fondo se ocultan y vuelven al cerrar, en sus mismas posiciones. Sin acciones de capa, solo "Cerrar". API: `useAnchorLayer` acepta `AnchorAction[]` (con prioridad). Demo: Buscar con teclado abierto (Ocultar teclado, Borrar texto) y cerrado (Escribir, Borrar texto); Ofertas cerca (Ordenar por distancia, Filtrar por categoría); Favoritos (Ordenar, Ver en el mapa). | **Decidido** (25-09-2026, todas A): (1) "Deshacer" reemplaza a la prioridad 1 **de la capa**, sin mover nada más (C-21). (2) La capa declara ícono y nombre; el centro, el nombre accesible y la banda los muestran mientras está abierta (D-09; reemplaza lo dicho en HM-03 sobre el centro). (3) "Ocultar teclado" lo pone el ancla, **fijo a 180°**, siempre que haya un teclado abierto, en cualquier campo; se **agrega** como "Atrás" a 90° y, solo si ya hubiera 5 opciones, reemplaza a la de menor prioridad. Buscar con teclado: Cerrar (90°) · Borrar texto · Ocultar teclado (180°). RF-13, RF-15, RF-17. |
-| HM-09 | 25-09-2026 | Idea del usuario (cierra P-01) | **Desplazar con el ancla, tipo joystick**, para leer listas o documentos sin la otra mano ni tapar la pantalla. La **primera dirección** del movimiento decide: hacia el arco = menú; hacia abajo (fuera del arco) = modo desplazamiento, bloqueado hasta soltar. La distancia vertical al punto de inicio da dirección y velocidad (zona muerta pequeña, curva no lineal, máximo al borde de una zona; sigue mientras el dedo esté ahí). Al soltar se detiene en seco. Guía translúcida junto al ancla. Objetivo: la capa abierta o el contenedor principal (`useAnchorScroll(ref)`). Vibración al llegar al inicio o al final (Android); menos velocidad con movimiento reducido. Solo deslizando (D-15). Experimental, con interruptor en Ajustes (activado en la demo) y parámetros. | **Propuesta registrada, pendiente de visto bueno** (análisis en `decisiones-pendientes.md`). No se implementa todavía. |
+| HM-09 | 25-09-2026 | Idea del usuario (cierra P-01) | **Desplazar con el ancla, tipo joystick**, para leer listas o documentos sin la otra mano ni tapar la pantalla. La **primera dirección** del movimiento decide: hacia el arco = menú; hacia abajo (fuera del arco) = modo desplazamiento, bloqueado hasta soltar. La distancia vertical al punto de inicio da dirección y velocidad (zona muerta pequeña, curva no lineal, máximo al borde de una zona; sigue mientras el dedo esté ahí). Al soltar se detiene en seco. Guía translúcida junto al ancla. Objetivo: la capa abierta o el contenedor principal (`useAnchorScroll(ref)`). Vibración al llegar al inicio o al final (Android); menos velocidad con movimiento reducido. Solo deslizando (D-15). Experimental, con interruptor en Ajustes (activado en la demo) y parámetros. | **Decidido** (25-09-2026): estado `desplazando`; entrada hacia abajo (210°–330°, espejo en la izquierda) desde armado o descanso, **solo si hay algo registrado para desplazar** (el mapa no se registra: HU-13 intacta); parada en seco al soltar. Solo vertical; guía translúcida del lado del contenido; experimental con interruptor (activado en la demo, apagado por defecto en el componente). Cierra P-01. RF-18, §6, §7, §9. |
