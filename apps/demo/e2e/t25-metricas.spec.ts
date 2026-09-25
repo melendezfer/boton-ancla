@@ -48,6 +48,9 @@ test("la pantalla de Métricas lista los eventos y el resumen", async ({ page })
 test("exportar descarga un JSON con los campos de spec §9", async ({ page }) => {
   await usarElAncla(page);
   await page.goto("/metricas");
+  // Esperar la hidratación: si se escribe antes, React deja el campo con su estado inicial (vacío).
+  // "Dispositivo" lo autocompleta un efecto que solo corre en el navegador ya hidratado.
+  await expect(page.getByLabel("Dispositivo")).toHaveValue(/.+/);
   await page.getByLabel("Observaciones (qué se sintió lento, confuso o incómodo)").fill("Prueba automática");
   const [descarga] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Descargar JSON" }).click()]);
   expect(descarga.suggestedFilename()).toMatch(/^metricas-boton-ancla-\d{8}-\d{4}\.json$/);
