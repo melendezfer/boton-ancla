@@ -188,7 +188,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Manual:** la lista completa en PC, Android e iPhone; 3 personas, una usando solo deslizamiento.
 - **Commit:** `docs: resultados de pruebas manuales de la fase 1`
 
-### [ ] T-28 · README
+### [x] T-28 · README
 - **Hacer:** cómo instalar, correr la demo en 3002, abrirla desde el celular, correr Vitest y Playwright, y dónde está cada documento.
 - **Commit:** `docs: README con instrucciones de desarrollo y pruebas`
 
