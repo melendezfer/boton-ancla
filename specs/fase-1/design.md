@@ -47,6 +47,10 @@ Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en 
 | Avisos (T-19) | ✅ **Aceptada.** Deshacer, bloqueado, error y "Confirmar" van justo encima de la banda, fuera del alcance del pulgar. | spec RF-08b; aquí §6 |
 | Error asíncrono (T-19, C-19) | ✅ **Aceptada.** Si `onSelect` devuelve una promesa que falla: aviso "No se pudo completar la acción" y sin deshacer. Implementado; sin E2E porque ninguna acción de la demo es asíncrona. | spec RF-08b |
 | Etiqueta deshabilitada (C-09) | ✅ **Aceptada.** Siempre "{etiqueta} · no disponible", aunque la etiqueta ya diga "no disponible". | spec RF-06c |
+| HM-03 | Capas: "Cerrar" (id reservado `cerrar`) reemplaza lo que esté a 90° mientras haya una capa; pila; atrás del sistema por `history.pushState` + `popstate`; Escape. Métricas: `execute {id: "cerrar"}` y `layer_close {via}`. API: `useAnchorLayer`, `icons.close`. | spec D-10, RF-15, HU-14 |
+| HM-04 | Teclado detectado por `visualViewport`: abierto si el alto visible cae más de 150 px bajo el máximo visto en esa orientación. Ya no depende del foco. | spec RF-16 |
+| HM-05 | Las hojas se ubican sobre el borde inferior del `visualViewport` (`useTeclado().alto`). No se usa `interactive-widget`. | spec RF-16 |
+| HM-07 | `useAnchorReserva()` = lado del ancla y ancho `MARGEN_LATERAL + D_ACTIVO`; las hojas de la demo reservan ese espacio. | spec RF-16 |
 | L-02 | Margen lateral de 24 px (`MARGEN_LATERAL`); el inferior sigue en 16 px (`MARGEN_INFERIOR`). | spec §6, RF-12; aquí §2, §4.2 |
 | L-04 | La acción se ejecuta de forma **síncrona al soltar**, sin esperar la animación. | aquí §6 ("Ejecutar") |
 | L-09 | Se expone el 3002 igual que RUTEANDO expone el 3001: `portproxy` + regla del firewall, con `scripts/lan-3002.sh`, que genera los comandos de administrador y tú los ejecutas. `allowedDevOrigins` para que `next dev` hidrate por la IP de la LAN. | aquí §10, tasks T-12 |

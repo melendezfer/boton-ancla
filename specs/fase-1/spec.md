@@ -1,6 +1,6 @@
 # Botón-ancla — Especificación Fase 1: núcleo del gesto
 
-Versión 0.7 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
+Versión 0.8 · Primera app base: RUTEANDO · Destino: componente integrable en cualquier app
 
 > Esta spec es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
 
@@ -9,6 +9,8 @@ Versión 0.7 · Primera app base: RUTEANDO · Destino: componente integrable en 
 - C-02: en reposo el ícono usa el color `text`; `terracota` solo cuando el ancla está activa (D-04).
 - C-03: "Deshacer" también se puede hacer solo deslizando (D-14, RF-08, HU-07, §6 "Distribución").
 - L-02: el margen lateral sube a 24 px; el inferior sigue en 16 px (§6, RF-12).
+
+**Cambios en 0.8:** hallazgos de prueba manual HM-03 a HM-07: capas y "Cerrar" (D-10, RF-15, HU-14, §7), detección del teclado por `visualViewport`, hojas sobre el teclado, reserva del espacio del ancla; HM-06 (el ancla sobre el teclado) queda pendiente de un detalle (§12).
 
 **Cambios en 0.7:** segunda prueba manual de HM-01 (`ANCLA_ALTURA` = 0,44) y seis decisiones aceptadas del Bloque C: `icons` en `AnchorProvider`, pistas de la banda para irreversibles, aspecto del descanso, zona de avisos, aviso de error asíncrono y etiqueta de opciones deshabilitadas (§5, §7, §12).
 
@@ -67,7 +69,7 @@ Versión 0.7 · Primera app base: RUTEANDO · Destino: componente integrable en 
 | D-07 | El gesto y el toque conviven; el sistema los distingue por movimiento y tiempo. | H1 |
 | D-08 | Modo experto: soltar fuera de la zona muerta ejecuta según la dirección, sin esperar la animación. | H2 |
 | D-09 | El centro muestra **dónde está el usuario en la app** (ícono de sección). Mientras hay una preselección, anticipa el ícono de esa opción. | H3, H9 |
-| D-10 | Cancelar es lo **inverso de activar**: volver al centro y soltar. La app puede habilitar además una opción fija de "Atrás". | H4 |
+| D-10 | Cancelar es lo **inverso de activar**: volver al centro y soltar. La app puede habilitar además una opción fija de "Atrás". La posición de 90° **retrocede un paso**: con una capa abierta es "Cerrar"; si no, "Atrás" (HM-03). | H4, HM-03 |
 | D-11 | **Modo descanso**: dejar el pulgar quieto sobre el ancla no abre nada. Sirve para sostener el teléfono mientras se lee. En descanso el ancla sigue translúcida y solo muestra un anillo sutil; el aspecto sólido queda para armar y para el menú abierto (Bloque C). | H5, H6 |
 | D-12 | Como mantener quieto significa descanso, **mover el ancla no puede activarse manteniendo presionado**. En Fase 1 se hace desde ajustes; el arrastre llega en la Fase 3. | H12 (cambia mi propuesta anterior) |
 | D-13 | Del estado sólido se vuelve al translúcido por gesto (cancelar o ejecutar) o por tiempo. Mientras está abierto, el ancla capta los toques de su zona para que no pasen al contenido. | H7 |
@@ -238,6 +240,14 @@ Y durante los primeros 5 usos de las opciones de la pantalla (uso = ejecutar la 
   muestra "Desliza hacia una opción" mientras no hay preselección, y el nombre de la opción cuando la hay (HM-02)
 ```
 
+**HU-14 — Cerrar lo que se abrió encima** (HM-03)
+```gherkin
+Dado el mapa con la lista de Favoritos abierta
+Cuando deslizo hacia arriba (90°) hasta "Cerrar" y suelto
+Entonces la lista se cierra y sigo en el mapa
+Y el botón atrás del sistema también la cierra, sin salir del mapa
+```
+
 **HU-13 — No interferir con el mapa**
 ```gherkin
 Dado que presiono el ancla y deslizo
@@ -268,6 +278,8 @@ Entonces el ancla no se activa
 - **RF-12** El sistema debe calcular el arco dentro del viewport, restando `MARGEN_LATERAL`, `MARGEN_INFERIOR` y `env(safe-area-inset-*)`. Ninguna opción puede quedar fuera de pantalla.
 - **RF-13** Mientras el teclado esté abierto (`visualViewport`), el sistema debe ubicar el ancla sobre el teclado o bien ocultarla (valor por defecto: ocultar).
 - **RF-14** El sistema debe mantener el ancla por encima de las hojas inferiores de la app. En RUTEANDO, su `z-index` debe ser mayor que `z-[1000]`.
+- **RF-15** (HM-03) La app puede declarar **capas** (hojas, listas, búsqueda abiertas encima del contenido) con su `onClose`. Mientras haya una, la posición de 90° muestra "Cerrar" y reemplaza temporalmente lo que haya ahí, sin mover nada más. Las capas forman una pila: "Cerrar", el botón atrás del sistema y `Escape` cierran la de arriba, **sin navegar**.
+- **RF-16** (HM-04, HM-05, HM-07) El teclado virtual se detecta con `visualViewport` (no por el foco). Las hojas de la app se ubican sobre el teclado y reservan del lado del ancla el espacio `MARGEN_LATERAL + D_ACTIVO`, para que sus controles no queden debajo del ancla.
 
 ### No funcionales
 - **RNF-01** Solo deslizar: ninguna función puede requerir un toque (D-15).
@@ -367,6 +379,9 @@ validateScreen(screen: AnchorScreen, params: Params): string[];      // lo que e
 // icons: íconos de las opciones fijas "Atrás" y "Deshacer"; los pone la app porque los íconos
 // se registran en la app (RNF-09) y AnchorScreen no los trae (agregado en T-16).
 useAnchorScreen(screen: AnchorScreen): void;
+useAnchorLayer(abierta: boolean, onClose: () => void): void;   // capa encima del contenido (HM-03, RF-15)
+useAnchorReserva(): { lado: "right" | "left"; ancho: number }; // espacio a reservar del lado del ancla (HM-07)
+// icons: { back, undo, close }  (close = "Cerrar" de las capas, HM-03)
 ```
 
 ---
@@ -435,4 +450,8 @@ Lo que aparece al probar en dispositivos reales y cambia la spec. Cada hallazgo 
 |---|---|---|---|---|
 | HM-01 | 24-09-2026 | Celular, una mano, demo T-12 | El ancla queda demasiado abajo; la posición cómoda está más arriba, hacia el centro-lateral. | Nuevo parámetro `ANCLA_ALTURA` con piso y techo (§6); en la demo, un control deslizante para ajustarlo mientras se prueba. Arrastrar el ancla sigue siendo de la Fase 3 (D-12). **Resultado de la prueba manual** (24-09-2026, Nubia Neo 3 GT, una mano): al 30 % el ancla se siente baja (a un cuarto de la pantalla); la altura cómoda es **38 %**, entre un cuarto y la mitad. **Segunda prueba** (Bloque C, mismo celular, con el ancla ya respondiendo al dedo): al 38 % sigue baja → `ANCLA_ALTURA` queda en **0,44**. Tocar y arrastrar para seleccionar funcionan bien. |
 | HM-02 | 24-09-2026 | Celular y PC, demo del Bloque B (abanico fantasma) | Las etiquetas del abanico quedan tapadas por los íconos vecinos (en el Mapa, "Mi ubicación" queda debajo de Buscar y "Buscar" debajo de Ofertas cerca). Con el reparto actual las vecinas están a 52 px y entre 13 y 50 px más abajo, así que una etiqueta junto a cada ícono choca con la siguiente. Afecta también a HU-12 (etiquetas de todas las opciones) y a RF-06 ("por encima del dedo"). | **Decidido** (24-09-2026): una sola etiqueta, en una banda fija encima del abanico, con fondo sólido (RF-06b). Zona muerta → nombre de la sección (D-09). Modo toque → al apoyar el dedo sobre una opción, la banda muestra su nombre antes de soltar. Bienvenida (HU-12) → sin preselección, "Desliza hacia una opción"; con preselección, el nombre de la opción. Parámetros `BANDA_ALTO` y `BANDA_MARGEN` (§6); el techo de `ANCLA_ALTURA` deja lugar para la banda. |
-| HM-03 | 25-09-2026 | Nubia Neo 3 GT, demo del Bloque D | Cuando algo se abre encima del contenido (lista de Favoritos, búsqueda, hoja inferior), el ancla no permite cerrarlo: solo existe "Atrás", que navega. Propuesta del usuario: distinguir *navegar* (Atrás) de *capa abierta encima* (Cerrar); con una capa abierta, la posición fija de 90° muestra "Cerrar" (ícono X); el botón atrás del sistema también cierra la capa; API para que la app declare y quite una capa con su `onClose`. | **Pendiente de decisión**: análisis de choques y propuesta de implementación en `decisiones-pendientes.md`. No se implementa sin visto bueno. |
+| HM-03 | 25-09-2026 | Nubia Neo 3 GT, demo del Bloque D | Cuando algo se abre encima del contenido (lista de Favoritos, búsqueda, hoja inferior), el ancla no permite cerrarlo: solo existe "Atrás", que navega. | **Decidido** (25-09-2026): *capas*. Con una capa abierta, la posición de 90° muestra "Cerrar" (X), que **reemplaza temporalmente** lo que haya ahí ("Atrás" o, sin "Atrás", la opción a 90°) sin mover nada más, igual que C-21. Pila de capas: cierra la de arriba. El atrás del sistema y Escape también cierran la capa, sin navegar. API: `useAnchorLayer` e `icons.close`. RF-15, HU-14, D-10. |
+| HM-04 | 25-09-2026 | Nubia Neo 3 GT | **Error:** en Buscar, si se baja el teclado con el botón atrás del celular, el ancla no vuelve a aparecer. Causa: se detectaba el teclado por el foco del campo, y el campo sigue enfocado con el teclado cerrado. | Detectar el teclado solo con `visualViewport` (alto visible frente al máximo visto en esa orientación), con prueba. |
+| HM-05 | 25-09-2026 | Nubia Neo 3 GT | **Error:** con el teclado abierto, la hoja de búsqueda queda detrás del teclado y no se ve lo que se escribe. | Las hojas inferiores se ubican sobre el borde de abajo del `visualViewport` (funciona en Chrome Android y en iOS, que ignora `interactive-widget`). |
+| HM-06 | 25-09-2026 | Nubia Neo 3 GT | **Decisión (cierra P-02):** con el teclado abierto, el ancla **no** se oculta: sube y queda sobre el teclado, con "Cerrar" (90°) y "Ocultar teclado" (blur del campo). Motivo: el botón atrás de Android exige un toque y D-15 pide que todo se pueda hacer solo deslizando. | **Pendiente**: falta decidir dónde va "Ocultar teclado" en el abanico (`decisiones-pendientes.md`). Cambia RF-13. |
+| HM-07 | 25-09-2026 | Nubia Neo 3 GT | **Error:** en "Ofertas cerca", el ancla tapa la esquina del encabezado de la hoja y puede esconder su X. | Las hojas reservan una franja del lado del ancla (`MARGEN_LATERAL + D_ACTIVO`) para que su X quede visible y alcanzable; el adaptador expone ese espacio con `useAnchorReserva`. |
