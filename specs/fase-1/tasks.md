@@ -175,7 +175,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **E2E:** un recorrido genera los eventos esperados; el JSON exportado tiene los campos de §9; no hay peticiones de red con métricas.
 - **Commit:** `feat: registro local y exportación de métricas`
 
-### [ ] T-26 · E2E "solo deslizando" y matriz completa
+### [x] T-26 · E2E "solo deslizando" y matriz completa
 - **Cubre:** D-15, RNF-01, HU-09, §10.2 (HU-01…HU-13)
 - **Hacer:** test que recorre **todas** las acciones de **todas** las pantallas usando solo arrastres (el helper falla si se usa `tap`), incluida la confirmación de Eliminar y el deshacer.
 - **Prueba:** toda la suite E2E pasa en Pixel 7 e iPhone 14; tabla HU → archivo de prueba en `e2e/README.md`.
