@@ -1,6 +1,6 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **25-09-2026**, al cerrar el Bloque D.
+Última actualización: **25-09-2026**, después de los hallazgos HM-03 a HM-07.
 Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`"* y dile qué resultados trajiste de las sesiones de prueba (§2).
 
 ---
@@ -16,7 +16,9 @@ Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`
 | C — Adaptador | T-15 … T-23 ✅ | `packages/react`: el ancla completa (gesto, toque, descanso, deshacer, irreversibles, teclado, mano izquierda, bienvenida). |
 | D — Cierre | T-24, T-25, T-26, T-28 ✅ · T-27 ⚠️ | Métricas con exportación, recorrido E2E solo deslizando, contraste y rendimiento medidos, README. Falta la prueba con personas (§2). |
 
-**Pruebas (todas en verde):** 380 del núcleo, 53 de la demo (Vitest) y 193 E2E (Playwright, Pixel 7 + iPhone 14; 7 se saltan a propósito: 6 mediciones opcionales de rendimiento y el control deslizante en WebKit).
+**Pruebas (todas en verde):** 390 del núcleo, 53 de la demo (Vitest) y 233 E2E (Playwright, Pixel 7 + iPhone 14; 7 se saltan a propósito: 6 mediciones opcionales de rendimiento y el control deslizante en WebKit).
+
+**Después del Bloque D** (spec v0.8, §12): HM-03 capas y "Cerrar" ✅, HM-04 teclado por `visualViewport` ✅, HM-05 hojas sobre el teclado ✅, HM-07 reserva del espacio del ancla ✅. **HM-06 espera una decisión** (dónde va "Ocultar teclado"): `decisiones-pendientes.md`. Guía: `prueba-hm03-hm07.md`.
 
 **Spec:** `spec.md` v0.7. Decisiones clave recientes:
 - `ANCLA_ALTURA` = **0,44** (HM-01, dos pruebas manuales).
@@ -33,6 +35,8 @@ Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`
 | `prueba-t12.md` | Red del celular (portproxy) y el hallazgo de Next 16. |
 | `prueba-bloque-b.md`, `prueba-bloque-c.md`, `prueba-bloque-d.md` | Guías de prueba manual por bloque. |
 | `pruebas-manuales.md` | Registro de sesiones con personas, contraste y rendimiento (T-27). |
+| `guion-sesiones.md` | Guion en lenguaje sencillo para las sesiones con 3 personas. |
+| `prueba-hm03-hm07.md` | Guía de prueba de los hallazgos HM-03 a HM-07. |
 | `estado.md` | Este archivo. |
 
 ---
@@ -51,14 +55,16 @@ Tareas T-01…T-26 y T-28: hechas (ver `tasks.md`).
 
 ## 3. Pendientes y cabos sueltos
 
-**Decisiones pendientes:** ninguna abierta (`decisiones-pendientes.md` está vacío).
+**Decisiones pendientes:** **HM-06**: dónde va "Ocultar teclado" en el abanico (opciones A/B/C en `decisiones-pendientes.md`; propuesta: A, "modo escritura").
 
-**Preguntas abiertas para fases siguientes** (spec §11, no bloquean): P-01 descanso + mover; P-02 teclado (hoy se oculta); P-03 cambiar de mano rápido; P-04 modos del abanico; P-05 ¿abrir el abanico hacia abajo cuando el ancla está alta?
+**Preguntas abiertas para fases siguientes** (spec §11, no bloquean): P-01 descanso + mover; P-02 teclado (decidida por HM-06: sube sobre el teclado, falta un detalle); P-03 cambiar de mano rápido; P-04 modos del abanico; P-05 ¿abrir el abanico hacia abajo cuando el ancla está alta?
 
 **Cabos sueltos conocidos:**
 - **Remoto:** `origin` = `https://github.com/melendezfer/boton-ancla.git` (corregido por el usuario el 25-09-2026). Push solo con autorización explícita.
 - **C-19** (aviso de error cuando una acción asíncrona falla): implementado, pero **sin E2E**, porque ninguna acción de la demo es asíncrona.
 - **Interpretación de métricas (C-20)**: "errores" = cancelaciones y bloqueos desde la ejecución anterior; "posición" = altura + lado. A confirmar con el Documento 8 (`prueba-bloque-d.md` §2).
+- **Historial y capas (HM-03)**: si una capa se cierra porque se navega desde ella (un enlace dentro de la hoja), queda una entrada duplicada e inofensiva de la misma página en el historial. Un `back()` en ese caso desharía la navegación.
+- **Búsqueda de la demo**: es solo visual (no filtra). Se puede agregar si sirve para las sesiones.
 - **Rendimiento**: con la CPU frenada ×6 quedan cuadros sueltos de 100–170 ms, probablemente al abrir el menú. Si se confirma en un celular real, la idea es montar el abanico de antemano, oculto.
 - **Historial**: el commit `f999b4d` quedó con una E2E en rojo (una carrera con la hidratación); se corrigió en `7e5859f`. Desde ahí, el commit se hace solo si las pruebas pasan.
 - En RUTEANDO: el "Cargando…" desde el celular con `next dev` se arreglaría con `allowedDevOrigins` (explicado en `prueba-t12.md` §2). **No se tocó RUTEANDO.**
