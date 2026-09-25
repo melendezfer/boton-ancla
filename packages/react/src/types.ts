@@ -36,7 +36,13 @@ export type AnchorIcons = {
   close: ReactAnchorIcon;
   /** Opción "Ocultar teclado" con un teclado virtual abierto (HM-06, RF-17). */
   hideKeyboard: ReactAnchorIcon;
+  /** Flechas del ancla al desplazar (HM-10, variante "ancla"). Si faltan, se usan unas propias. */
+  scrollUp?: ReactAnchorIcon;
+  scrollDown?: ReactAnchorIcon;
 };
+
+/** HM-10: dónde se ve la guía al desplazar. "ancla" = flecha y anillo en el propio ancla; "arriba" = cápsula arriba del ancla. */
+export type GuiaDesplazar = "ancla" | "arriba";
 
 export type AnchorProviderProps = {
   prefs: AnchorPrefs;
@@ -48,5 +54,7 @@ export type AnchorProviderProps = {
   params?: Partial<Params>;
   /** HM-09 (experimental): desplazar el contenido con el ancla. Por defecto false. */
   desplazar?: boolean;
+  /** HM-10: variante de la guía al desplazar. Por defecto "ancla". */
+  guiaDesplazar?: GuiaDesplazar;
   children: ReactNode;
 };

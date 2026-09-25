@@ -36,7 +36,7 @@ const ContextoDesplazar = createContext<RegistroDesplazar | null>(null);
 export type ReservaAncla = { lado: "right" | "left"; ancho: number };
 const ContextoReserva = createContext<ReservaAncla | null>(null);
 
-export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, desplazar = false, children }: AnchorProviderProps) {
+export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, desplazar = false, guiaDesplazar = "ancla", children }: AnchorProviderProps) {
   const pantallaRef = useRef<AnchorScreen | null>(null);
   const duenoRef = useRef<symbol | null>(null);
   // Copia para DIBUJAR. Para EJECUTAR se usa pantallaRef (siempre la más reciente).
@@ -89,6 +89,7 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
               onEventRef={onEventRef}
               capas={capas}
               desplazar={desplazar}
+              guiaDesplazar={guiaDesplazar}
               objetivoDesplazar={objetivoDesplazar}
               versionObjetivo={versionObjetivo}
             />,

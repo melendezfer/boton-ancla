@@ -1,6 +1,6 @@
 "use client";
 
-import { velocidadDesplazamiento, type AnchorState, type Machine, type Params } from "@boton-ancla/core";
+import { indicadorDesplazamiento, velocidadDesplazamiento, type AnchorState, type Machine, type Params } from "@boton-ancla/core";
 import { useEffect, type RefObject } from "react";
 import type { ObjetivoDesplazar } from "../AnchorProvider";
 
@@ -14,8 +14,10 @@ type Opciones = {
   params: Params;
   /** Qué desplazar ahora (la capa de arriba o el contenido principal). */
   obtenerObjetivo: () => ObjetivoDesplazar | null;
-  /** El punto de la guía que sigue al dedo. */
+  /** El punto de la cápsula que sigue al dedo (variante "arriba"). Su `data-escala` ajusta el recorrido si la cápsula se achicó. */
   puntoGuia: RefObject<HTMLElement | null>;
+  /** La raíz del ancla (variante "ancla", HM-10): recibe `data-direccion` y `--ba-llenado`. */
+  indicador: RefObject<HTMLElement | null>;
 };
 
 function posicion(o: ObjetivoDesplazar): number {
@@ -35,7 +37,7 @@ function vibrar(ms: number) {
   }
 }
 
-export function useBucleDesplazamiento({ machine, estado, params, obtenerObjetivo, puntoGuia }: Opciones) {
+export function useBucleDesplazamiento({ machine, estado, params, obtenerObjetivo, puntoGuia, indicador }: Opciones) {
   const activo = estado.tipo === "desplazando";
 
   useEffect(() => {
@@ -69,13 +71,31 @@ export function useBucleDesplazamiento({ machine, estado, params, obtenerObjetiv
         enBorde = borde;
       }
 
-      // La guía: el punto sigue al dedo, limitado a la zona (R_MAX_DESPLAZAR).
-      const limitado = Math.max(-params.R_MAX_DESPLAZAR, Math.min(params.R_MAX_DESPLAZAR, dy));
-      if (puntoGuia.current) puntoGuia.current.style.transform = `translate(-50%, calc(-50% + ${limitado}px))`;
+      // Variante "arriba": el punto sigue al dedo, limitado a la zona (R_MAX_DESPLAZAR).
+      const punto = puntoGuia.current;
+      if (punto) {
+        const escala = Number(punto.dataset.escala ?? 1);
+        const limitado = Math.max(-params.R_MAX_DESPLAZAR, Math.min(params.R_MAX_DESPLAZAR, dy)) * escala;
+        punto.style.transform = `translate(-50%, calc(-50% + ${limitado}px))`;
+      }
+      // Variante "ancla" (HM-10): flecha según la dirección y anillo según la velocidad.
+      const ancla = indicador.current;
+      if (ancla) {
+        const { direccion, llenado } = indicadorDesplazamiento(dy, params);
+        ancla.dataset.direccion = direccion > 0 ? "abajo" : direccion < 0 ? "arriba" : "quieto";
+        ancla.style.setProperty("--ba-llenado", llenado.toFixed(3));
+      }
 
       cuadro = requestAnimationFrame(paso);
     };
     cuadro = requestAnimationFrame(paso);
-    return () => cancelAnimationFrame(cuadro);
-  }, [activo, machine, params, obtenerObjetivo, puntoGuia]);
+    const ancla = indicador.current;
+    return () => {
+      cancelAnimationFrame(cuadro);
+      if (ancla) {
+        delete ancla.dataset.direccion;
+        ancla.style.removeProperty("--ba-llenado");
+      }
+    };
+  }, [activo, machine, params, obtenerObjetivo, puntoGuia, indicador]);
 }

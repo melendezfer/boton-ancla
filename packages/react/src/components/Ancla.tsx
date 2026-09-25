@@ -10,6 +10,7 @@ import {
   ID_DESHACER,
   ID_OCULTAR_TECLADO,
   pantallaDeCapa,
+  posicionGuiaArriba,
   mostrarEtiqueta,
   necesitaDemostracion,
   posicionBanda,
@@ -30,7 +31,7 @@ import { useBucleDesplazamiento } from "../dom/desplazar";
 import type { ControlCapas } from "../dom/capas";
 import { useCambioOrientacion, useTeclado } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
-import type { AnchorIcons, AnchorTheme, ReactAnchorIcon } from "../types";
+import type { AnchorIcons, AnchorTheme, GuiaDesplazar, ReactAnchorIcon } from "../types";
 
 // El ancla y todo lo que dibuja (design.md §6).
 
@@ -52,6 +53,8 @@ export type PropsAncla = {
   objetivoDesplazar: RefObject<ObjetivoDesplazar | null>;
   /** Cambia cuando se registra o quita el contenido principal. */
   versionObjetivo: number;
+  /** HM-10: variante de la guía al desplazar. */
+  guiaDesplazar: GuiaDesplazar;
 };
 
 /** Avisos del ancla (T-19): deshacer (RF-08), irreversible bloqueada (HU-08) o error (C-19). */
@@ -74,6 +77,7 @@ export function Ancla({
   desplazar,
   objetivoDesplazar,
   versionObjetivo,
+  guiaDesplazar,
 }: PropsAncla) {
   const medidas = useMedidas();
   const [machine] = useState(() => createAnchorMachine());
@@ -230,7 +234,9 @@ export function Ancla({
 
   // HM-09: bucle de desplazamiento y punto de la guía (sin redibujar React en cada cuadro).
   const puntoGuia = useRef<HTMLDivElement>(null);
-  useBucleDesplazamiento({ machine, estado, params, obtenerObjetivo, puntoGuia });
+  const refRaiz = useRef<HTMLDivElement>(null);
+  const indicador = guiaDesplazar === "ancla" ? refRaiz : SIN_ELEMENTO;
+  useBucleDesplazamiento({ machine, estado, params, obtenerObjetivo, puntoGuia, indicador });
 
   // RF-09: un cambio de orientación cancela la interacción.
   useCambioOrientacion(() => controlador.enviar({ tipo: "ORIENTACION" }));
@@ -262,7 +268,6 @@ export function Ancla({
 
   // RNF-05: foco itinerante. Con teclado, el foco va a la opción activa; al cerrar, vuelve al ancla.
   const refBoton = useRef<HTMLButtonElement>(null);
-  const refRaiz = useRef<HTMLDivElement>(null);
   const tipoAnterior = useRef(estado.tipo);
   const focoTeclado = estado.tipo === "abierto_teclado" ? estado.foco : -1;
   useEffect(() => {
@@ -298,6 +303,19 @@ export function Ancla({
   };
   // D-09: el centro muestra la sección (o la capa abierta, HM-08); con una opción activa, anticipa su ícono.
   const IconoCentro = (idActivo && iconoDe(idActivo)) || (vista.sectionIcon as ReactAnchorIcon);
+  const desplazando = estado.tipo === "desplazando";
+  // HM-10, variante "arriba": la cápsula arriba del ancla, corrida hacia el centro y fuera del alcance del pulgar.
+  const guiaArriba =
+    desplazando && guiaDesplazar === "arriba"
+      ? posicionGuiaArriba({
+          centro: geoDibujo.centro,
+          origen: estado.origen,
+          hand: prefs.hand,
+          params,
+          alto: 2 * params.R_MAX_DESPLAZAR + ALTO_EXTRA_GUIA,
+          techo: medidas.safeArea.top + 8,
+        })
+      : null;
 
   return (
     <div
@@ -334,23 +352,39 @@ export function Ancla({
         />
       )}
 
-      {estado.tipo === "desplazando" && (
-        // HM-09: guía translúcida del lado del contenido (no tapa el ancla ni el centro del texto).
+      {guiaArriba && (
+        // HM-10 A: cápsula translúcida arriba del ancla; su borde de abajo queda por encima del pulgar.
         <div
           className="ba-guia-desplazar"
           data-testid="guia-desplazar"
+          data-variante="arriba"
           aria-hidden
-          style={{
-            left: geoDibujo.centro.x + (prefs.hand === "right" ? -1 : 1) * (params.D_ACTIVO / 2 + 26),
-            top: estado.origen.y,
-            height: 2 * params.R_MAX_DESPLAZAR + 36,
-          }}
+          style={{ left: guiaArriba.x, top: guiaArriba.top, height: guiaArriba.alto }}
         >
           <span className="ba-guia-flecha ba-guia-flecha--arriba">↑</span>
           <span className="ba-guia-centro" />
-          <div ref={puntoGuia} className="ba-guia-punto" />
+          <div
+            ref={puntoGuia}
+            className="ba-guia-punto"
+            data-escala={Math.min(1, Math.max(0, guiaArriba.alto - ALTO_EXTRA_GUIA) / (2 * params.R_MAX_DESPLAZAR))}
+          />
           <span className="ba-guia-flecha ba-guia-flecha--abajo">↓</span>
         </div>
+      )}
+
+      {desplazando && guiaDesplazar === "ancla" && (
+        // HM-10 B: anillo alrededor del ancla que se llena con la velocidad (lo llena el bucle con --ba-llenado).
+        <svg
+          className="ba-anillo-desplazar"
+          data-testid="guia-desplazar"
+          data-variante="ancla"
+          aria-hidden
+          viewBox="0 0 100 100"
+          style={{ left: geoDibujo.centro.x, top: geoDibujo.centro.y, width: params.D_ACTIVO + 12, height: params.D_ACTIVO + 12 }}
+        >
+          <circle className="ba-anillo-desplazar-fondo" cx="50" cy="50" r="46" pathLength={1} />
+          <circle className="ba-anillo-desplazar-lleno" cx="50" cy="50" r="46" pathLength={1} />
+        </svg>
       )}
 
       {demostrar && slotDemostracion && (
@@ -424,9 +458,35 @@ export function Ancla({
         onClick={() => controlador.clicEnAncla()}
         onContextMenu={(e) => e.preventDefault()}
       >
-        <IconoCentro size={26} aria-hidden />
+        {desplazando && guiaDesplazar === "ancla" ? (
+          // HM-10 B: el ícono pasa a flecha ↑/↓ (el bucle elige cuál con data-direccion).
+          <>
+            <FlechaDesplazar icono={icons.scrollUp} sentido="arriba" />
+            <FlechaDesplazar icono={icons.scrollDown} sentido="abajo" />
+          </>
+        ) : (
+          <IconoCentro size={26} aria-hidden />
+        )}
       </button>
     </div>
+  );
+}
+
+/** Espacio de la cápsula para sus flechas, además del recorrido del punto (HM-09). */
+const ALTO_EXTRA_GUIA = 36;
+const SIN_ELEMENTO: RefObject<HTMLElement | null> = { current: null };
+
+function FlechaDesplazar({ icono: Icono, sentido }: { icono?: ReactAnchorIcon; sentido: "arriba" | "abajo" }) {
+  return (
+    <span className={`ba-flecha-desplazar ba-flecha-desplazar--${sentido}`} data-testid={`flecha-${sentido}`} aria-hidden>
+      {Icono ? (
+        <Icono size={24} weight="bold" aria-hidden />
+      ) : (
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d={sentido === "arriba" ? "M12 19V5M5 12l7-7 7 7" : "M12 5v14M5 12l7 7 7-7"} />
+        </svg>
+      )}
+    </span>
   );
 }
 

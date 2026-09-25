@@ -364,3 +364,60 @@
   background: var(--ba-accent);
   transform: translate(-50%, -50%);
 }
+
+/* --- HM-10, variante "ancla": el propio ancla muestra el desplazamiento. --- */
+
+/* Flechas ↑/↓ en lugar del ícono. Quieto (zona muerta): las dos, tenues y juntas. */
+.ba-flecha-desplazar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  transform: translate(-50%, -50%);
+  transition: opacity 80ms linear;
+}
+
+.ba-raiz:not([data-direccion]) .ba-flecha-desplazar,
+.ba-raiz[data-direccion="quieto"] .ba-flecha-desplazar {
+  opacity: 0.45;
+  scale: 0.75;
+}
+
+.ba-raiz:not([data-direccion]) .ba-flecha-desplazar--arriba,
+.ba-raiz[data-direccion="quieto"] .ba-flecha-desplazar--arriba {
+  translate: 0 -7px;
+}
+
+.ba-raiz:not([data-direccion]) .ba-flecha-desplazar--abajo,
+.ba-raiz[data-direccion="quieto"] .ba-flecha-desplazar--abajo {
+  translate: 0 7px;
+}
+
+.ba-raiz[data-direccion="arriba"] .ba-flecha-desplazar--abajo,
+.ba-raiz[data-direccion="abajo"] .ba-flecha-desplazar--arriba {
+  opacity: 0;
+}
+
+/* Anillo alrededor del ancla: se llena con la velocidad (--ba-llenado lo escribe el bucle). */
+.ba-anillo-desplazar {
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  pointer-events: none;
+  overflow: visible;
+}
+
+.ba-anillo-desplazar circle {
+  fill: none;
+  stroke-width: 6;
+}
+
+.ba-anillo-desplazar-fondo {
+  stroke: color-mix(in srgb, var(--ba-border) 70%, transparent);
+}
+
+.ba-anillo-desplazar-lleno {
+  stroke: var(--ba-accent);
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - var(--ba-llenado, 0));
+}
