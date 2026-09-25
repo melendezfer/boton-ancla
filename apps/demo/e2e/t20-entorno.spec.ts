@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { sinBienvenida } from "./helpers/almacen";
 import { estadoAncla, haciaOpcion, leerGeometria } from "./helpers/ancla";
 import { crearGestos } from "./helpers/gestos";
+import { ponerTeclado, tecladoFalso } from "./helpers/teclado";
 
 // T-20: cancelaciones del entorno y teclado (RF-09, RF-10, RF-13).
 
@@ -12,6 +13,7 @@ test.beforeEach(async ({ page }) => {
     } catch {}
   });
   await sinBienvenida(page);
+  await tecladoFalso(page);
   await page.goto("/mapa");
   await expect(page.getByTestId("mapa-lienzo")).toHaveAttribute("data-offset-x", /-?\d+/);
 });
@@ -56,12 +58,22 @@ test("RF-10: si la app cambia de sección con el menú abierto, se cancela y el 
   await expect(page).toHaveURL(/\/ajustes$/); // soltar después no hace nada
 });
 
-test("RF-13: con el campo de búsqueda enfocado (teclado abierto) el ancla se oculta, y vuelve al cerrarlo", async ({ page }) => {
+test("RF-13 + HM-04: con el teclado abierto el ancla se oculta; al bajarlo vuelve aunque el campo siga enfocado", async ({ page }) => {
+  // El teclado se simula (Playwright no muestra el de un celular): helpers/teclado.ts.
+  await page.goto("/mapa");
+  await expect(page.getByTestId("mapa-lienzo")).toHaveAttribute("data-offset-x", /-?\d+/);
   const g = await leerGeometria(page);
   const gestos = await crearGestos(page);
   await gestos.deslizar(g.centro, haciaOpcion(g, "buscar"), { pasos: 8, ms: 150 });
   await expect(page.getByTestId("campo-busqueda")).toBeFocused();
+  // Enfocar solo ya no oculta: lo que cuenta es el teclado (HM-04).
+  await expect(page.getByTestId("ancla")).toBeVisible();
+
+  await ponerTeclado(page, 300);
   await expect(page.getByTestId("ancla")).toBeHidden();
-  await page.getByRole("dialog", { name: "Buscar" }).getByRole("button", { name: "Cerrar" }).click();
+
+  // El botón atrás de Android baja el teclado pero deja el campo enfocado (HM-04).
+  await ponerTeclado(page, 0);
+  await expect(page.getByTestId("campo-busqueda")).toBeFocused();
   await expect(page.getByTestId("ancla")).toBeVisible();
 });

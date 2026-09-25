@@ -7,40 +7,50 @@ import { useEffect, useRef, useState } from "react";
 /** Si el alto visible cae más que esto, se asume que hay un teclado virtual abierto. */
 const CAIDA_TECLADO_PX = 150;
 
-function esEditable(el: Element | null): boolean {
-  if (!el) return false;
-  if (el instanceof HTMLTextAreaElement) return true;
-  if (el instanceof HTMLInputElement) return !["button", "checkbox", "radio", "range", "submit", "reset", "file", "color"].includes(el.type);
-  return el instanceof HTMLElement && el.isContentEditable;
-}
+export type EstadoTeclado = {
+  /** Hay un teclado virtual abierto (RF-13, RF-16). */
+  abierto: boolean;
+  /** Cuánto tapa el teclado por abajo, en px: lo que hay que subir una hoja para que no quede detrás (HM-05). */
+  alto: number;
+};
 
 /**
- * RF-13: ¿hay un teclado virtual abierto? (L-04: no hay API estándar en iOS).
- * - El alto visible (visualViewport) cayó más de 150 px respecto de la ventana; o
- * - en un dispositivo táctil, hay un campo de texto enfocado (el teclado sale siempre).
+ * Teclado virtual, detectado SOLO con visualViewport (HM-04). Antes también contaba "hay
+ * un campo enfocado", y en Android el campo sigue enfocado después de bajar el teclado con
+ * el botón atrás: el ancla no volvía a aparecer.
+ *
+ * Se compara el alto visible con el MÁXIMO visto en esa orientación, no con innerHeight:
+ * así funciona tanto si el navegador achica solo lo visible (Chrome por defecto, iOS) como
+ * si achica toda la ventana (interactive-widget=resizes-content).
  */
-export function useTecladoAbierto(): boolean {
-  const [abierto, setAbierto] = useState(false);
+export function useTeclado(): EstadoTeclado {
+  const [estado, setEstado] = useState<EstadoTeclado>({ abierto: false, alto: 0 });
 
   useEffect(() => {
-    const tactil = window.matchMedia("(pointer: coarse)");
+    const maximos = new Map<string, number>();
     const revisar = () => {
       const vv = window.visualViewport;
-      const cayo = vv ? window.innerHeight - vv.height > CAIDA_TECLADO_PX : false;
-      setAbierto(cayo || (tactil.matches && esEditable(document.activeElement)));
+      const orientacion = window.innerWidth > window.innerHeight ? "horizontal" : "vertical";
+      const visible = vv ? vv.height : window.innerHeight;
+      const maximo = Math.max(maximos.get(orientacion) ?? 0, window.innerHeight, visible);
+      maximos.set(orientacion, maximo);
+      const abierto = maximo - visible > CAIDA_TECLADO_PX;
+      // Lo que queda tapado abajo: de la ventana, lo que no alcanza a mostrar lo visible.
+      const alto = vv ? Math.max(0, Math.round(window.innerHeight - (vv.offsetTop + vv.height))) : 0;
+      setEstado((e) => (e.abierto === abierto && e.alto === alto ? e : { abierto, alto }));
     };
     revisar();
-    document.addEventListener("focusin", revisar);
-    document.addEventListener("focusout", revisar);
     window.visualViewport?.addEventListener("resize", revisar);
+    window.visualViewport?.addEventListener("scroll", revisar);
+    window.addEventListener("resize", revisar);
     return () => {
-      document.removeEventListener("focusin", revisar);
-      document.removeEventListener("focusout", revisar);
       window.visualViewport?.removeEventListener("resize", revisar);
+      window.visualViewport?.removeEventListener("scroll", revisar);
+      window.removeEventListener("resize", revisar);
     };
   }, []);
 
-  return abierto;
+  return estado;
 }
 
 /** RF-09: llama `alCambiar` cuando cambia la orientación (screen.orientation, o matchMedia en iOS < 16.4: L-11). */

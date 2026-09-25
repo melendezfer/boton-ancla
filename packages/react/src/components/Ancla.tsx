@@ -24,7 +24,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, use
 import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
 import { useBienvenida } from "../dom/bienvenida";
 import type { ControlCapas } from "../dom/capas";
-import { useCambioOrientacion, useTecladoAbierto } from "../dom/entorno";
+import { useCambioOrientacion, useTeclado } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
 import type { AnchorIcons, AnchorTheme, ReactAnchorIcon } from "../types";
 
@@ -194,7 +194,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
   }, [cantidadCapas, cerrarArriba, machine]);
 
   // RF-13: con el teclado abierto el ancla se oculta (valor por defecto de la spec).
-  const teclado = useTecladoAbierto();
+  const teclado = useTeclado().abierto;
 
   // RNF-05: foco itinerante. Con teclado, el foco va a la opción activa; al cerrar, vuelve al ancla.
   const refBoton = useRef<HTMLButtonElement>(null);
