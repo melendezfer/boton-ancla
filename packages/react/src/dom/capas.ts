@@ -1,6 +1,6 @@
 "use client";
 
-import type { MetricEvent } from "@boton-ancla/core";
+import type { CapaAncla, MetricEvent } from "@boton-ancla/core";
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 // Capas (HM-03, spec RF-15): lo que la app abre ENCIMA del contenido (hojas, listas,
@@ -18,7 +18,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 // - Se sincroniza en un paso diferido: el doble montaje del Modo estricto de React en
 //   desarrollo no lo desordena.
 
-type Capa = { clave: symbol; onClose: RefObject<() => void> };
+type Capa = {
+  clave: symbol;
+  onClose: RefObject<() => void>;
+  /** Ícono, nombre y acciones de la capa (HM-08); siempre la versión más reciente. */
+  datos: RefObject<CapaAncla>;
+};
 export type ViaCierre = "ancla" | "teclado" | "app";
 
 const MARCA = "__botonAnclaCapa";
@@ -30,6 +35,12 @@ function entradaPropia(): boolean {
 
 export type ControlCapas = {
   cantidad: number;
+  /** Cambia cuando una capa actualiza su ícono, nombre o acciones (para volver a dibujar). */
+  version: number;
+  /** Avisa que los datos de alguna capa cambiaron. */
+  actualizar: () => void;
+  /** Datos de la capa de arriba (la que se ve), o null si no hay capas. */
+  datosArriba: () => CapaAncla | null;
   agregar: (capa: Capa) => void;
   quitar: (clave: symbol) => void;
   /** Cierra la capa de arriba (por el historial, si tiene su entrada). */
@@ -41,6 +52,9 @@ export type ControlCapas = {
 export function useCapas(onEventRef: RefObject<((e: MetricEvent) => void) | undefined>): ControlCapas {
   const pila = useRef<Capa[]>([]);
   const [cantidad, setCantidad] = useState(0);
+  const [version, setVersion] = useState(0);
+  const actualizar = useCallback(() => setVersion((v) => v + 1), []);
+  const datosArriba = useCallback(() => pila.current.at(-1)?.datos.current ?? null, []);
   /** Cierre propio en curso: el próximo popstate lo provocamos nosotros. */
   const cierrePropio = useRef<ViaCierre | null>(null);
   const programado = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -129,5 +143,8 @@ export function useCapas(onEventRef: RefObject<((e: MetricEvent) => void) | unde
     };
   }, [registrar, sincronizarHistorial]);
 
-  return useMemo(() => ({ cantidad, agregar, quitar, cerrarArriba, cerrar }), [cantidad, agregar, quitar, cerrarArriba, cerrar]);
+  return useMemo(
+    () => ({ cantidad, version, actualizar, datosArriba, agregar, quitar, cerrarArriba, cerrar }),
+    [cantidad, version, actualizar, datosArriba, agregar, quitar, cerrarArriba, cerrar],
+  );
 }

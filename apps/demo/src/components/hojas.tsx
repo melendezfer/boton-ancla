@@ -1,5 +1,6 @@
 "use client";
 
+import type { AnchorAction, CapaAncla } from "@boton-ancla/core";
 import { useAnchorLayer, useAnchorReserva, useMedidas, useTeclado } from "@boton-ancla/react";
 import Link from "next/link";
 import { createRef } from "react";
@@ -36,10 +37,24 @@ function usePosicionHoja() {
 // Hojas inferiores de la demo, con z-[1000] como en RUTEANDO: el ancla debe
 // quedar por encima (RF-14). Solo una abierta a la vez (useDemo().hoja).
 
-export function HojaInferior({ titulo, onCerrar, children }: { titulo: string; onCerrar: () => void; children: React.ReactNode }) {
-  // HM-03: la hoja es una capa: el ancla ofrece "Cerrar" y el atrás del sistema la cierra.
-  // Su X usa el `cerrar` que devuelve el hook, para que el historial quede limpio.
-  const cerrar = useAnchorLayer(true, onCerrar);
+export function HojaInferior({
+  titulo,
+  onCerrar,
+  icono,
+  acciones,
+  children,
+}: {
+  titulo: string;
+  onCerrar: () => void;
+  /** Ícono de la capa: lo muestra el centro del ancla mientras está abierta (HM-08). */
+  icono?: CapaAncla["icon"];
+  /** Acciones propias de la capa en el abanico (HM-08). */
+  acciones?: AnchorAction[];
+  children: React.ReactNode;
+}) {
+  // HM-03/HM-08: la hoja es una capa: el ancla ofrece "Cerrar" + sus acciones, y el atrás del
+  // sistema la cierra. Su X usa el `cerrar` que devuelve el hook, para que el historial quede limpio.
+  const cerrar = useAnchorLayer(true, onCerrar, { label: titulo, icon: icono, actions: acciones });
   const pos = usePosicionHoja();
   return (
     <div className="fixed inset-x-0 bottom-0 z-[1000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" data-testid="hoja-inferior" style={pos.contenedor}>
@@ -91,7 +106,7 @@ function BuscadorPersistente() {
     refBuscador.current?.blur();
     cerrarHoja();
   };
-  const cerrar = useAnchorLayer(abierta, cerrarEstado); // HM-03: su X cierra por el historial
+  const cerrar = useAnchorLayer(abierta, cerrarEstado, { label: "Buscar", icon: ANCHOR_ICONS.search }); // HM-03/HM-08
   const pos = usePosicionHoja(); // HM-05: sobre el teclado
   return (
     <div

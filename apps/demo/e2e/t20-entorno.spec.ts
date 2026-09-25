@@ -58,7 +58,7 @@ test("RF-10: si la app cambia de sección con el menú abierto, se cancela y el 
   await expect(page).toHaveURL(/\/ajustes$/); // soltar después no hace nada
 });
 
-test("RF-13 + HM-04: con el teclado abierto el ancla se oculta; al bajarlo vuelve aunque el campo siga enfocado", async ({ page }) => {
+test("RF-13 (HM-06) + HM-04: con el teclado abierto el ancla sube sobre él y ofrece 'Ocultar teclado'; al bajarlo, sigue ahí", async ({ page }) => {
   // El teclado se simula (Playwright no muestra el de un celular): helpers/teclado.ts.
   await page.goto("/mapa");
   await expect(page.getByTestId("mapa-lienzo")).toHaveAttribute("data-offset-x", /-?\d+/);
@@ -66,14 +66,22 @@ test("RF-13 + HM-04: con el teclado abierto el ancla se oculta; al bajarlo vuelv
   const gestos = await crearGestos(page);
   await gestos.deslizar(g.centro, haciaOpcion(g, "buscar"), { pasos: 8, ms: 150 });
   await expect(page.getByTestId("campo-busqueda")).toBeFocused();
-  // Enfocar solo ya no oculta: lo que cuenta es el teclado (HM-04).
-  await expect(page.getByTestId("ancla")).toBeVisible();
 
+  const alto = page.viewportSize()!.height;
   await ponerTeclado(page, 300);
-  await expect(page.getByTestId("ancla")).toBeHidden();
+  const ancla = page.getByTestId("ancla");
+  await expect(ancla).toBeVisible(); // ya no se oculta (HM-06)
+  await expect.poll(async () => (await ancla.boundingBox())!.y + (await ancla.boundingBox())!.height).toBeLessThanOrEqual(alto - 300);
+  const conTeclado = await leerGeometria(page);
+  expect(conTeclado.slots.find((s) => s.id === "ocultar-teclado")?.angulo).toBeCloseTo(180, 5); // RF-17
+  expect(conTeclado.slots.find((s) => s.id === "cerrar")?.angulo).toBeCloseTo(90, 5);
 
-  // El botón atrás de Android baja el teclado pero deja el campo enfocado (HM-04).
+  // Solo deslizando: "Ocultar teclado" quita el foco del campo (en un celular, baja el teclado).
+  await gestos.deslizar(conTeclado.centro, haciaOpcion(conTeclado, "ocultar-teclado"), { pasos: 8, ms: 150 });
+  await expect(page.getByTestId("campo-busqueda")).not.toBeFocused();
+
+  // HM-04: al bajar el teclado, el ancla sigue visible y "Ocultar teclado" desaparece.
   await ponerTeclado(page, 0);
-  await expect(page.getByTestId("campo-busqueda")).toBeFocused();
-  await expect(page.getByTestId("ancla")).toBeVisible();
+  await expect(ancla).toBeVisible();
+  await expect.poll(async () => (await leerGeometria(page)).slots.some((s) => s.id === "ocultar-teclado")).toBe(false);
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { DEFAULT_PARAMS, validateScreen, type AnchorScreen, type Params } from "@boton-ancla/core";
+import { DEFAULT_PARAMS, pantallaDeCapa, validateScreen, type AnchorScreen, type CapaAncla, type Params } from "@boton-ancla/core";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Ancla } from "./components/Ancla";
@@ -93,28 +93,48 @@ export function useAnchorReserva(): ReservaAncla {
 }
 
 /**
- * Declara una capa abierta encima del contenido (HM-03, RF-15): una hoja, una lista,
- * la búsqueda. Mientras `abierta` sea true, el ancla ofrece "Cerrar" a 90°, y el botón
- * atrás del sistema y Escape llaman `onClose` en vez de navegar.
+ * Declara una capa abierta encima del contenido (HM-03, HM-08, RF-15): una hoja, una
+ * lista, la búsqueda. Mientras `abierta` sea true, el abanico muestra "Cerrar" a 90° y
+ * las acciones de la capa (las de la pantalla de fondo se ocultan); el centro muestra su
+ * ícono y nombre. El botón atrás del sistema y Escape llaman `onClose` en vez de navegar.
  *
  * Devuelve `cerrar`: úsala en el botón de cerrar propio de la capa (su X). Cierra por el
  * historial, así el "atrás" siguiente navega normal. Si la capa se cierra porque se
  * navega (un enlace dentro de ella), basta con cerrar el estado como siempre.
  */
-export function useAnchorLayer(abierta: boolean, onClose: () => void): () => void {
+export function useAnchorLayer(abierta: boolean, onClose: () => void, capa: CapaAncla = {}): () => void {
   const capas = useContext(ContextoCapas);
   if (!capas) throw new Error("useAnchorLayer debe usarse dentro de <AnchorProvider>.");
-  const { agregar, quitar, cerrar } = capas;
+  const { agregar, quitar, cerrar, actualizar } = capas;
   const onCloseRef = useRef(onClose);
+  const datosRef = useRef<CapaAncla>(capa);
   useLayoutEffect(() => {
     onCloseRef.current = onClose;
+    datosRef.current = capa;
   });
+
+  // Se vuelve a dibujar solo si cambia algo visible de la capa (como la firma de useAnchorScreen).
+  const firma = [
+    capa.label ?? "",
+    ...(capa.actions ?? []).map((a) => `${a.id}:${a.label}:${a.kind ?? "normal"}:${a.disabled ? 1 : 0}:${a.priority ?? ""}`),
+  ].join("|");
+  const icono = capa.icon;
+  useLayoutEffect(() => {
+    if (!abierta) return;
+    if (process.env.NODE_ENV !== "production") {
+      const errores = validateScreen(pantallaDeCapa({ id: "capa", sectionIcon: null, sectionLabel: "capa", actions: [] }, datosRef.current), {
+        ...DEFAULT_PARAMS,
+      });
+      if (errores.length > 0) throw new Error(`Capa del ancla inválida:\n- ${errores.join("\n- ")}`);
+    }
+    actualizar();
+  }, [abierta, firma, icono, actualizar]);
   const claveRef = useRef<symbol | null>(null);
   useLayoutEffect(() => {
     if (!abierta) return;
     const clave = Symbol("capa");
     claveRef.current = clave;
-    agregar({ clave, onClose: onCloseRef });
+    agregar({ clave, onClose: onCloseRef, datos: datosRef });
     return () => {
       quitar(clave);
       if (claveRef.current === clave) claveRef.current = null;

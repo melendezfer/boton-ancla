@@ -7,7 +7,7 @@ import { formatoPesos } from "@/lib/datos";
 import { useDemo } from "@/lib/demo-store";
 
 export function DetalleProducto({ id }: { id: string }) {
-  const { productos } = useDemo();
+  const { productos, abrirHoja } = useDemo();
   const p = productos.find((x) => x.id === id);
   usePantallaProducto(id, p?.disponible ?? false);
 
@@ -35,6 +35,14 @@ export function DetalleProducto({ id }: { id: string }) {
         <p className="self-start rounded-full bg-ambar/20 px-3 py-1 font-sans text-caption font-medium tracking-wide text-ambar uppercase">No disponible</p>
       )}
       <p className="font-sans text-body text-text-muted">{p.descripcion}</p>
+      {/* Como en RUTEANDO (product-row.tsx): editar también desde el contenido. */}
+      <button
+        type="button"
+        onClick={() => abrirHoja({ tipo: "editar-producto", productoId: p.id })}
+        className="flex h-btn items-center justify-center rounded-input border border-border bg-surface font-sans text-button font-semibold text-text"
+      >
+        Editar producto
+      </button>
       <p className="rounded-input bg-background px-3 py-2 font-sans text-body-sm text-text-muted">
         Editar, marcar no disponible y eliminar se harán desde el ancla (T-24). Eliminar es irreversible: habrá que deslizar más allá del anillo.
       </p>

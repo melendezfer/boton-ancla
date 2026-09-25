@@ -3,6 +3,7 @@ import {
   ArrowCounterClockwise,
   ArrowLeft,
   BookOpen,
+  CaretDoubleDown,
   Broadcast,
   ChartBar,
   CheckCircle,
@@ -92,6 +93,8 @@ export const ANCHOR_ICONS = {
 
   /** Cerrar lo que está abierto encima (hojas, listas): la X de las hojas y "Cerrar" del ancla (HM-03). */
   close: X,
+  /** Bajar el teclado virtual (quitar el foco del campo), que agrega el ancla (HM-06, RF-17). */
+  hideKeyboard: CaretDoubleDown,
 
   // Solo de la demo.
   /** Pin de un negocio en el mapa falso. */

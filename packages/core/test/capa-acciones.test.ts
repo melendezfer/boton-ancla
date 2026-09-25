@@ -52,6 +52,10 @@ describe("pantallaDeCapa (HM-08)", () => {
     expect(conDeshacer[ID_CERRAR]).toBe(90);
   });
 
+  it("1-A en una capa SIN acciones: 'Deshacer' se agrega junto a 'Cerrar'", () => {
+    expect(angulos(lay(pantallaDeCapa(productoDueno, {}), { capa: true, deshacer: true }))).toEqual({ [ID_CERRAR]: 90, [ID_DESHACER]: 180 });
+  });
+
   it("valida el tope: 'Cerrar' + 4 acciones de capa está bien; 5 no", () => {
     const cuatro = pantallaDeCapa(mapa, { actions: ["a", "b", "c", "d"].map((id) => accion(id, id)) });
     expect(validateScreen(cuatro, P)).toEqual([]);

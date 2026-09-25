@@ -4,6 +4,7 @@ import {
   ID_ATRAS,
   ID_CERRAR,
   ID_DESHACER,
+  ID_OCULTAR_TECLADO,
   type AnchorEvent,
   type AnchorScreen,
   type AnchorState,
@@ -234,6 +235,8 @@ export class Controlador {
       if (id === ID_ATRAS) pantalla.back?.onSelect();
       else if (id === ID_DESHACER) this.o.efectos.alDeshacer?.();
       else if (id === ID_CERRAR) this.o.efectos.alCerrarCapa?.();
+      // RF-17: quitar el foco del campo baja el teclado virtual.
+      else if (id === ID_OCULTAR_TECLADO) (document.activeElement as HTMLElement | null)?.blur?.();
       else {
         const accion = pantalla.actions.find((a) => a.id === id);
         if (!accion || accion.disabled) return;

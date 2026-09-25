@@ -34,6 +34,8 @@ export type AnchorIcons = {
   undo: ReactAnchorIcon;
   /** Opción temporal "Cerrar" mientras hay una capa abierta (HM-03). */
   close: ReactAnchorIcon;
+  /** Opción "Ocultar teclado" con un teclado virtual abierto (HM-06, RF-17). */
+  hideKeyboard: ReactAnchorIcon;
 };
 
 export type AnchorProviderProps = {

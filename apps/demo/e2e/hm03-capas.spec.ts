@@ -30,13 +30,38 @@ async function mapaConFavoritosAbierto(page: Page) {
   return { antes: g, gestos };
 }
 
-test("HU-14: con una capa abierta, 'Cerrar' reemplaza a Favoritos a 90° y nada más se mueve", async ({ page }) => {
+test("HM-08: con una capa abierta, 'Cerrar' va a 90°, el fondo se oculta y el centro muestra la capa", async ({ page }) => {
   const { antes } = await mapaConFavoritosAbierto(page);
   const ahora = await leerGeometria(page);
-  const angulo = (g: typeof ahora, id: string) => g.slots.find((s) => s.id === id)?.angulo;
-  expect(angulo(ahora, "cerrar")).toBeCloseTo(90, 5);
-  expect(angulo(ahora, "favoritos")).toBeUndefined();
-  for (const id of ["mi-ubicacion", "buscar", "ofertas-cerca"]) expect(angulo(ahora, id)).toBeCloseTo(angulo(antes, id)!, 5);
+  expect(ahora.slots.find((s) => s.id === "cerrar")?.angulo).toBeCloseTo(90, 5);
+  for (const id of ["buscar", "mi-ubicacion", "ofertas-cerca", "favoritos"]) expect(ahora.slots.find((s) => s.id === id)).toBeUndefined();
+  await expect(page.getByRole("button", { name: "Menú, Favoritos" })).toBeVisible(); // D-09 (HM-08 2-A)
+
+  // Al cerrar, el fondo vuelve con sus mismas posiciones.
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const despues = await leerGeometria(page);
+  for (const s of antes.slots) expect(despues.slots.find((x) => x.id === s.id)?.angulo).toBeCloseTo(s.angulo, 5);
+  await expect(page.getByRole("button", { name: "Menú, sección Mapa" })).toBeVisible();
+});
+
+test("HM-08 1-A: con una capa abierta, 'Deshacer' entra al abanico de la capa", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify({ rol: "dueno" })));
+  await page.goto("/producto/arepa-queso");
+  const g = await leerGeometria(page);
+  const gestos = await crearGestos(page);
+  await gestos.deslizar(g.centro, haciaOpcion(g, "marcar-no-disponible"), { pasos: 8, ms: 150 });
+  await expect(page.getByTestId("aviso")).toBeVisible();
+
+  // Mientras dura el aviso, se abre una capa en la misma página (botón del contenido).
+  await page.getByRole("button", { name: "Editar producto" }).click();
+  await expect(page.getByRole("dialog", { name: "Editar producto (simulado)" })).toBeVisible();
+
+  const enCapa = await leerGeometria(page);
+  expect(Object.fromEntries(enCapa.slots.map((s) => [s.id, Math.round(s.angulo)]))).toEqual({ cerrar: 90, deshacer: 180 });
+  await gestos.deslizar(enCapa.centro, haciaOpcion(enCapa, "deshacer"), { pasos: 8, ms: 150 });
+  await expect(page.getByTestId("aviso")).toHaveCount(0);
+  await expect(page.getByText("Disponible", { exact: true })).toBeVisible(); // se deshizo
 });
 
 test("HU-14: deslizar a 'Cerrar' cierra la capa, solo deslizando", async ({ page }) => {

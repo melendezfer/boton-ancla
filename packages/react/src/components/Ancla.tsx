@@ -8,6 +8,8 @@ import {
   ID_ATRAS,
   ID_CERRAR,
   ID_DESHACER,
+  ID_OCULTAR_TECLADO,
+  pantallaDeCapa,
   mostrarEtiqueta,
   necesitaDemostracion,
   posicionBanda,
@@ -58,11 +60,11 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
   // RNF-03: el estado de la máquina cambia en CADA pointermove (última posición, recorrido),
   // pero en pantalla solo cambia algo con la preselección, el foco, el dedo apoyado, etc.
   // React solo se entera de los cambios visibles: evita redibujar el ancla en cada movimiento.
-  const vista = useRef<AnchorState | null>(null);
+  const vistaCache = useRef<AnchorState | null>(null);
   const leerVista = useCallback(() => {
     const actual = machine.getState();
-    if (vista.current && mismaVista(vista.current, actual)) return vista.current;
-    vista.current = actual;
+    if (vistaCache.current && mismaVista(vistaCache.current, actual)) return vistaCache.current;
+    vistaCache.current = actual;
     return actual;
   }, [machine]);
   const estado = useSyncExternalStore(machine.subscribe, leerVista, leerVista);
@@ -124,22 +126,48 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
     efectosRef.current = efectos;
   });
 
+  // HM-08: con una capa abierta, lo que se ve es la capa (su ícono, nombre y acciones, con
+  // "Cerrar" a 90°); la pantalla de fondo se oculta y vuelve al cerrar.
+  const { version: versionCapas, cantidad: cantidadCapasVista, datosArriba } = capas;
+  const hayCapa = cantidadCapasVista > 0;
+  const vista = useMemo<AnchorScreen | null>(() => {
+    if (!pantalla) return null;
+    const arriba = hayCapa ? datosArriba() : null;
+    return arriba ? pantallaDeCapa(pantalla, arriba) : pantalla;
+    // versionCapas: se recalcula cuando una capa cambia sus datos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pantalla, hayCapa, versionCapas, datosArriba]);
+
+  // HM-06 / RF-13: con el teclado abierto el ancla NO se oculta: se ubica en el alto visible
+  // (sobre el teclado) y agrega "Ocultar teclado" a 180° (RF-17).
+  const teclado = useTeclado();
+
   // Geometría para EMPEZAR una interacción. Mientras hay una abierta, se dibuja la de la máquina
   // (la foto tomada al empezar), así el abanico no se mueve bajo el dedo.
   const geo = useMemo<Geometry | null>(() => {
-    if (!pantalla || !medidas) return null;
+    if (!vista || !medidas) return null;
+    const viewport = teclado.abierto ? { ...medidas.viewport, height: medidas.viewport.height - teclado.alto } : medidas.viewport;
     return crearGeometria({
-      screen: pantalla,
-      viewport: medidas.viewport,
-      safeArea: medidas.safeArea,
+      screen: vista,
+      viewport,
+      safeArea: teclado.abierto ? { ...medidas.safeArea, bottom: 0 } : medidas.safeArea,
       hand: prefs.hand,
       params,
-      // C-21: mientras hay algo para deshacer, "Deshacer" reemplaza a la prioridad 1.
+      // C-21: mientras hay algo para deshacer, "Deshacer" reemplaza a la prioridad 1 (de la capa, si hay: HM-08 1-A).
       deshacer: aviso?.tipo === "deshacer",
-      // HM-03: con una capa abierta, "Cerrar" reemplaza lo que esté a 90°.
-      capa: capas.cantidad > 0,
+      // HM-03/HM-08: el "Atrás" de la capa se convierte en "Cerrar" a 90°.
+      capa: hayCapa,
+      teclado: teclado.abierto,
     });
-  }, [pantalla, medidas, prefs.hand, params, aviso?.tipo, capas.cantidad]);
+  }, [vista, medidas, prefs.hand, params, aviso?.tipo, hayCapa, teclado.abierto, teclado.alto]);
+
+  // Pantalla más reciente para EJECUTAR (acciones de la capa o de la sección, siempre al día).
+  const vistaRef = useRef<AnchorScreen | null>(null);
+  useLayoutEffect(() => {
+    const fondo = pantallaRef.current;
+    const arriba = capas.cantidad > 0 ? capas.datosArriba() : null;
+    vistaRef.current = fondo && arriba ? pantallaDeCapa(fondo, arriba) : fondo;
+  });
 
   const geoRef = useRef<Geometry | null>(geo);
   useLayoutEffect(() => {
@@ -151,7 +179,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
       new Controlador({
         machine,
         obtenerGeo: () => geoRef.current,
-        obtenerPantalla: () => pantallaRef.current,
+        obtenerPantalla: () => vistaRef.current,
         onEvent: (m) => onEventRef.current?.(m),
         // Siempre la versión más reciente de los efectos (usan estado de React).
         efectos: {
@@ -171,7 +199,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
 
   // RF-10: si la app cambia de sección con el menú abierto, se cancela. El cambio que
   // provoca una acción ejecutada (p. ej. "Carta") llega cuando el ancla ya está en reposo.
-  const idSeccion = pantalla?.id;
+  const idSeccion = vista?.id; // abrir o cerrar una capa también cuenta (HM-08)
   const seccionAnterior = useRef(idSeccion);
   useEffect(() => {
     if (seccionAnterior.current !== idSeccion) {
@@ -193,8 +221,6 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
     return () => window.removeEventListener("keydown", alTeclado);
   }, [cantidadCapas, cerrarArriba, machine]);
 
-  // RF-13: con el teclado abierto el ancla se oculta (valor por defecto de la spec).
-  const teclado = useTeclado().abierto;
 
   // RNF-05: foco itinerante. Con teclado, el foco va a la opción activa; al cerrar, vuelve al ancla.
   const refBoton = useRef<HTMLButtonElement>(null);
@@ -215,7 +241,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
     tipoAnterior.current = estado.tipo;
   }, [estado, focoTeclado]);
 
-  if (!pantalla || !geo || !medidas) return null;
+  if (!pantalla || !vista || !geo || !medidas) return null;
 
   const geoDibujo = "geo" in estado ? estado.geo : geo;
   const abierto = menuAbierto(estado);
@@ -229,19 +255,20 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
     if (id === ID_ATRAS) return icons.back;
     if (id === ID_DESHACER) return icons.undo;
     if (id === ID_CERRAR) return icons.close;
-    return pantalla.actions.find((a) => a.id === id)?.icon as ReactAnchorIcon | undefined;
+    if (id === ID_OCULTAR_TECLADO) return icons.hideKeyboard;
+    return vista.actions.find((a) => a.id === id)?.icon as ReactAnchorIcon | undefined;
   };
-  // D-09: el centro muestra la sección; con una opción activa, anticipa su ícono.
-  const IconoCentro = (idActivo && iconoDe(idActivo)) || (pantalla.sectionIcon as ReactAnchorIcon);
+  // D-09: el centro muestra la sección (o la capa abierta, HM-08); con una opción activa, anticipa su ícono.
+  const IconoCentro = (idActivo && iconoDe(idActivo)) || (vista.sectionIcon as ReactAnchorIcon);
 
   return (
     <div
       ref={refRaiz}
-      className={`ba-raiz${teclado && estado.tipo === "reposo" ? " ba-raiz--oculta" : ""}`}
+      className="ba-raiz"
       style={variablesCss(theme, params)}
       data-estado={estado.tipo}
       data-mano={prefs.hand}
-      data-oculta={(teclado && estado.tipo === "reposo") || undefined}
+      data-teclado={teclado.abierto || undefined}
     >
       {velo.visible && (
         // RF-11, L-06: tapa el contenido mientras el menú está abierto sin dedo apoyado
@@ -261,7 +288,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
         <Abanico
           estado={estado}
           geo={geoDibujo}
-          pantalla={pantalla}
+          pantalla={vista}
           iconoDe={iconoDe}
           idActivo={idActivo}
           medidas={medidas}
@@ -304,7 +331,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
             data-testid="confirmar"
             onClick={() => controlador.enviar({ tipo: "CONFIRMAR", t: performance.now() })}
           >
-            Confirmar: {etiquetaOpcion(pantalla, estado.id)}
+            Confirmar: {etiquetaOpcion(vista, estado.id)}
           </button>
         </ZonaAviso>
       )}
@@ -333,7 +360,7 @@ export function Ancla({ pantalla, pantallaRef, prefs, theme, icons, params, onEv
         aria-haspopup="menu"
         aria-expanded={abierto}
         aria-controls={abierto ? "ba-menu" : undefined}
-        aria-label={`Menú, sección ${pantalla.sectionLabel}`}
+        aria-label={hayCapa ? `Menú, ${vista.sectionLabel}` : `Menú, sección ${vista.sectionLabel}`}
         style={{ left: geoDibujo.centro.x, top: geoDibujo.centro.y }}
         onPointerDown={(e) => controlador.bajarEnAncla(e.nativeEvent, e.currentTarget)}
         onKeyDown={(e) => controlador.teclaEnAncla(e.nativeEvent)}
