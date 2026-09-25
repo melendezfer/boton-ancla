@@ -1,7 +1,9 @@
 import type { Icon } from "@phosphor-icons/react";
 import {
   ArrowCounterClockwise,
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
   BookOpen,
   CaretDoubleDown,
   Broadcast,
@@ -100,6 +102,9 @@ export const ANCHOR_ICONS = {
   close: X,
   /** Bajar el teclado virtual (quitar el foco del campo), que agrega el ancla (HM-06, RF-17). */
   hideKeyboard: CaretDoubleDown,
+  /** Flechas del ancla al desplazar con ella (HM-10, variante "ancla"). */
+  scrollUp: ArrowUp,
+  scrollDown: ArrowDown,
 
   // Acciones de capa de la demo (HM-08).
   /** Enfocar el campo de texto para escribir (abre el teclado). */

@@ -82,6 +82,19 @@ export default function PaginaAjustes() {
         </span>
       </label>
 
+      {prefs.desplazar && (
+        <Opciones<Preferencias["guiaDesplazar"]>
+          titulo="Guía al desplazar"
+          detalle="Para comparar (HM-10). En el ancla: flecha ↑/↓ y un anillo que se llena con la velocidad. Arriba: la cápsula con el punto, sobre el ancla."
+          valor={prefs.guiaDesplazar}
+          opciones={[
+            ["ancla", "En el ancla"],
+            ["arriba", "Arriba"],
+          ]}
+          alCambiar={(v) => setPref("guiaDesplazar", v)}
+        />
+      )}
+
       <section className="flex flex-col gap-2">
         <h2 className="font-heading text-title-2 font-semibold text-text">Bienvenida</h2>
         <p className="font-sans text-body-sm text-text-muted">

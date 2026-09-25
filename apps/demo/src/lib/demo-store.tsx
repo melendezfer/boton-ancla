@@ -20,6 +20,8 @@ export type Preferencias = {
   anclaAltura: number;
   /** HM-09 (experimental): desplazar con el ancla. Activado por defecto en la demo. */
   desplazar: boolean;
+  /** HM-10: dónde se ve la guía al desplazar. "ancla" por defecto. */
+  guiaDesplazar: "ancla" | "arriba";
 };
 
 export const PREFERENCIAS_INICIALES: Preferencias = {
@@ -28,6 +30,7 @@ export const PREFERENCIAS_INICIALES: Preferencias = {
   fondo: "claro",
   anclaAltura: DEFAULT_PARAMS.ANCLA_ALTURA,
   desplazar: true,
+  guiaDesplazar: "ancla",
 };
 
 /** Hojas inferiores de la demo; solo una abierta a la vez. */
@@ -108,6 +111,7 @@ function leerPrefs(): Preferencias {
       fondo: d.fondo === "foto" || d.fondo === "oscuro" ? d.fondo : "claro",
       anclaAltura: typeof d.anclaAltura === "number" && Number.isFinite(d.anclaAltura) ? d.anclaAltura : PREFERENCIAS_INICIALES.anclaAltura,
       desplazar: d.desplazar !== false,
+      guiaDesplazar: d.guiaDesplazar === "arriba" ? "arriba" : "ancla",
     };
   } catch {
     return PREFERENCIAS_INICIALES;
