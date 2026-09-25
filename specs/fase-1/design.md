@@ -35,7 +35,7 @@ Registro de lo que decidiste en la revisión. Lo que cambia la spec ya está en 
 | C-17 | "Uso" de una opción = ejecutarla. | spec HU-12 |
 | C-18 | Fase 1 guarda solo la mano, con una clave que incluye la orientación. | spec §7 |
 | C-19 | Si `onSelect` de una reversible falla, no hay deshacer y se muestra un aviso de error. | spec RF-08 |
-| C-20 | Los campos de exportación son los de spec §9 hasta tener el Documento 8. En T-25: posición = altura + lado; errores = cancelaciones y bloqueos desde la ejecución anterior; se exportan también los eventos crudos (`apps/demo/src/lib/exportar.ts`). | spec §9 |
+| C-20 | Los campos de exportación son los de spec §9 hasta tener el Documento 8. En T-25: posición = altura + lado; errores = cancelaciones y bloqueos desde la ejecución anterior; se exportan también los eventos crudos (`apps/demo/src/lib/exportar.ts`). ✅ Interpretación aceptada el 25-09-2026. | spec §9 |
 | C-22 | "Atrás" va a 90° aunque sea la única opción: `computeFanLayout` recibe `unicaArriba` (lo calcula `layoutParaPantalla`). Cualquier otra opción única sigue en la diagonal. | spec §6, §7; aquí §4.3 |
 | C-21 | "Deshacer" **reemplaza** a la acción de prioridad 1 en su posición; nada más se mueve. Aviso y "Deshacer" siguen hasta vencer los 5 s aunque cambie la sección. Ícono `ArrowCounterClockwise`, registrado en `semantic-icons.ts` de la demo. | spec RF-08, §6, §8; aquí §4.4 |
 | C-16 | `Heart` = marcar favorito; `ListHeart` = ver la lista de Favoritos. Secciones: `IdentificationCard` (perfil) y `Cube` (producto). `Storefront` nunca para secciones (= local fijo en RUTEANDO). Solo en la demo; RUTEANDO no se toca. | spec §8; aquí §8 |
