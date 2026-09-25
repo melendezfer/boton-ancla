@@ -9,7 +9,10 @@ export const ID_DESHACER = "deshacer";
 /** Id de la opción temporal "Cerrar" que ocupa la posición de 90° mientras hay una capa abierta (HM-03). */
 export const ID_CERRAR = "cerrar";
 
-const IDS_RESERVADOS = [ID_ATRAS, ID_DESHACER, ID_CERRAR];
+/** Id de la opción "Ocultar teclado" que el ancla agrega a 180° con un teclado abierto (HM-06, HM-08, RF-17). */
+export const ID_OCULTAR_TECLADO = "ocultar-teclado";
+
+const IDS_RESERVADOS = [ID_ATRAS, ID_DESHACER, ID_CERRAR, ID_OCULTAR_TECLADO];
 
 /**
  * Revisa lo que el tipo AnchorScreen no puede imponer por sí solo (C-13).

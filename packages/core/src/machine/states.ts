@@ -1,7 +1,7 @@
 import { layoutParaPantalla, type Slot } from "../layout";
 import type { Params } from "../params";
 import type { AnchorScreen, Hand, Insets, Point, Rect } from "../types";
-import { ID_ATRAS, ID_CERRAR } from "../validate";
+import { ID_ATRAS, ID_CERRAR, ID_OCULTAR_TECLADO } from "../validate";
 
 // Tipos de la máquina de estados (spec §3, design.md §3.2).
 // La máquina es pura: todo lo que necesita llega dentro de los eventos.
@@ -25,10 +25,11 @@ export function crearGeometria(input: {
   params: Params;
   deshacer?: boolean;
   capa?: boolean;
+  teclado?: boolean;
 }): Geometry {
   const { anchor, ordered, slots } = layoutParaPantalla(input);
   // La prioridad 1 es la primera acción propia (no "Atrás") de orderActions.
-  const prioridad1 = ordered.find((a) => a.id !== ID_ATRAS && a.id !== ID_CERRAR)?.id;
+  const prioridad1 = ordered.find((a) => ![ID_ATRAS, ID_CERRAR, ID_OCULTAR_TECLADO].includes(a.id))?.id;
   return { centro: anchor, slots, params: input.params, hand: input.hand, prioridad1 };
 }
 

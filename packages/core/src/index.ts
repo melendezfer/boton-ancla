@@ -12,7 +12,7 @@ export type {
   Rect,
 } from "./types";
 export { DEFAULT_PARAMS, type Desempate, type Params } from "./params";
-export { ID_ATRAS, ID_CERRAR, ID_DESHACER, validateScreen } from "./validate";
+export { ID_ATRAS, ID_CERRAR, ID_DESHACER, ID_OCULTAR_TECLADO, validateScreen } from "./validate";
 export {
   anguloDesde,
   anguloParaMano,
@@ -27,7 +27,9 @@ export {
   computeFanLayout,
   layoutParaPantalla,
   orderActions,
+  pantallaDeCapa,
   radioAdaptativo,
+  type CapaAncla,
   type FanLayout,
   type FanSlot,
   type OrderedAction,

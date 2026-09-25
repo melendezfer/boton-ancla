@@ -1,7 +1,7 @@
 import { anguloParaMano, puntoEnDireccion, radioParaCuerda } from "./geometry";
 import type { Params } from "./params";
-import type { ActionKind, AnchorScreen, Hand, Insets, Point, Rect } from "./types";
-import { ID_ATRAS, ID_CERRAR, ID_DESHACER } from "./validate";
+import type { ActionKind, AnchorAction, AnchorIcon, AnchorScreen, Hand, Insets, Point, Rect } from "./types";
+import { ID_ATRAS, ID_CERRAR, ID_DESHACER, ID_OCULTAR_TECLADO } from "./validate";
 
 // Posición del ancla y geometría del abanico (design.md §4.2 y §4.3).
 
@@ -80,9 +80,13 @@ export function radioAdaptativo(count: number, params: Params): number {
  * Ángulos base: en los extremos del arco y a intervalos iguales. Con 1 opción,
  * la diagonal, salvo que sea "Atrás" (unicaArriba): entonces arriba (C-22).
  */
-function angulosBase(count: number, params: Params, unicaArriba: boolean): number[] {
+function angulosBase(count: number, params: Params, unicaArriba: boolean, unicaLateral: boolean): number[] {
   if (count <= 0) return [];
-  if (count === 1) return [unicaArriba ? params.ARCO_DESDE : (params.ARCO_HASTA + params.ARCO_DESDE) / 2];
+  if (count === 1) {
+    if (unicaArriba) return [params.ARCO_DESDE];
+    if (unicaLateral) return [params.ARCO_HASTA];
+    return [(params.ARCO_HASTA + params.ARCO_DESDE) / 2];
+  }
   const delta = paso(count, params);
   return Array.from({ length: count }, (_, i) => params.ARCO_DESDE + i * delta);
 }
@@ -96,6 +100,8 @@ type EntradaAbanico = {
   params: Params;
   /** La opción única es "Atrás": va arriba y no en la diagonal (C-22). Sin efecto si count ≠ 1. */
   unicaArriba?: boolean;
+  /** La opción única es "Ocultar teclado": va al extremo lateral (RF-17). Sin efecto si count ≠ 1. */
+  unicaLateral?: boolean;
 };
 
 export function computeFanLayout({
@@ -106,9 +112,10 @@ export function computeFanLayout({
   hand,
   params,
   unicaArriba = false,
+  unicaLateral = false,
 }: EntradaAbanico): FanLayout {
   const radio = radioAdaptativo(count, params);
-  const angulos = angulosBase(count, params, unicaArriba);
+  const angulos = angulosBase(count, params, unicaArriba, unicaLateral);
   const inicio = params.ARCO_DESDE - params.EXT_EXTREMOS;
   const fin = params.ARCO_HASTA + params.EXT_EXTREMOS;
 
@@ -169,6 +176,7 @@ export type Slot = FanSlot & OrderedAction;
 const ATRAS: OrderedAction = { id: ID_ATRAS, kind: "normal", disabled: false };
 const DESHACER: OrderedAction = { id: ID_DESHACER, kind: "normal", disabled: false };
 const CERRAR: OrderedAction = { id: ID_CERRAR, kind: "normal", disabled: false };
+const OCULTAR_TECLADO: OrderedAction = { id: ID_OCULTAR_TECLADO, kind: "normal", disabled: false };
 
 /** Opciones fijas que van siempre arriba (90°): "Atrás" y, con una capa abierta, "Cerrar". */
 const FIJAS_ARRIBA = [ID_ATRAS, ID_CERRAR];
@@ -223,7 +231,16 @@ export function assignActions(layout: FanLayout, ordered: OrderedAction[], param
     const arriba = libres.reduce((min, s) => (s.anguloBase < min.anguloBase ? s : min));
     asignadas.push({ ...arriba, ...atras });
     libres = libres.filter((s) => s !== arriba);
-    pendientes = ordered.filter((a) => a !== atras);
+    pendientes = pendientes.filter((a) => a !== atras);
+  }
+
+  // RF-17: "Ocultar teclado" va siempre al extremo lateral (mayor ángulo base).
+  const ocultar = pendientes.find((a) => a.id === ID_OCULTAR_TECLADO);
+  if (ocultar && libres.length > 0) {
+    const lateral = libres.reduce((max, s) => (s.anguloBase > max.anguloBase ? s : max));
+    asignadas.push({ ...lateral, ...ocultar });
+    libres = libres.filter((s) => s !== lateral);
+    pendientes = pendientes.filter((a) => a !== ocultar);
   }
 
   const diagonal = (params.ARCO_DESDE + params.ARCO_HASTA) / 2;
@@ -251,13 +268,24 @@ type EntradaPantalla = {
   deshacer?: boolean;
   /** Hay una capa abierta encima del contenido (HM-03): "Cerrar" va a 90°. */
   capa?: boolean;
+  /** Hay un teclado virtual abierto (RF-17): "Ocultar teclado" va a 180°. */
+  teclado?: boolean;
 };
 
 /**
  * Atajo para el adaptador: ordena las acciones, calcula el ancla y el abanico
  * (con unicaArriba cuando la única opción es "Atrás", C-22) y asigna cada acción.
  */
-export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, deshacer = false, capa = false }: EntradaPantalla): {
+export function layoutParaPantalla({
+  screen,
+  viewport,
+  safeArea,
+  hand,
+  params,
+  deshacer = false,
+  capa = false,
+  teclado = false,
+}: EntradaPantalla): {
   anchor: Point;
   layout: FanLayout;
   ordered: OrderedAction[];
@@ -268,6 +296,12 @@ export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, d
   // es "Atrás" (esa va en la diagonal), "Cerrar" se agrega arriba y la acción pasa al extremo.
   const agregarCerrar = capa && (ordered.length === 0 || (ordered.length === 1 && ordered[0]!.id !== ID_ATRAS));
   if (agregarCerrar) ordered = [CERRAR, ...ordered];
+  // RF-17: con teclado, "Ocultar teclado" se AGREGA fijo al extremo lateral (como "Atrás"
+  // arriba). Si así pasara de MAX_OPCIONES, sale la acción de menor prioridad (la última).
+  if (teclado) {
+    if (ordered.length >= params.MAX_OPCIONES) ordered = ordered.slice(0, params.MAX_OPCIONES - 1);
+    ordered = [...ordered, OCULTAR_TECLADO];
+  }
   const anchor = computeAnchorPosition({ viewport, safeArea, hand, params });
   const layout = computeFanLayout({
     anchor,
@@ -277,6 +311,7 @@ export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, d
     hand,
     params,
     unicaArriba: ordered.length === 1 && FIJAS_ARRIBA.includes(ordered[0]!.id),
+    unicaLateral: ordered.length === 1 && ordered[0]!.id === ID_OCULTAR_TECLADO,
   });
   let slots = assignActions(layout, ordered, params);
   // HM-03: "Cerrar" REEMPLAZA lo que esté a 90° ("Atrás" o la opción de arriba) y nada más se
@@ -285,4 +320,28 @@ export function layoutParaPantalla({ screen, viewport, safeArea, hand, params, d
     slots = slots.map((s) => (s.index === 0 ? { ...s, ...CERRAR } : s));
   }
   return { anchor, layout, ordered, slots };
+}
+
+/** Lo que una capa declara (HM-08, spec RF-15). */
+export type CapaAncla = {
+  icon?: AnchorIcon;
+  label?: string;
+  /** Máximo MAX_OPCIONES − 1: "Cerrar" ocupa una posición. */
+  actions?: AnchorAction[];
+};
+
+/**
+ * Pantalla que se ve mientras hay una capa abierta (HM-08): el ícono y el nombre de la
+ * capa (o los del fondo, si no los declara), sus acciones, y un "Atrás" que la regla de
+ * HM-03 convierte en "Cerrar" a 90° (usar con `capa: true`). Las acciones del fondo no
+ * están: vuelven al cerrar la capa, en sus mismas posiciones.
+ */
+export function pantallaDeCapa(fondo: AnchorScreen, capa: CapaAncla): AnchorScreen {
+  return {
+    id: `${fondo.id}›${capa.label ?? "capa"}`,
+    sectionIcon: capa.icon ?? fondo.sectionIcon,
+    sectionLabel: capa.label ?? fondo.sectionLabel,
+    back: { onSelect: () => {} }, // lo ejecuta "Cerrar", no este onSelect
+    actions: capa.actions ?? [],
+  };
 }
