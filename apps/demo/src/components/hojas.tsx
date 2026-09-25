@@ -1,6 +1,6 @@
 "use client";
 
-import { useAnchorLayer, useMedidas, useTeclado } from "@boton-ancla/react";
+import { useAnchorLayer, useAnchorReserva, useMedidas, useTeclado } from "@boton-ancla/react";
 import Link from "next/link";
 import { createRef } from "react";
 import { NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos } from "@/lib/datos";
@@ -14,12 +14,20 @@ const X = ANCHOR_ICONS.close;
  * máximo = lo visible menos la barra superior. Funciona en Chrome Android y en iOS (que
  * ignora interactive-widget), porque solo usa visualViewport.
  */
+/** Margen lateral del contenedor de la hoja (px-3 = 12 px). */
+const MARGEN_HOJA = 12;
+
 function usePosicionHoja() {
   const { alto } = useTeclado();
   const medidas = useMedidas();
+  const reserva = useAnchorReserva();
   const visible = (medidas?.viewport.height ?? 0) - alto;
+  // HM-07: del lado del ancla, la hoja deja libre el espacio que ocupa el ancla desde el
+  // borde, para que su X y su contenido no queden debajo.
+  const libre = Math.max(0, reserva.ancho - MARGEN_HOJA);
   return {
     contenedor: { bottom: alto } as React.CSSProperties,
+    reserva: (reserva.lado === "right" ? { paddingRight: libre } : { paddingLeft: libre }) as React.CSSProperties,
     // 3,5rem de la barra superior + margen; nunca más del 60 % del alto (como antes).
     hoja: { maxHeight: visible > 0 ? `min(60vh, calc(${visible}px - 4.5rem - env(safe-area-inset-top)))` : undefined } as React.CSSProperties,
   };
@@ -41,13 +49,15 @@ export function HojaInferior({ titulo, onCerrar, children }: { titulo: string; o
         style={pos.hoja}
         className="mx-auto flex max-h-[60vh] max-w-lg flex-col overflow-hidden rounded-card border border-border bg-surface shadow-lg motion-safe:animate-[subir_160ms_ease-out]"
       >
-        <header className="flex items-center gap-2 border-b border-border px-4 py-3">
-          <h2 className="flex-1 font-heading text-title-2 font-semibold text-text">{titulo}</h2>
-          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-background">
-            <X size={20} />
-          </button>
-        </header>
-        <div className="overflow-y-auto px-4 py-3">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col" style={pos.reserva} data-testid="hoja-reserva">
+          <header className="flex items-center gap-2 border-b border-border px-4 py-3">
+            <h2 className="flex-1 font-heading text-title-2 font-semibold text-text">{titulo}</h2>
+            <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-background">
+              <X size={20} />
+            </button>
+          </header>
+          <div className="overflow-y-auto px-4 py-3">{children}</div>
+        </div>
       </section>
     </div>
   );
@@ -90,7 +100,7 @@ function BuscadorPersistente() {
       aria-hidden={!abierta || undefined}
       style={pos.contenedor}
     >
-      <section role="dialog" aria-label="Buscar" style={pos.hoja} className="mx-auto flex max-w-lg flex-col overflow-hidden rounded-card border border-border bg-surface shadow-lg">
+      <section role="dialog" aria-label="Buscar" style={{ ...pos.hoja, ...pos.reserva }} className="mx-auto flex max-w-lg flex-col overflow-hidden rounded-card border border-border bg-surface shadow-lg">
         <header className="flex items-center gap-2 border-b border-border px-4 py-3">
           <h2 className="flex-1 font-heading text-title-2 font-semibold text-text">Buscar</h2>
           <button type="button" onClick={cerrar} aria-label="Cerrar" tabIndex={abierta ? 0 : -1} className="flex size-9 items-center justify-center rounded-full text-text-muted hover:bg-background">

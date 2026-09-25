@@ -23,6 +23,10 @@ type Registro = {
 const ContextoRegistro = createContext<Registro | null>(null);
 const ContextoCapas = createContext<ControlCapas | null>(null);
 
+/** Espacio que ocupa el ancla desde el borde de su lado (HM-07). */
+export type ReservaAncla = { lado: "right" | "left"; ancho: number };
+const ContextoReserva = createContext<ReservaAncla | null>(null);
+
 export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, children }: AnchorProviderProps) {
   const pantallaRef = useRef<AnchorScreen | null>(null);
   const duenoRef = useRef<symbol | null>(null);
@@ -47,9 +51,14 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
 
   const registro = useMemo<Registro>(() => ({ pantallaRef, duenoRef, publicar }), []);
   const capas = useCapas(onEventRef);
+  const reserva = useMemo<ReservaAncla>(
+    () => ({ lado: prefs.hand, ancho: params.MARGEN_LATERAL + params.D_ACTIVO }),
+    [prefs.hand, params.MARGEN_LATERAL, params.D_ACTIVO],
+  );
 
   return (
     <ContextoRegistro.Provider value={registro}>
+      <ContextoReserva.Provider value={reserva}>
       <ContextoCapas.Provider value={capas}>
         {children}
         {montado &&
@@ -67,8 +76,20 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
             document.body,
           )}
       </ContextoCapas.Provider>
+      </ContextoReserva.Provider>
     </ContextoRegistro.Provider>
   );
+}
+
+/**
+ * HM-07: lado del ancla y ancho que ocupa desde ese borde (MARGEN_LATERAL + D_ACTIVO).
+ * Las hojas y barras de la app reservan ese espacio para que sus controles (p. ej. la X)
+ * no queden debajo del ancla.
+ */
+export function useAnchorReserva(): ReservaAncla {
+  const reserva = useContext(ContextoReserva);
+  if (!reserva) throw new Error("useAnchorReserva debe usarse dentro de <AnchorProvider>.");
+  return reserva;
 }
 
 /**
