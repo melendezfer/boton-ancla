@@ -18,7 +18,8 @@ export type Producto = {
   eliminado: boolean;
 };
 
-export type Oferta = { id: string; titulo: string; negocio: string; distancia: string };
+export type CategoriaOferta = "Comida" | "Bebidas";
+export type Oferta = { id: string; titulo: string; negocio: string; categoria: CategoriaOferta; metros: number };
 
 /** El negocio "de la demo": el que tiene perfil, carta y productos. */
 export const NEGOCIO_DEMO: Negocio = { id: "arepas-dona-rosa", nombre: "Arepas Doña Rosa", categoria: "Comida rápida", x: 1000, y: 1000 };
@@ -39,11 +40,15 @@ export const PRODUCTOS_INICIALES: Producto[] = [
   { id: "empanada", nombre: "Empanada de pipián", precio: 2500, descripcion: "Con ají de la casa.", disponible: false, eliminado: false },
 ];
 
+// En orden "de llegada" (no por distancia), para que "Ordenar por distancia" cambie algo.
 export const OFERTAS: Oferta[] = [
-  { id: "o1", titulo: "2 arepas de queso por $7.000", negocio: "Arepas Doña Rosa", distancia: "120 m" },
-  { id: "o2", titulo: "Jugo en agua a $3.000 hasta las 11", negocio: "Jugos El Parque", distancia: "240 m" },
-  { id: "o3", titulo: "Empanada + gaseosa $4.500", negocio: "Empanadas La Esquina", distancia: "310 m" },
+  { id: "o3", titulo: "Empanada + gaseosa $4.500", negocio: "Empanadas La Esquina", categoria: "Comida", metros: 310 },
+  { id: "o2", titulo: "Jugo en agua a $3.000 hasta las 11", negocio: "Jugos El Parque", categoria: "Bebidas", metros: 240 },
+  { id: "o1", titulo: "2 arepas de queso por $7.000", negocio: "Arepas Doña Rosa", categoria: "Comida", metros: 120 },
+  { id: "o4", titulo: "Tinto + pan de bono $2.500", negocio: "Tinto y Pan", categoria: "Bebidas", metros: 450 },
 ];
+
+export const CATEGORIAS_OFERTA: ("Todas" | CategoriaOferta)[] = ["Todas", "Comida", "Bebidas"];
 
 export function formatoPesos(valor: number): string {
   return `$${valor.toLocaleString("es-CO")}`;

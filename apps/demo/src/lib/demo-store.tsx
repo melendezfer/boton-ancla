@@ -123,7 +123,7 @@ const DemoContext = createContext<Demo | null>(null);
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [prefs, setPrefs] = useState<Preferencias>(PREFERENCIAS_INICIALES);
   const [prefsListas, setPrefsListas] = useState(false);
-  const [favoritos, setFavoritos] = useState<string[]>(["jugos-el-parque"]);
+  const [favoritos, setFavoritos] = useState<string[]>(["jugos-el-parque", "tinto-y-pan"]);
   const [productos, setProductos] = useState<Producto[]>(PRODUCTOS_INICIALES);
   const [hoja, setHoja] = useState<Hoja | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);

@@ -3,8 +3,8 @@
 import type { AnchorAction, CapaAncla } from "@boton-ancla/core";
 import { useAnchorLayer, useAnchorReserva, useMedidas, useTeclado } from "@boton-ancla/react";
 import Link from "next/link";
-import { createRef } from "react";
-import { NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos } from "@/lib/datos";
+import { createRef, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { CATEGORIAS_OFERTA, NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos } from "@/lib/datos";
 import { useDemo, type Hoja } from "@/lib/demo-store";
 import { ANCHOR_ICONS, SEMANTIC_ICONS } from "@/lib/icons/semantic-icons";
 
@@ -48,13 +48,25 @@ export function HojaInferior({
   onCerrar: () => void;
   /** Ícono de la capa: lo muestra el centro del ancla mientras está abierta (HM-08). */
   icono?: CapaAncla["icon"];
-  /** Acciones propias de la capa en el abanico (HM-08). */
-  acciones?: AnchorAction[];
+  /**
+   * Acciones propias de la capa en el abanico (HM-08). Como función, recibe `cerrar`
+   * (cierra por el historial, igual que la X) para acciones que además cierran la hoja.
+   */
+  acciones?: AnchorAction[] | ((cerrar: () => void) => AnchorAction[]);
   children: React.ReactNode;
 }) {
   // HM-03/HM-08: la hoja es una capa: el ancla ofrece "Cerrar" + sus acciones, y el atrás del
   // sistema la cierra. Su X usa el `cerrar` que devuelve el hook, para que el historial quede limpio.
-  const cerrar = useAnchorLayer(true, onCerrar, { label: titulo, icon: icono, actions: acciones });
+  const cerrarRef = useRef<() => void>(onCerrar);
+  // Las acciones se arman antes de tener `cerrar` (lo devuelve el mismo hook): se pasa una
+  // función estable que lo llama cuando se ejecuta la acción, no durante el render.
+  const cerrarDesdeAccion = useCallback(() => cerrarRef.current(), []);
+  // eslint-disable-next-line react-hooks/refs -- cerrarDesdeAccion solo se ejecuta al elegir la acción, nunca durante el render
+  const lista = typeof acciones === "function" ? acciones(cerrarDesdeAccion) : acciones;
+  const cerrar = useAnchorLayer(true, onCerrar, { label: titulo, icon: icono, actions: lista });
+  useLayoutEffect(() => {
+    cerrarRef.current = cerrar;
+  });
   const pos = usePosicionHoja();
   return (
     <div className="fixed inset-x-0 bottom-0 z-[1000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" data-testid="hoja-inferior" style={pos.contenedor}>
@@ -102,11 +114,24 @@ export function enfocarBuscador() {
 function BuscadorPersistente() {
   const { hoja, cerrarHoja } = useDemo();
   const abierta = hoja?.tipo === "buscar";
+  const [texto, setTexto] = useState("");
+  const teclado = useTeclado();
   const cerrarEstado = () => {
     refBuscador.current?.blur();
     cerrarHoja();
   };
-  const cerrar = useAnchorLayer(abierta, cerrarEstado, { label: "Buscar", icon: ANCHOR_ICONS.search }); // HM-03/HM-08
+  // HM-08: acciones de la capa de búsqueda. Con el teclado abierto, "Ocultar teclado" lo
+  // agrega el ancla a 180° (RF-17); aquí solo lo propio de la búsqueda.
+  const borrar: AnchorAction = { id: "borrar-texto", label: "Borrar texto", icon: ANCHOR_ICONS.clearText, priority: 2, onSelect: () => setTexto("") };
+  const escribir: AnchorAction = {
+    id: "escribir",
+    label: "Escribir",
+    icon: ANCHOR_ICONS.write,
+    priority: 1,
+    onSelect: enfocarBuscador, // síncrono dentro del gesto: iOS abre el teclado (L-04)
+  };
+  const acciones = teclado.abierto ? [borrar] : [escribir, borrar];
+  const cerrar = useAnchorLayer(abierta, cerrarEstado, { label: "Buscar", icon: ANCHOR_ICONS.search, actions: acciones }); // HM-03/HM-08
   const pos = usePosicionHoja(); // HM-05: sobre el teclado
   return (
     <div
@@ -126,6 +151,8 @@ function BuscadorPersistente() {
           <input
             ref={refBuscador}
             type="search"
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
             placeholder="Negocio, producto o categoría"
             tabIndex={abierta ? 0 : -1}
             data-testid="campo-busqueda"
@@ -160,47 +187,10 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
     }
     case "buscar":
       return null; // lo dibuja BuscadorPersistente
-    case "ofertas": {
-      const Oferta = SEMANTIC_ICONS.offer;
-      return (
-        <HojaInferior titulo="Ofertas cerca" onCerrar={cerrar}>
-          <ul className="flex flex-col divide-y divide-border">
-            {OFERTAS.map((o) => (
-              <li key={o.id} className="flex items-start gap-3 py-2">
-                <Oferta size={20} className="mt-0.5 text-terracota" />
-                <div>
-                  <p className="font-sans text-body font-semibold text-text">{o.titulo}</p>
-                  <p className="font-sans text-body-sm text-text-muted">
-                    {o.negocio} · {o.distancia}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </HojaInferior>
-      );
-    }
-    case "favoritos": {
-      const Lista = ANCHOR_ICONS.favoritesList;
-      const lista = NEGOCIOS.filter((n) => favoritos.includes(n.id));
-      return (
-        <HojaInferior titulo="Favoritos" onCerrar={cerrar}>
-          {lista.length === 0 ? (
-            <p className="flex items-center gap-2 font-sans text-body text-text-muted">
-              <Lista size={20} /> Todavía no tienes favoritos.
-            </p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-border">
-              {lista.map((n) => (
-                <li key={n.id} className="py-2 font-sans text-body text-text">
-                  {n.nombre}
-                </li>
-              ))}
-            </ul>
-          )}
-        </HojaInferior>
-      );
-    }
+    case "ofertas":
+      return <HojaOfertas cerrar={cerrar} />;
+    case "favoritos":
+      return <HojaFavoritos cerrar={cerrar} favoritos={favoritos} />;
     case "agregar-plato":
       return (
         <HojaInferior titulo="Agregar plato (simulado)" onCerrar={cerrar}>
@@ -224,6 +214,102 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
       );
     }
   }
+}
+
+/** Ofertas cerca, con sus acciones de capa (HM-08): ordenar por distancia y filtrar por categoría. */
+function HojaOfertas({ cerrar }: { cerrar: () => void }) {
+  const { avisar } = useDemo();
+  const [porDistancia, setPorDistancia] = useState(false);
+  const [categoria, setCategoria] = useState(0);
+  const Oferta = SEMANTIC_ICONS.offer;
+  const filtro = CATEGORIAS_OFERTA[categoria]!;
+  const lista = OFERTAS.filter((o) => filtro === "Todas" || o.categoria === filtro).sort((a, b) => (porDistancia ? a.metros - b.metros : 0));
+  const acciones: AnchorAction[] = [
+    {
+      id: "ordenar-distancia",
+      label: "Ordenar por distancia",
+      icon: ANCHOR_ICONS.sort,
+      priority: 1,
+      onSelect: () => {
+        setPorDistancia(true);
+        avisar("Ordenadas por distancia");
+      },
+    },
+    {
+      id: "filtrar-categoria",
+      label: "Filtrar por categoría",
+      icon: ANCHOR_ICONS.filter,
+      priority: 2,
+      onSelect: () => {
+        const siguiente = (categoria + 1) % CATEGORIAS_OFERTA.length;
+        setCategoria(siguiente);
+        avisar(`Categoría: ${CATEGORIAS_OFERTA[siguiente]}`);
+      },
+    },
+  ];
+  return (
+    <HojaInferior titulo="Ofertas cerca" onCerrar={cerrar} icono={SEMANTIC_ICONS.offer} acciones={acciones}>
+      <p className="mb-1 font-sans text-caption text-text-muted" data-testid="estado-ofertas">
+        {filtro} · {porDistancia ? "por distancia" : "sin ordenar"}
+      </p>
+      <ul className="flex flex-col divide-y divide-border" data-testid="lista-ofertas">
+        {lista.map((o) => (
+          <li key={o.id} className="flex items-start gap-3 py-2">
+            <Oferta size={20} className="mt-0.5 text-terracota" />
+            <div>
+              <p className="font-sans text-body font-semibold text-text">{o.titulo}</p>
+              <p className="font-sans text-body-sm text-text-muted">
+                {o.negocio} · {o.categoria} · {o.metros} m
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </HojaInferior>
+  );
+}
+
+/** Favoritos, con sus acciones de capa (HM-08): ordenar y ver en el mapa. */
+function HojaFavoritos({ cerrar, favoritos }: { cerrar: () => void; favoritos: string[] }) {
+  const { avisar, pedirRecentrar } = useDemo();
+  const [zA, setZA] = useState(false);
+  const Lista = ANCHOR_ICONS.favoritesList;
+  const lista = NEGOCIOS.filter((n) => favoritos.includes(n.id)).sort((a, b) => (zA ? -1 : 1) * a.nombre.localeCompare(b.nombre, "es"));
+  return (
+    <HojaInferior
+      titulo="Favoritos"
+      onCerrar={cerrar}
+      icono={ANCHOR_ICONS.favoritesList}
+      acciones={(cerrarCapa) => [
+        { id: "ordenar", label: "Ordenar", icon: ANCHOR_ICONS.sort, priority: 1, onSelect: () => setZA((v) => !v) },
+        {
+          id: "ver-en-mapa",
+          label: "Ver en el mapa",
+          icon: ANCHOR_ICONS.showOnMap,
+          priority: 2,
+          onSelect: () => {
+            cerrarCapa(); // por el historial, como la X
+            pedirRecentrar();
+            avisar("Favoritos en el mapa (simulado)");
+          },
+        },
+      ]}
+    >
+      {lista.length === 0 ? (
+        <p className="flex items-center gap-2 font-sans text-body text-text-muted">
+          <Lista size={20} /> Todavía no tienes favoritos.
+        </p>
+      ) : (
+        <ul className="flex flex-col divide-y divide-border" data-testid="lista-favoritos">
+          {lista.map((n) => (
+            <li key={n.id} className="py-2 font-sans text-body text-text">
+              {n.nombre}
+            </li>
+          ))}
+        </ul>
+      )}
+    </HojaInferior>
+  );
 }
 
 export function AvisoDemo() {

@@ -10,12 +10,16 @@ import {
   Crosshair,
   Cube,
   DoorOpen,
+  Eraser,
+  Funnel,
   GearSix,
   Heart,
   IdentificationCard,
+  Keyboard,
   ListHeart,
   MagnifyingGlass,
   MapPin,
+  MapPinArea,
   MapTrifold,
   MinusCircle,
   NavigationArrow,
@@ -24,6 +28,7 @@ import {
   SealCheck,
   ShareNetwork,
   ShoppingCartSimple,
+  SortAscending,
   Stethoscope,
   Storefront,
   Tag,
@@ -95,6 +100,18 @@ export const ANCHOR_ICONS = {
   close: X,
   /** Bajar el teclado virtual (quitar el foco del campo), que agrega el ancla (HM-06, RF-17). */
   hideKeyboard: CaretDoubleDown,
+
+  // Acciones de capa de la demo (HM-08).
+  /** Enfocar el campo de texto para escribir (abre el teclado). */
+  write: Keyboard,
+  /** Borrar el texto escrito en un campo. */
+  clearText: Eraser,
+  /** Ordenar una lista. */
+  sort: SortAscending,
+  /** Filtrar una lista por categoría. */
+  filter: Funnel,
+  /** Ver en el mapa los elementos de una lista. */
+  showOnMap: MapPinArea,
 
   // Solo de la demo.
   /** Pin de un negocio en el mapa falso. */
