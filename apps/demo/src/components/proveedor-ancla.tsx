@@ -19,9 +19,15 @@ const TEMA: AnchorTheme = {
 
 /** Conecta las preferencias de la demo (mano, altura) con el proveedor del ancla. */
 export function ProveedorAncla({ children }: { children: React.ReactNode }) {
-  const { prefs } = useDemo();
+  const { prefs, registrarMetrica } = useDemo();
   return (
-    <AnchorProvider prefs={{ hand: prefs.mano }} theme={TEMA} icons={ICONOS} params={{ ANCLA_ALTURA: prefs.anclaAltura }}>
+    <AnchorProvider
+      prefs={{ hand: prefs.mano }}
+      theme={TEMA}
+      icons={ICONOS}
+      params={{ ANCLA_ALTURA: prefs.anclaAltura }}
+      onEvent={registrarMetrica}
+    >
       {children}
     </AnchorProvider>
   );

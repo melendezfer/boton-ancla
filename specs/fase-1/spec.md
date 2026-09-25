@@ -393,7 +393,7 @@ useAnchorScreen(screen: AnchorScreen): void;
 ## 9. Métricas locales (Documento 8)
 
 Eventos que se registran: `open {mode: gesto|toque|teclado}`, `preselect {id}`, `execute {id, ms, pathPx, expert}`, `cancel {reason}`, `rest_enter`, `sensitive_blocked {id}`, `undo {id}`. "Experto" no se sabe al abrir, solo al soltar: se registra en `execute.expert` (soltar menos de `T_ANIM` después de abrir) (C-04).
-La demo incluye una pantalla para exportar a JSON con los campos del Documento 8 §13: versión, dispositivo, mano, posición, número de opciones, acción, tiempo, errores y observaciones. Como los Documentos 1, 7 y 8 no están en este repositorio, esta lista es la referencia; si el Documento 8 pide más campos, se agregan aquí primero (C-20).
+La demo incluye una pantalla para exportar a JSON con los campos del Documento 8 §13: versión, dispositivo, mano, posición, número de opciones, acción, tiempo, errores y observaciones. Como los Documentos 1, 7 y 8 no están en este repositorio, esta lista es la referencia; si el Documento 8 pide más campos, se agregan aquí primero (C-20). Interpretación usada en T-25 (a confirmar con el Documento 8): **posición** = altura del ancla (`ANCLA_ALTURA`) y lado; **errores** de una acción = cancelaciones y bloqueos de irreversibles desde la ejecución anterior; el JSON incluye además todos los eventos crudos, para poder reinterpretarlos.
 
 ---
 

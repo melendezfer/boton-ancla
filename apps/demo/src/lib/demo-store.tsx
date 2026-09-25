@@ -1,8 +1,9 @@
 "use client";
 
-import { DEFAULT_PARAMS, type AnchorScreen, type Hand } from "@boton-ancla/core";
+import { DEFAULT_PARAMS, type AnchorScreen, type Hand, type MetricEvent } from "@boton-ancla/core";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { PRODUCTOS_INICIALES, type Producto } from "./datos";
+import type { RegistroMetrica } from "./exportar";
 
 // Estado simulado de la demo (design.md §8).
 // - Preferencias: se guardan en localStorage (sobreviven a recargar).
@@ -64,9 +65,34 @@ type Demo = {
   /** Se incrementa para pedirle al mapa que vuelva al centro ("Mi ubicación"). */
   recentrarMapa: number;
   pedirRecentrar: () => void;
+
+  /** Métricas locales (spec §9, RNF-08): solo en este dispositivo. */
+  metricas: RegistroMetrica[];
+  registrarMetrica: (evento: MetricEvent) => void;
+  borrarMetricas: () => void;
 };
 
 const CLAVE_PREFS = "boton-ancla-demo:v1:prefs";
+const CLAVE_METRICAS = "boton-ancla-demo:v1:metricas";
+/** Tope de registros guardados: evita llenar el almacenamiento del navegador. */
+const MAX_METRICAS = 2000;
+
+function leerMetricas(): RegistroMetrica[] {
+  try {
+    const d = JSON.parse(window.localStorage.getItem(CLAVE_METRICAS) ?? "[]") as unknown;
+    return Array.isArray(d) ? (d as RegistroMetrica[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function guardarMetricas(m: RegistroMetrica[]) {
+  try {
+    window.localStorage.setItem(CLAVE_METRICAS, JSON.stringify(m));
+  } catch {
+    // Sin almacenamiento: las métricas se pierden al recargar, la demo sigue.
+  }
+}
 
 function leerPrefs(): Preferencias {
   try {
@@ -104,6 +130,12 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [pantalla, setPantalla] = useState<AnchorScreen | null>(null);
   const [recentrarMapa, setRecentrarMapa] = useState(0);
   const temporizadorAviso = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [metricas, setMetricas] = useState<RegistroMetrica[]>([]);
+  // Pantalla actual para anotar cada evento (el callback de métricas no debe cambiar en cada render).
+  const pantallaRef = useRef<AnchorScreen | null>(null);
+  useLayoutEffect(() => {
+    pantallaRef.current = pantalla;
+  });
 
   // localStorage solo existe en el navegador: se lee después de montar para que
   // el HTML del servidor y el primer render del cliente coincidan.
@@ -111,6 +143,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza con un sistema externo (localStorage) una sola vez
     setPrefs(leerPrefs());
     setPrefsListas(true);
+    setMetricas(leerMetricas());
   }, []);
 
   const setPref = useCallback(<K extends keyof Preferencias>(clave: K, valor: Preferencias[K]) => {
@@ -139,6 +172,26 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     temporizadorAviso.current = setTimeout(() => setAviso(null), 2500);
   }, []);
 
+  const registrarMetrica = useCallback((evento: MetricEvent) => {
+    const p = pantallaRef.current;
+    const registro: RegistroMetrica = {
+      t: Date.now(),
+      pantalla: p?.id ?? "(ninguna)",
+      opciones: p ? p.actions.length + (p.back ? 1 : 0) : 0,
+      evento,
+    };
+    setMetricas((m) => {
+      const nuevas = [...m, registro].slice(-MAX_METRICAS);
+      guardarMetricas(nuevas);
+      return nuevas;
+    });
+  }, []);
+
+  const borrarMetricas = useCallback(() => {
+    setMetricas([]);
+    guardarMetricas([]);
+  }, []);
+
   const valor = useMemo<Demo>(
     () => ({
       prefs,
@@ -158,8 +211,28 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       setPantalla,
       recentrarMapa,
       pedirRecentrar: () => setRecentrarMapa((n) => n + 1),
+      metricas,
+      registrarMetrica,
+      borrarMetricas,
     }),
-    [prefs, prefsListas, setPref, favoritos, alternarFavorito, productos, marcarDisponible, eliminarProducto, hoja, aviso, avisar, pantalla, recentrarMapa],
+    [
+      prefs,
+      prefsListas,
+      setPref,
+      favoritos,
+      alternarFavorito,
+      productos,
+      marcarDisponible,
+      eliminarProducto,
+      hoja,
+      aviso,
+      avisar,
+      pantalla,
+      recentrarMapa,
+      metricas,
+      registrarMetrica,
+      borrarMetricas,
+    ],
   );
 
   return <DemoContext.Provider value={valor}>{children}</DemoContext.Provider>;

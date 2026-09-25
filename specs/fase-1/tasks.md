@@ -169,7 +169,7 @@ A partir de aquí, cada tarea se prueba sobre la pantalla **Mapa** de la demo; l
 - **Manual:** ejecutar las 4–5 opciones de cada pantalla con una sola mano.
 - **Commit:** `feat: ancla integrada en todas las pantallas de la demo`
 
-### [ ] T-25 · Registro y exportación de métricas
+### [x] T-25 · Registro y exportación de métricas
 - **Cubre:** §9, RNF-08 · C-04, C-20, L-10
 - **Hacer:** `onEvent` → almacenamiento local; pantalla Métricas con lista, formulario (versión, dispositivo, mano, posición, nº de opciones, observaciones) y exportar JSON por descarga.
 - **E2E:** un recorrido genera los eventos esperados; el JSON exportado tiene los campos de §9; no hay peticiones de red con métricas.
