@@ -76,6 +76,10 @@ export type Params = {
   CURVA_DESPLAZAR: number;
   /** HM-09: velocidad máxima con prefers-reduced-motion, en px/s. */
   V_MAX_REDUCIDO: number;
+  /** Variante "arriba" de la guía (HM-10): corrimiento de la cápsula hacia el centro, en px. */
+  GUIA_CORRIMIENTO: number;
+  /** Variante "arriba" (HM-10): espacio sobre el punto más alto que alcanza el pulgar, en px. */
+  GUIA_SEPARACION: number;
 };
 
 /** "horizontal" = gana la más cercana al extremo lateral; "vertical" = la más cercana a "arriba". */
@@ -117,4 +121,6 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   V_MAX_DESPLAZAR: 1400,
   CURVA_DESPLAZAR: 2.2,
   V_MAX_REDUCIDO: 500,
+  GUIA_CORRIMIENTO: 20,
+  GUIA_SEPARACION: 24,
 });
