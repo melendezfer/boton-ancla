@@ -1,7 +1,7 @@
 "use client";
 
 import type { AnchorAction, CapaAncla } from "@boton-ancla/core";
-import { useAnchorLayer, useAnchorReserva, useMedidas, useTeclado } from "@boton-ancla/react";
+import { useAnchorLayer, useAnchorReserva, useMedidas, useTeclado, type OpcionesApuntarLista } from "@boton-ancla/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createRef, useCallback, useLayoutEffect, useRef, useState } from "react";
@@ -44,6 +44,7 @@ export function HojaInferior({
   icono,
   acciones,
   desplazable = false,
+  alElegirFila,
   children,
 }: {
   titulo: string;
@@ -52,6 +53,11 @@ export function HojaInferior({
   icono?: CapaAncla["icon"];
   /** HM-09: su lista se puede desplazar con el ancla. */
   desplazable?: boolean;
+  /**
+   * HM-12b (RF-23): sus filas (`data-fila` = id, `data-etiqueta` = nombre) se pueden apuntar con
+   * el ancla; al soltar sobre una se llama esto (normalmente, apila su hoja encima de la lista).
+   */
+  alElegirFila?: (id: string) => void;
   /**
    * Acciones propias de la capa en el abanico (HM-08). Como función, recibe `cerrar`
    * (cierra por el historial, igual que la X) para acciones que además cierran la hoja.
@@ -68,11 +74,15 @@ export function HojaInferior({
   // eslint-disable-next-line react-hooks/refs -- cerrarDesdeAccion solo se ejecuta al elegir la acción, nunca durante el render
   const lista = typeof acciones === "function" ? acciones(cerrarDesdeAccion) : acciones;
   const contenido = useRef<HTMLDivElement>(null);
+  const apuntar: OpcionesApuntarLista | undefined = alElegirFila
+    ? { elementos: () => filasApuntables(contenido.current), elegir: alElegirFila } // HM-12b
+    : undefined;
   const cerrar = useAnchorLayer(true, onCerrar, {
     label: titulo,
     icon: icono,
     actions: lista,
     scrollRef: desplazable ? contenido : undefined, // HM-09
+    apuntar,
   });
   useLayoutEffect(() => {
     cerrarRef.current = cerrar;
@@ -102,12 +112,28 @@ export function HojaInferior({
   );
 }
 
+/** HM-12b: las filas de una lista que el ancla puede apuntar (`data-fila`), en orden. */
+export function filasApuntables(contenedor: HTMLElement | null) {
+  return Array.from(contenedor?.querySelectorAll<HTMLElement>("[data-fila]") ?? []).map((el) => ({
+    id: el.dataset.fila!,
+    el,
+    label: el.dataset.etiqueta ?? el.textContent ?? "",
+  }));
+}
+
 export function HojasDemo() {
-  const { hoja, cerrarHoja } = useDemo();
+  const { hojas, cerrarHoja } = useDemo();
   return (
     <>
       <BuscadorPersistente />
-      {hoja && hoja.tipo !== "buscar" && <HojaSegunTipo hoja={hoja} cerrar={cerrarHoja} />}
+      {/* HM-12b: pila. Las de abajo siguen montadas pero ocultas: al volver, la lista está donde quedó. */}
+      {hojas.map((h, i) =>
+        h.tipo === "buscar" ? null : (
+          <div key={`${i}-${h.tipo}`} className={i < hojas.length - 1 ? "invisible" : undefined} inert={i < hojas.length - 1}>
+            <HojaSegunTipo hoja={h} cerrar={cerrarHoja} />
+          </div>
+        ),
+      )}
     </>
   );
 }
@@ -184,6 +210,8 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
       return <HojaResumenNegocio negocioId={hoja.negocioId} cerrar={cerrar} />;
     case "grupo-negocios":
       return <HojaGrupo ids={hoja.ids} cerrar={cerrar} />;
+    case "plato":
+      return <HojaPlato productoId={hoja.productoId} cerrar={cerrar} />;
     case "buscar":
       return null; // lo dibuja BuscadorPersistente
     case "ofertas":
@@ -221,7 +249,7 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
  * más "Cerrar" en 90°. "Ver perfil completo" es un botón de la hoja.
  */
 function HojaResumenNegocio({ negocioId, cerrar }: { negocioId: string; cerrar: () => void }) {
-  const { favoritos, alternarFavorito, avisar } = useDemo();
+  const { favoritos, alternarFavorito, avisar, cerrarHojas } = useDemo();
   const router = useRouter();
   const n = NEGOCIOS.find((x) => x.id === negocioId);
   if (!n) return null;
@@ -234,7 +262,11 @@ function HojaResumenNegocio({ negocioId, cerrar }: { negocioId: string; cerrar: 
       label: catalogo,
       icon: SEMANTIC_ICONS.catalog,
       priority: 1,
-      onSelect: () => (esDemo ? router.push("/negocio/carta") : avisar(`En la demo solo "${NEGOCIO_DEMO.nombre}" tiene ${catalogo.toLowerCase()}`)),
+      onSelect: () => {
+        if (!esDemo) return avisar(`En la demo solo "${NEGOCIO_DEMO.nombre}" tiene ${catalogo.toLowerCase()}`);
+        cerrarHojas(); // se navega: se cierran todas las hojas apiladas
+        router.push("/negocio/carta");
+      },
     },
     { id: "como-llegar", label: "Cómo llegar", icon: ANCHOR_ICONS.directions, priority: 2, onSelect: () => avisar("Abriendo indicaciones (simulado)") },
     ...(n.whatsapp
@@ -255,7 +287,7 @@ function HojaResumenNegocio({ negocioId, cerrar }: { negocioId: string; cerrar: 
     <HojaInferior titulo={n.nombre} onCerrar={cerrar} icono={ANCHOR_ICONS.mapPin} acciones={acciones}>
       <p className="font-sans text-body text-text-muted">{n.categoria}</p>
       {esDemo ? (
-        <Link href="/negocio" onClick={cerrar} className="mt-3 flex h-btn items-center justify-center rounded-input bg-terracota font-sans text-button font-semibold text-white">
+        <Link href="/negocio" onClick={cerrarHojas} className="mt-3 flex h-btn items-center justify-center rounded-input bg-terracota font-sans text-button font-semibold text-white">
           Ver perfil completo
         </Link>
       ) : (
@@ -267,14 +299,15 @@ function HojaResumenNegocio({ negocioId, cerrar }: { negocioId: string; cerrar: 
 
 /** HM-12a (RF-21, nivel 2): varios negocios que no se pueden separar en la mira. Tocar uno abre su resumen. */
 function HojaGrupo({ ids, cerrar }: { ids: string[]; cerrar: () => void }) {
-  const { abrirHoja } = useDemo();
+  const { apilarHoja } = useDemo();
   const lista = NEGOCIOS.filter((n) => ids.includes(n.id));
+  const elegir = (id: string) => apilarHoja({ tipo: "resumen-negocio", negocioId: id }); // HM-12b: al cerrar, se vuelve al grupo
   return (
-    <HojaInferior titulo={`${lista.length} negocios aquí`} onCerrar={cerrar} icono={ANCHOR_ICONS.showOnMap} desplazable>
+    <HojaInferior titulo={`${lista.length} negocios aquí`} onCerrar={cerrar} icono={ANCHOR_ICONS.showOnMap} desplazable alElegirFila={elegir}>
       <ul className="flex flex-col divide-y divide-border" data-testid="lista-grupo">
         {lista.map((n) => (
-          <li key={n.id}>
-            <button type="button" className="w-full py-2 text-left" onClick={() => abrirHoja({ tipo: "resumen-negocio", negocioId: n.id })}>
+          <li key={n.id} data-fila={n.id} data-etiqueta={n.nombre} className="rounded-input">
+            <button type="button" className="w-full py-2 text-left" onClick={() => elegir(n.id)}>
               <span className="block font-sans text-body text-text">{n.nombre}</span>
               <span className="block font-sans text-body-sm text-text-muted">{n.categoria}</span>
             </button>
@@ -285,9 +318,23 @@ function HojaGrupo({ ids, cerrar }: { ids: string[]; cerrar: () => void }) {
   );
 }
 
+/** HM-12b: un plato elegido en la carta (visitante). Sin acciones propias: solo "Cerrar". */
+function HojaPlato({ productoId, cerrar }: { productoId: string; cerrar: () => void }) {
+  const { productos } = useDemo();
+  const p = productos.find((x) => x.id === productoId);
+  if (!p) return null;
+  return (
+    <HojaInferior titulo={p.nombre} onCerrar={cerrar} icono={SEMANTIC_ICONS.catalog}>
+      <p className="font-sans text-title-2 font-semibold text-text">{formatoPesos(p.precio)}</p>
+      <p className="mt-1 font-sans text-body text-text-muted">{p.descripcion}</p>
+      {!p.disponible && <p className="mt-2 font-sans text-body-sm text-ambar">No disponible hoy</p>}
+    </HojaInferior>
+  );
+}
+
 /** Ofertas cerca, con sus acciones de capa (HM-08): ordenar por distancia y filtrar por categoría. */
 function HojaOfertas({ cerrar }: { cerrar: () => void }) {
-  const { avisar } = useDemo();
+  const { avisar, apilarHoja } = useDemo();
   const [porDistancia, setPorDistancia] = useState(false);
   const [categoria, setCategoria] = useState(0);
   const Oferta = SEMANTIC_ICONS.offer;
@@ -316,21 +363,28 @@ function HojaOfertas({ cerrar }: { cerrar: () => void }) {
       },
     },
   ];
+  // HM-12b: elegir una oferta (apuntando o tocándola) abre el negocio encima de la lista.
+  const elegir = (id: string) => {
+    const negocio = NEGOCIOS.find((n) => n.nombre === OFERTAS.find((o) => o.id === id)?.negocio);
+    if (negocio) apilarHoja({ tipo: "resumen-negocio", negocioId: negocio.id });
+  };
   return (
-    <HojaInferior titulo="Ofertas cerca" onCerrar={cerrar} icono={SEMANTIC_ICONS.offer} acciones={acciones} desplazable>
+    <HojaInferior titulo="Ofertas cerca" onCerrar={cerrar} icono={SEMANTIC_ICONS.offer} acciones={acciones} desplazable alElegirFila={elegir}>
       <p className="mb-1 font-sans text-caption text-text-muted" data-testid="estado-ofertas">
         {filtro} · {porDistancia ? "por distancia" : "sin ordenar"}
       </p>
       <ul className="flex flex-col divide-y divide-border" data-testid="lista-ofertas">
         {lista.map((o) => (
-          <li key={o.id} className="flex items-start gap-3 py-2">
-            <Oferta size={20} className="mt-0.5 text-terracota" />
-            <div>
-              <p className="font-sans text-body font-semibold text-text">{o.titulo}</p>
-              <p className="font-sans text-body-sm text-text-muted">
-                {o.negocio} · {o.categoria} · {o.metros} m
-              </p>
-            </div>
+          <li key={o.id} data-fila={o.id} data-etiqueta={o.titulo} className="rounded-input">
+            <button type="button" className="flex w-full items-start gap-3 py-2 text-left" onClick={() => elegir(o.id)}>
+              <Oferta size={20} className="mt-0.5 text-terracota" />
+              <div>
+                <p className="font-sans text-body font-semibold text-text">{o.titulo}</p>
+                <p className="font-sans text-body-sm text-text-muted">
+                  {o.negocio} · {o.categoria} · {o.metros} m
+                </p>
+              </div>
+            </button>
           </li>
         ))}
       </ul>
@@ -340,7 +394,8 @@ function HojaOfertas({ cerrar }: { cerrar: () => void }) {
 
 /** Favoritos, con sus acciones de capa (HM-08): ordenar y ver en el mapa. */
 function HojaFavoritos({ cerrar, favoritos }: { cerrar: () => void; favoritos: string[] }) {
-  const { avisar, pedirRecentrar } = useDemo();
+  const { avisar, pedirRecentrar, apilarHoja } = useDemo();
+  const elegir = (id: string) => apilarHoja({ tipo: "resumen-negocio", negocioId: id }); // HM-12b
   const [zA, setZA] = useState(false);
   const Lista = ANCHOR_ICONS.favoritesList;
   const lista = NEGOCIOS.filter((n) => favoritos.includes(n.id)).sort((a, b) => (zA ? -1 : 1) * a.nombre.localeCompare(b.nombre, "es"));
@@ -350,6 +405,7 @@ function HojaFavoritos({ cerrar, favoritos }: { cerrar: () => void; favoritos: s
       onCerrar={cerrar}
       icono={ANCHOR_ICONS.favoritesList}
       desplazable
+      alElegirFila={elegir}
       acciones={(cerrarCapa) => [
         { id: "ordenar", label: "Ordenar", icon: ANCHOR_ICONS.sort, priority: 1, onSelect: () => setZA((v) => !v) },
         {
@@ -372,9 +428,11 @@ function HojaFavoritos({ cerrar, favoritos }: { cerrar: () => void; favoritos: s
       ) : (
         <ul className="flex flex-col divide-y divide-border" data-testid="lista-favoritos">
           {lista.map((n) => (
-            <li key={n.id} className="py-2">
-              <p className="font-sans text-body text-text">{n.nombre}</p>
-              <p className="font-sans text-body-sm text-text-muted">{n.categoria}</p>
+            <li key={n.id} data-fila={n.id} data-etiqueta={n.nombre} className="rounded-input">
+              <button type="button" className="w-full py-2 text-left" onClick={() => elegir(n.id)}>
+                <span className="block font-sans text-body text-text">{n.nombre}</span>
+                <span className="block font-sans text-body-sm text-text-muted">{n.categoria}</span>
+              </button>
             </li>
           ))}
         </ul>

@@ -97,3 +97,8 @@ body {
     opacity: 1;
   }
 }
+
+/* HM-12b (RF-23): la fila en foco al apuntar con el ancla. */
+[data-ba-foco] {
+  background: color-mix(in srgb, var(--color-terracota) 12%, transparent);
+}

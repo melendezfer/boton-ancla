@@ -22,7 +22,7 @@ export type Preferencias = {
   desplazar: boolean;
   /** HM-11 (experimental): mover el mapa con el ancla (joystick libre). Activado por defecto en la demo. */
   moverMapa: boolean;
-  /** HM-12a (experimental): apuntar y elegir en el mapa. Activado por defecto en la demo. */
+  /** HM-12a/12b (experimental): apuntar y elegir en el mapa y en las listas. Activado por defecto en la demo. */
   apuntar: boolean;
   /** HM-10: dónde se ve la guía al desplazar. "ancla" por defecto. */
   guiaDesplazar: "ancla" | "arriba";
@@ -44,6 +44,8 @@ export type Hoja =
   | { tipo: "resumen-negocio"; negocioId: string }
   /** HM-12a: varios negocios que no se pueden separar en la mira. */
   | { tipo: "grupo-negocios"; ids: string[] }
+  /** HM-12b: un plato de la carta elegido con "apuntar" (visitante). */
+  | { tipo: "plato"; productoId: string }
   | { tipo: "buscar" }
   | { tipo: "ofertas" }
   | { tipo: "favoritos" }
@@ -64,9 +66,18 @@ type Demo = {
   marcarDisponible: (productoId: string, disponible: boolean) => void;
   eliminarProducto: (productoId: string) => void;
 
+  /** HM-12b: pila de hojas; la de arriba es la visible. Las de abajo siguen montadas (conservan su posición). */
+  hojas: Hoja[];
+  /** La de arriba (o null). */
   hoja: Hoja | null;
+  /** Abre una hoja en lugar de las que haya. */
   abrirHoja: (hoja: Hoja) => void;
+  /** HM-12b: abre una hoja ENCIMA de la actual (elegir un elemento de una lista); al cerrarla se vuelve a la lista. */
+  apilarHoja: (hoja: Hoja) => void;
+  /** Cierra la de arriba. */
   cerrarHoja: () => void;
+  /** Cierra todas (p. ej. al navegar a otra página). */
+  cerrarHojas: () => void;
 
   /** Aviso breve de la demo (no es el aviso del ancla, que llega en T-19). */
   aviso: string | null;
@@ -143,7 +154,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [prefsListas, setPrefsListas] = useState(false);
   const [favoritos, setFavoritos] = useState<string[]>(FAVORITOS_INICIALES);
   const [productos, setProductos] = useState<Producto[]>(PRODUCTOS_INICIALES);
-  const [hoja, setHoja] = useState<Hoja | null>(null);
+  const [hojas, setHojas] = useState<Hoja[]>([]);
+  const hoja = hojas.at(-1) ?? null;
   const [aviso, setAviso] = useState<string | null>(null);
   const [pantalla, setPantalla] = useState<AnchorScreen | null>(null);
   const [recentrarMapa, setRecentrarMapa] = useState(0);
@@ -220,9 +232,12 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       productos,
       marcarDisponible,
       eliminarProducto,
+      hojas,
       hoja,
-      abrirHoja: setHoja,
-      cerrarHoja: () => setHoja(null),
+      abrirHoja: (h: Hoja) => setHojas([h]),
+      apilarHoja: (h: Hoja) => setHojas((p) => [...p, h]),
+      cerrarHoja: () => setHojas((p) => p.slice(0, -1)),
+      cerrarHojas: () => setHojas([]),
       aviso,
       avisar,
       pantalla,
@@ -242,6 +257,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       productos,
       marcarDisponible,
       eliminarProducto,
+      hojas,
       hoja,
       aviso,
       avisar,

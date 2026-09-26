@@ -107,10 +107,11 @@ export default function PaginaAjustes() {
           data-testid="interruptor-apuntar"
         />
         <span className="flex flex-col">
-          <span className="font-sans text-body font-semibold text-text">Apuntar y elegir en el mapa (experimental)</span>
+          <span className="font-sans text-body font-semibold text-text">Apuntar y elegir: mapa y listas (experimental)</span>
           <span className="font-sans text-body-sm text-text-muted">
-            Mientras mueves el mapa con el ancla, una mira en el centro marca un negocio; frena y suelta para elegirlo (HM-12a). Necesita
-            &quot;Mover el mapa con el ancla&quot;.
+            En el mapa, una mira en el centro marca un negocio: frena y suelta para elegirlo (HM-12a). En una lista, mientras desplazas,
+            lleva el pulgar hacia el centro de la pantalla: una franja marca una fila; sube o baja de una en una y suelta para elegirla
+            (HM-12b).
           </span>
         </span>
       </label>
