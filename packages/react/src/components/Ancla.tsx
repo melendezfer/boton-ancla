@@ -309,6 +309,13 @@ export function Ancla({
   }, [cantidadCapas, cerrarArriba, machine]);
 
 
+  // HU-12, C-17: ajustar un deslizador (Zoom) cuenta como un uso, igual que ejecutar una opción.
+  const idAjustando = estado.tipo === "ajustando" ? estado.id : null;
+  const usarBienvenida = bienvenida.usar;
+  useEffect(() => {
+    if (idAjustando) usarBienvenida(idAjustando);
+  }, [idAjustando, usarBienvenida]);
+
   // RNF-05: foco itinerante. Con teclado, el foco va a la opción activa; al cerrar, vuelve al ancla.
   const refBoton = useRef<HTMLButtonElement>(null);
   const tipoAnterior = useRef(estado.tipo);
