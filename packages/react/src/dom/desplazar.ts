@@ -172,11 +172,17 @@ export function useBucleDesplazamiento(o: Opciones) {
       // La lista se desliza (suave) hasta que el elemento en foco queda centrado en la franja.
       const r = e.el.getBoundingClientRect();
       const delta = r.top + r.height / 2 - yFranja;
-      if (Math.abs(delta) >= 1) desplazar(o, Math.abs(delta) < 3 ? Math.sign(delta) : Math.round(delta * 0.3));
+      let yDibujo = yFranja;
+      if (Math.abs(delta) >= 1) {
+        const antes = posicion(o);
+        desplazar(o, Math.abs(delta) < 3 ? Math.sign(delta) : Math.round(delta * 0.3));
+        // En un extremo de la lista ya no se puede desplazar: la franja va hasta el elemento.
+        if (Math.abs(posicion(o) - antes) < 0.5) yDibujo = r.top + r.height / 2;
+      }
       const f = franja.current;
       if (f) {
         const alto = r.height + 8;
-        f.style.top = `${yFranja - alto / 2}px`;
+        f.style.top = `${yDibujo - alto / 2}px`;
         f.style.height = `${alto}px`;
         f.style.left = `${r.left - 4}px`;
         f.style.width = `${r.width + 8}px`;
