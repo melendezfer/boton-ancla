@@ -8,12 +8,14 @@ const D_ACTIVO = 64;
 const R_MAX = 72;
 const GUIA_SEPARACION = 24;
 
+// Aquí se prueba solo el joystick: "apuntar y elegir" (HM-12a) va apagado; lo prueba hm12a.
 test.beforeEach(async ({ page }) => {
   await sinBienvenida(page);
+  await conPreferencias(page, {});
 });
 
 function conPreferencias(page: Page, prefs: Record<string, unknown>) {
-  return page.addInitScript((p) => window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify(p)), prefs);
+  return page.addInitScript((p) => window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify({ apuntar: false, ...p })), prefs);
 }
 
 async function abrirMapa(page: Page) {

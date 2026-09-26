@@ -3,6 +3,7 @@
 import type { AnchorAction, CapaAncla } from "@boton-ancla/core";
 import { useAnchorLayer, useAnchorReserva, useMedidas, useTeclado } from "@boton-ancla/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createRef, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { CATEGORIAS_OFERTA, NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos } from "@/lib/datos";
 import { useDemo, type Hoja } from "@/lib/demo-store";
@@ -179,23 +180,10 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
   const { favoritos, productos } = useDemo();
 
   switch (hoja.tipo) {
-    case "resumen-negocio": {
-      const n = NEGOCIOS.find((x) => x.id === hoja.negocioId);
-      if (!n) return null;
-      const esDemo = n.id === NEGOCIO_DEMO.id;
-      return (
-        <HojaInferior titulo={n.nombre} onCerrar={cerrar}>
-          <p className="font-sans text-body text-text-muted">{n.categoria}</p>
-          {esDemo ? (
-            <Link href="/negocio" onClick={cerrar} className="mt-3 flex h-btn items-center justify-center rounded-input bg-terracota font-sans text-button font-semibold text-white">
-              Ver perfil
-            </Link>
-          ) : (
-            <p className="mt-3 font-sans text-body-sm text-text-muted">En la demo solo &quot;{NEGOCIO_DEMO.nombre}&quot; tiene perfil.</p>
-          )}
-        </HojaInferior>
-      );
-    }
+    case "resumen-negocio":
+      return <HojaResumenNegocio negocioId={hoja.negocioId} cerrar={cerrar} />;
+    case "grupo-negocios":
+      return <HojaGrupo ids={hoja.ids} cerrar={cerrar} />;
     case "buscar":
       return null; // lo dibuja BuscadorPersistente
     case "ofertas":
@@ -225,6 +213,83 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
       );
     }
   }
+}
+
+/**
+ * Resumen de un negocio: al tocar su pin o al elegirlo con la mira (HM-12a). Acciones de capa
+ * (HM-08, máx. 4 además de "Cerrar"): Ver perfil, Cómo llegar, Favorito y WhatsApp. "Ver carta"
+ * queda como botón del contenido (la quinta no cabe en el abanico: decisiones-pendientes §1).
+ */
+function HojaResumenNegocio({ negocioId, cerrar }: { negocioId: string; cerrar: () => void }) {
+  const { favoritos, alternarFavorito, avisar } = useDemo();
+  const router = useRouter();
+  const n = NEGOCIOS.find((x) => x.id === negocioId);
+  if (!n) return null;
+  const esDemo = n.id === NEGOCIO_DEMO.id;
+  const esFavorito = favoritos.includes(n.id);
+  const soloDemo = () => avisar(`En la demo solo "${NEGOCIO_DEMO.nombre}" tiene perfil y carta`);
+  return (
+    <HojaInferior
+      titulo={n.nombre}
+      onCerrar={cerrar}
+      icono={ANCHOR_ICONS.mapPin}
+      acciones={() => [
+        {
+          id: "ver-perfil",
+          label: "Ver perfil",
+          icon: ANCHOR_ICONS.sectionBusiness,
+          priority: 1,
+          onSelect: () => (esDemo ? router.push("/negocio") : soloDemo()),
+        },
+        { id: "como-llegar", label: "Cómo llegar", icon: ANCHOR_ICONS.directions, priority: 2, onSelect: () => avisar("Abriendo indicaciones (simulado)") },
+        {
+          id: "favorito",
+          label: esFavorito ? "Quitar de favoritos" : "Favorito",
+          icon: ANCHOR_ICONS.favoriteToggle,
+          priority: 3,
+          onSelect: () => {
+            alternarFavorito(n.id);
+            avisar(esFavorito ? "Quitado de favoritos" : "Agregado a favoritos");
+          },
+        },
+        { id: "whatsapp", label: "WhatsApp", icon: ANCHOR_ICONS.whatsapp, priority: 4, onSelect: () => avisar("Abriendo WhatsApp (simulado)") },
+      ]}
+    >
+      <p className="font-sans text-body text-text-muted">{n.categoria}</p>
+      {esDemo ? (
+        <div className="mt-3 flex gap-2">
+          <Link href="/negocio" onClick={cerrar} className="flex h-btn flex-1 items-center justify-center rounded-input bg-terracota font-sans text-button font-semibold text-white">
+            Ver perfil
+          </Link>
+          <Link href="/negocio/carta" onClick={cerrar} className="flex h-btn flex-1 items-center justify-center rounded-input border border-border bg-surface font-sans text-button font-semibold text-text">
+            Ver carta
+          </Link>
+        </div>
+      ) : (
+        <p className="mt-3 font-sans text-body-sm text-text-muted">En la demo solo &quot;{NEGOCIO_DEMO.nombre}&quot; tiene perfil.</p>
+      )}
+    </HojaInferior>
+  );
+}
+
+/** HM-12a (RF-21, nivel 2): varios negocios que no se pueden separar en la mira. Tocar uno abre su resumen. */
+function HojaGrupo({ ids, cerrar }: { ids: string[]; cerrar: () => void }) {
+  const { abrirHoja } = useDemo();
+  const lista = NEGOCIOS.filter((n) => ids.includes(n.id));
+  return (
+    <HojaInferior titulo={`${lista.length} negocios aquí`} onCerrar={cerrar} icono={ANCHOR_ICONS.showOnMap} desplazable>
+      <ul className="flex flex-col divide-y divide-border" data-testid="lista-grupo">
+        {lista.map((n) => (
+          <li key={n.id}>
+            <button type="button" className="w-full py-2 text-left" onClick={() => abrirHoja({ tipo: "resumen-negocio", negocioId: n.id })}>
+              <span className="block font-sans text-body text-text">{n.nombre}</span>
+              <span className="block font-sans text-body-sm text-text-muted">{n.categoria}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </HojaInferior>
+  );
 }
 
 /** Ofertas cerca, con sus acciones de capa (HM-08): ordenar por distancia y filtrar por categoría. */

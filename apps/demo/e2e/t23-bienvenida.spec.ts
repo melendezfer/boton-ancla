@@ -67,7 +67,7 @@ test("C-17: ejecutar una opción cuenta un uso", async ({ page }) => {
   await expect.poll(async () => (await bienvenidaGuardada(page)).usos["ofertas-cerca"]).toBe(1);
 });
 
-const usosMapa = (n: number) => ({ buscar: n, "mi-ubicacion": n, "ofertas-cerca": n, favoritos: n });
+const usosMapa = (n: number) => ({ buscar: n, "mi-ubicacion": n, "ofertas-cerca": n, favoritos: n, zoom: n });
 
 test("HU-12: si una opción de la pantalla tiene 4 usos, todavía hay pista", async ({ page }) => {
   await sembrar(page, { version: 1, demostracionHecha: true, usos: { ...usosMapa(5), favoritos: 4 } });

@@ -8,6 +8,7 @@ import { enfocarBuscador } from "@/components/hojas";
 import { NEGOCIO_DEMO } from "@/lib/datos";
 import { useDemo, useRegistrarPantalla } from "@/lib/demo-store";
 import { ANCHOR_ICONS } from "@/lib/icons/semantic-icons";
+import { acercarMapa, factorDePaso } from "@/lib/mapa-control";
 import {
   pantallaCarta,
   pantallaMapa,
@@ -44,6 +45,8 @@ export function usePantallaMapa(): AnchorScreen {
     },
     ofertasCerca: () => abrirHoja({ tipo: "ofertas" }),
     favoritos: () => abrirHoja({ tipo: "favoritos" }),
+    zoomPaso: () => acercarMapa(1.5),
+    zoomDeslizar: (paso) => acercarMapa(factorDePaso(paso)),
   });
   useRegistrar(p);
   return p;

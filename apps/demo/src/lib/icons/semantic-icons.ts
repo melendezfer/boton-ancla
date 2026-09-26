@@ -20,6 +20,7 @@ import {
   Keyboard,
   ListHeart,
   MagnifyingGlass,
+  MagnifyingGlassPlus,
   MapPin,
   MapPinArea,
   MapTrifold,
@@ -36,6 +37,7 @@ import {
   Tag,
   TextAa,
   Trash,
+  WhatsappLogo,
   Umbrella,
   X,
 } from "@phosphor-icons/react/dist/ssr";
@@ -121,4 +123,8 @@ export const ANCHOR_ICONS = {
   // Solo de la demo.
   /** Pin de un negocio en el mapa falso. */
   mapPin: MapPin,
+  /** Zoom del mapa: deslizador del abanico (HM-12a, RF-20). */
+  zoom: MagnifyingGlassPlus,
+  /** Escribir al negocio por WhatsApp (capa de un pin elegido, HM-12a). */
+  whatsapp: WhatsappLogo,
 } satisfies Record<string, Icon>;

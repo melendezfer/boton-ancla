@@ -62,7 +62,7 @@ test("exportar descarga un JSON con los campos de spec §9", async ({ page }) =>
   expect(datos.posicion).toEqual({ anclaAltura: 0.44, lado: "derecha" });
   expect(datos.observaciones).toBe("Prueba automática");
   expect(datos.acciones).toHaveLength(1);
-  expect(datos.acciones[0]).toMatchObject({ pantalla: "mapa", accion: "mi-ubicacion", modo: "gesto", numeroOpciones: 4, errores: 1 });
+  expect(datos.acciones[0]).toMatchObject({ pantalla: "mapa", accion: "mi-ubicacion", modo: "gesto", numeroOpciones: 5, errores: 1 }); // HM-12a: Zoom es la 5.ª del mapa
   expect(datos.acciones[0].tiempoMs).toBeGreaterThan(0);
   // C-04: "experto" va en la ejecución, no como modo de apertura.
   const modosOpen = datos.eventos.filter((e: { evento: { type: string } }) => e.evento.type === "open").map((e: { evento: { mode: string } }) => e.evento.mode);

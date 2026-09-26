@@ -12,7 +12,7 @@ import {
 
 const nada = () => {};
 const PANTALLAS: AnchorScreen[] = [
-  pantallaMapa({ buscar: nada, miUbicacion: nada, ofertasCerca: nada, favoritos: nada }),
+  pantallaMapa({ buscar: nada, miUbicacion: nada, ofertasCerca: nada, favoritos: nada, zoomPaso: nada, zoomDeslizar: nada }),
   pantallaPerfilVisitante({ carta: nada, comoLlegar: nada, favorito: nada, compartir: nada, atras: nada }, false),
   pantallaPerfilDueno({ agregarPlato: nada, editar: nada, atras: nada }),
   pantallaCarta({ compartir: nada, favorito: nada, atras: nada }, true),
@@ -55,11 +55,11 @@ describe("pantallas de la demo (spec §8)", () => {
     const resumen = Object.fromEntries(
       PANTALLAS.slice(0, 5).map((p) => [
         p.id,
-        [...(p.back ? ["Atrás"] : []), ...p.actions.map((a) => `${a.label} (${a.priority}${a.kind && a.kind !== "normal" ? `, ${a.kind}` : ""})`)],
+        [...(p.back ? ["Atrás"] : []), ...p.actions.map((a) => `${a.label} (${a.priority}${a.kind && a.kind !== "normal" ? `, ${a.kind}` : ""}${a.onSlide ? ", deslizador" : ""})`)],
       ]),
     );
     expect(resumen).toEqual({
-      mapa: ["Buscar (1)", "Mi ubicación (2)", "Ofertas cerca (3)", "Favoritos (4)"],
+      mapa: ["Buscar (1)", "Mi ubicación (2)", "Ofertas cerca (3)", "Favoritos (4)", "Zoom (5, deslizador)"],
       "perfil-negocio": ["Atrás", "Carta (1)", "Cómo llegar (2)", "Favorito (3)", "Compartir (4)"],
       "perfil-negocio-dueno": ["Atrás", "Agregar plato (1)", "Editar (2)"],
       carta: ["Atrás", "Compartir (1)", "Quitar de favoritos (2)"],

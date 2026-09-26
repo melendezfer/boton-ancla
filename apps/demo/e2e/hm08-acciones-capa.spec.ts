@@ -83,9 +83,17 @@ test("Favoritos: ordenar invierte la lista y 'Ver en el mapa' cierra la capa", a
   await expect(page.getByRole("button", { name: "Menú, sección Mapa" })).toBeVisible();
 });
 
-test("una capa sin acciones (resumen de un negocio) solo ofrece 'Cerrar'", async ({ page }) => {
+test("HM-12a: el resumen de un negocio ofrece Cerrar + Ver perfil, Cómo llegar, Favorito y WhatsApp", async ({ page }) => {
   await page.getByRole("button", { name: "Jugos El Parque" }).tap();
   await expect(page.getByRole("dialog", { name: "Jugos El Parque" })).toBeVisible();
-  expect(await angulos(page)).toEqual({ cerrar: 90 });
+  expect(await angulos(page)).toEqual({ cerrar: 90, favorito: 113, "ver-perfil": 135, "como-llegar": 158, whatsapp: 180 });
   await expect(page.getByRole("button", { name: "Menú, Jugos El Parque" })).toBeVisible();
+});
+
+test("una capa sin acciones (Agregar plato, dueño) solo ofrece 'Cerrar'", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify({ rol: "dueno" })));
+  await page.goto("/negocio");
+  await abrirCapa(page, "agregar-plato");
+  await expect(page.getByRole("dialog", { name: "Agregar plato (simulado)" })).toBeVisible();
+  expect(await angulos(page)).toEqual({ cerrar: 90 });
 });

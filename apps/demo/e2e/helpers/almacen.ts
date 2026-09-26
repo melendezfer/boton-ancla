@@ -10,6 +10,7 @@ const IDS = [
   "carta", "como-llegar", "favorito", "compartir",
   "agregar-plato", "editar", "marcar-no-disponible", "eliminar",
   "atras", "deshacer",
+  "zoom", "ver-perfil", "whatsapp", // HM-12a
 ];
 
 export async function sinBienvenida(page: Page) {

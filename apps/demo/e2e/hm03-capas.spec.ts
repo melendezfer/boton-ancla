@@ -70,8 +70,8 @@ test("HU-14: deslizar a 'Cerrar' cierra la capa, solo deslizando", async ({ page
   await gestos.deslizar(g.centro, haciaOpcion(g, "cerrar"), { pasos: 8, ms: 150 });
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page).toHaveURL(/\/mapa$/);
-  // Sin capas, vuelve Favoritos a 90°.
-  expect((await leerGeometria(page)).slots.find((s) => s.id === "favoritos")?.angulo).toBeCloseTo(90, 5);
+  // Sin capas, Favoritos vuelve a su lugar (180° desde HM-12a, con Zoom en el mapa).
+  expect((await leerGeometria(page)).slots.find((s) => s.id === "favoritos")?.angulo).toBeCloseTo(180, 5);
 });
 
 test("RF-15: el botón atrás del sistema cierra la capa SIN navegar", async ({ page }) => {

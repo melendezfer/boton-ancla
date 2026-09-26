@@ -22,6 +22,8 @@ export type Preferencias = {
   desplazar: boolean;
   /** HM-11 (experimental): mover el mapa con el ancla (joystick libre). Activado por defecto en la demo. */
   moverMapa: boolean;
+  /** HM-12a (experimental): apuntar y elegir en el mapa. Activado por defecto en la demo. */
+  apuntar: boolean;
   /** HM-10: dónde se ve la guía al desplazar. "ancla" por defecto. */
   guiaDesplazar: "ancla" | "arriba";
 };
@@ -33,12 +35,15 @@ export const PREFERENCIAS_INICIALES: Preferencias = {
   anclaAltura: DEFAULT_PARAMS.ANCLA_ALTURA,
   desplazar: true,
   moverMapa: true,
+  apuntar: true,
   guiaDesplazar: "ancla",
 };
 
 /** Hojas inferiores de la demo; solo una abierta a la vez. */
 export type Hoja =
   | { tipo: "resumen-negocio"; negocioId: string }
+  /** HM-12a: varios negocios que no se pueden separar en la mira. */
+  | { tipo: "grupo-negocios"; ids: string[] }
   | { tipo: "buscar" }
   | { tipo: "ofertas" }
   | { tipo: "favoritos" }
@@ -115,6 +120,7 @@ function leerPrefs(): Preferencias {
       anclaAltura: typeof d.anclaAltura === "number" && Number.isFinite(d.anclaAltura) ? d.anclaAltura : PREFERENCIAS_INICIALES.anclaAltura,
       desplazar: d.desplazar !== false,
       moverMapa: d.moverMapa !== false,
+      apuntar: d.apuntar !== false,
       guiaDesplazar: d.guiaDesplazar === "arriba" ? "arriba" : "ancla",
     };
   } catch {

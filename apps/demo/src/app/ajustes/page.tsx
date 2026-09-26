@@ -98,6 +98,23 @@ export default function PaginaAjustes() {
         </span>
       </label>
 
+      <label className="flex cursor-pointer items-start gap-3 rounded-card border border-border bg-surface p-4">
+        <input
+          type="checkbox"
+          checked={prefs.apuntar}
+          onChange={(e) => setPref("apuntar", e.target.checked)}
+          className="mt-1 size-5 accent-terracota"
+          data-testid="interruptor-apuntar"
+        />
+        <span className="flex flex-col">
+          <span className="font-sans text-body font-semibold text-text">Apuntar y elegir en el mapa (experimental)</span>
+          <span className="font-sans text-body-sm text-text-muted">
+            Mientras mueves el mapa con el ancla, una mira en el centro marca un negocio; frena y suelta para elegirlo (HM-12a). Necesita
+            &quot;Mover el mapa con el ancla&quot;.
+          </span>
+        </span>
+      </label>
+
       {(prefs.desplazar || prefs.moverMapa) && (
         <Opciones<Preferencias["guiaDesplazar"]>
           titulo="Guía al desplazar"

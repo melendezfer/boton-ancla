@@ -42,6 +42,10 @@ export const NEGOCIOS: Negocio[] = [
   { id: "tienda-la-esquinita", nombre: "Tienda La Esquinita", categoria: "Tienda", x: 1560, y: 1020 },
   { id: "mazamorra-dona-ana", nombre: "Mazamorra Doña Ana", categoria: "Postres", x: 760, y: 1560 },
   { id: "cafe-el-molino", nombre: "Café El Molino", categoria: "Bebidas", x: 1240, y: 1500 },
+  // HM-12a: pines muy juntos, para probar grupos (a 16 px no se separan con el zoom inicial)…
+  { id: "drogueria-la-esquinita", nombre: "Droguería La Esquinita", categoria: "Droguería", x: 1574, y: 1028 },
+  // …y dos vecinos a 36 px, para probar que el imán se achica sin formar grupo.
+  { id: "helados-don-jose", nombre: "Helados Don José", categoria: "Postres", x: 1136, y: 1290 },
 ];
 
 /** Favoritos con los que empieza la demo (sin el negocio de la demo, que se marca a mano). */

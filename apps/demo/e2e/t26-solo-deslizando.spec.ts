@@ -97,10 +97,24 @@ test("producto · eliminar confirmando más allá del anillo, solo deslizando (H
   await expect(page.getByText("Arepa de queso")).toHaveCount(0);
 });
 
+test("mapa · Zoom quedándose sobre la opción y subiendo el pulgar, solo deslizando (RF-20)", async ({ page }) => {
+  await preparar(page, "visitante");
+  const { g, gestos } = await abrir(page, "/mapa", "/ajustes");
+  const lienzo = page.getByTestId("mapa-lienzo");
+  const antes = Number(await lienzo.getAttribute("data-zoom"));
+  const sobreZoom = haciaOpcion(g, "zoom");
+  await gestos.presionar(g.centro);
+  await gestos.mover(sobreZoom);
+  await page.waitForTimeout(450); // quedarse sobre Zoom (T_ESPERA_DESLIZADOR)
+  await gestos.mover({ x: sobreZoom.x, y: sobreZoom.y - 60 });
+  await expect.poll(async () => Number(await lienzo.getAttribute("data-zoom")), { timeout: 10000 }).toBeGreaterThan(antes * 1.1);
+  await gestos.soltar({ x: sobreZoom.x, y: sobreZoom.y - 60 });
+});
+
 test("toda acción del abanico de §8 está en este recorrido", async () => {
-  const cubiertas = new Set([...CASOS.map((c) => `${c.ruta}|${c.rol}|${c.id}`), "/producto/arepa-queso|dueno|marcar-no-disponible", "/producto/arepa-queso|dueno|eliminar"]);
+  const cubiertas = new Set([...CASOS.map((c) => `${c.ruta}|${c.rol}|${c.id}`), "/producto/arepa-queso|dueno|marcar-no-disponible", "/producto/arepa-queso|dueno|eliminar", "/mapa|visitante|zoom"]);
   const esperadas = [
-    ["/mapa", "visitante", ["buscar", "mi-ubicacion", "ofertas-cerca", "favoritos"]],
+    ["/mapa", "visitante", ["buscar", "mi-ubicacion", "ofertas-cerca", "favoritos", "zoom"]],
     ["/negocio", "visitante", ["carta", "como-llegar", "favorito", "compartir", "atras"]],
     ["/negocio", "dueno", ["agregar-plato", "editar", "atras"]],
     ["/negocio/carta", "visitante", ["compartir", "favorito", "atras"]],

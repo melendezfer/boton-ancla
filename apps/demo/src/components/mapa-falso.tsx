@@ -1,8 +1,9 @@
 "use client";
 
-import { useAnchorPan } from "@boton-ancla/react";
+import { useAnchorPan, type ObjetivoApuntable } from "@boton-ancla/react";
 import { useCallback, useEffect, useRef } from "react";
 import { NEGOCIOS, NEGOCIO_DEMO } from "@/lib/datos";
+import { registrarMapa } from "@/lib/mapa-control";
 import { useDemo, type Fondo } from "@/lib/demo-store";
 import { ANCHOR_ICONS } from "@/lib/icons/semantic-icons";
 
@@ -16,6 +17,9 @@ const MapPin = ANCHOR_ICONS.mapPin;
 
 const LADO = 2000;
 const UMBRAL_ARRASTRE = 6;
+/** HM-12a: zoom del mapa (Zoom del abanico y zoom automático sobre un grupo). */
+const ZOOM_MIN = 0.6;
+const ZOOM_MAX = 4;
 
 type Colores = { suelo: string; manzana: string; calle: string; avenida: string; parque: string; rio: string };
 
@@ -28,6 +32,7 @@ export function MapaFalso() {
   const { prefs, abrirHoja, recentrarMapa } = useDemo();
   const capa = useRef<HTMLDivElement>(null);
   const offset = useRef({ x: 0, y: 0 });
+  const zoom = useRef(1);
   const arrastre = useRef<{ id: number; x0: number; y0: number; ox: number; oy: number; moviendo: boolean } | null>(null);
   const arrastroHaceNada = useRef(false);
 
@@ -36,27 +41,70 @@ export function MapaFalso() {
     const cont = el?.parentElement;
     if (!el || !cont) return;
     // El lienzo siempre cubre la pantalla: no se puede arrastrar más allá del borde.
-    const nx = Math.min(0, Math.max(cont.clientWidth - LADO, x));
-    const ny = Math.min(0, Math.max(cont.clientHeight - LADO, y));
+    const lado = LADO * zoom.current;
+    const nx = Math.min(0, Math.max(cont.clientWidth - lado, x));
+    const ny = Math.min(0, Math.max(cont.clientHeight - lado, y));
     offset.current = { x: nx, y: ny };
-    el.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
+    el.style.transform = `translate3d(${nx}px, ${ny}px, 0) scale(${zoom.current})`;
+    // Los pines conservan su tamaño en pantalla (se desescalan con --z).
+    el.style.setProperty("--z", String(zoom.current));
     el.dataset.offsetX = String(Math.round(nx));
     el.dataset.offsetY = String(Math.round(ny));
+    el.dataset.zoom = zoom.current.toFixed(3);
   }, []);
+
+  // HM-12a: acercar o alejar manteniendo quieto el punto `centro` de la pantalla.
+  const acercar = useCallback(
+    (factor: number, centro?: { x: number; y: number }) => {
+      const cont = capa.current?.parentElement;
+      if (!cont) return;
+      const c = centro ?? { x: cont.clientWidth / 2, y: cont.clientHeight / 2 };
+      const z0 = zoom.current;
+      const minimo = Math.max(ZOOM_MIN, cont.clientWidth / LADO, cont.clientHeight / LADO);
+      const z1 = Math.min(ZOOM_MAX, Math.max(minimo, z0 * factor));
+      if (z1 === z0) return;
+      // El punto del mapa que está bajo `c` sigue bajo `c` después del zoom.
+      const wx = (c.x - offset.current.x) / z0;
+      const wy = (c.y - offset.current.y) / z0;
+      zoom.current = z1;
+      aplicar(c.x - wx * z1, c.y - wy * z1);
+    },
+    [aplicar],
+  );
+  useEffect(() => {
+    registrarMapa({ acercar });
+    return () => registrarMapa(null);
+  }, [acercar]);
 
   const centrar = useCallback(() => {
     const cont = capa.current?.parentElement;
     if (!cont) return;
-    aplicar(cont.clientWidth / 2 - NEGOCIO_DEMO.x, cont.clientHeight / 2 - NEGOCIO_DEMO.y);
+    aplicar(cont.clientWidth / 2 - NEGOCIO_DEMO.x * zoom.current, cont.clientHeight / 2 - NEGOCIO_DEMO.y * zoom.current);
   }, [aplicar]);
 
   // HM-11: el joystick del ancla mueve la vista hacia donde apunta el pulgar (el lienzo va al revés).
   // Devuelve false en el borde, para que el ancla vibre.
-  useAnchorPan((dx, dy) => {
-    const { x, y } = offset.current;
-    aplicar(x - dx, y - dy);
-    return offset.current.x !== x || offset.current.y !== y;
-  });
+  useAnchorPan(
+    (dx, dy) => {
+      const { x, y } = offset.current;
+      aplicar(x - dx, y - dy);
+      return offset.current.x !== x || offset.current.y !== y;
+    },
+    // HM-12a (RF-21): apuntar y elegir. Los pines se dan en pantalla (la punta del pin).
+    {
+      objetivos: (): ObjetivoApuntable[] =>
+        NEGOCIOS.map((n) => ({
+          id: n.id,
+          x: offset.current.x + n.x * zoom.current,
+          y: offset.current.y + n.y * zoom.current,
+          label: n.nombre,
+          icon: MapPin,
+        })),
+      elegir: (a) => abrirHoja(a.tipo === "uno" ? { tipo: "resumen-negocio", negocioId: a.id } : { tipo: "grupo-negocios", ids: a.ids }),
+      acercar,
+      etiquetaGrupo: (n) => `${n} negocios`,
+    },
+  );
 
   // Centrar al montar y cada vez que se pide "Mi ubicación".
   useEffect(() => centrar(), [centrar, recentrarMapa]);
@@ -126,7 +174,8 @@ export function MapaFalso() {
               abrirHoja({ tipo: "resumen-negocio", negocioId: n.id });
             }}
             className="absolute flex -translate-x-1/2 -translate-y-full flex-col items-center"
-            style={{ left: n.x, top: n.y }}
+            // HM-12a: con zoom, el pin conserva su tamaño; su punta sigue en (x, y).
+            style={{ left: n.x, top: n.y, scale: "calc(1 / var(--z, 1))", transformOrigin: "50% 100%" }}
           >
             <MapPin size={40} weight="fill" className={n.id === NEGOCIO_DEMO.id ? "text-terracota drop-shadow" : "text-text-muted drop-shadow"} />
             <span className="-mt-1 rounded bg-surface/90 px-1.5 font-sans text-caption font-medium whitespace-nowrap text-text shadow-sm">
