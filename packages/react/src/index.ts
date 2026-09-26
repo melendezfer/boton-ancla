@@ -4,8 +4,10 @@ export {
   useAnchorLayer,
   useAnchorReserva,
   useAnchorScreen,
+  useAnchorPan,
   useAnchorScroll,
   type ObjetivoDesplazar,
+  type ObjetivoLibre,
   type ReservaAncla,
 } from "./AnchorProvider";
 export type { CapaReact } from "./dom/capas";

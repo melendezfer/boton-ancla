@@ -421,3 +421,46 @@
   stroke-dasharray: 1;
   stroke-dashoffset: calc(1 - var(--ba-llenado, 0));
 }
+
+/* --- HM-11: joystick libre (mapa). --- */
+
+/* Una sola flecha, girada hacia donde apunta el pulgar (--ba-giro lo escribe el bucle). */
+.ba-flecha-libre {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  transform: translate(-50%, -50%) rotate(var(--ba-giro, 0deg));
+  transition: opacity 80ms linear;
+}
+
+/* Quieto (zona muerta): la flecha casi no se ve; no hay dirección que mostrar. */
+.ba-raiz:not([data-direccion]) .ba-flecha-libre,
+.ba-raiz[data-direccion="quieto"] .ba-flecha-libre,
+.ba-guia-circulo:not([data-direccion]) .ba-flecha-libre,
+.ba-guia-circulo[data-direccion="quieto"] .ba-flecha-libre {
+  opacity: 0.3;
+}
+
+/* Variante "arriba": círculo translúcido arriba del ancla, fuera del alcance del pulgar. */
+.ba-guia-circulo {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--ba-surface) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ba-border) 80%, transparent);
+  color: var(--ba-text-muted);
+  pointer-events: none;
+}
+
+/* Punto de inicio (velocidad cero). */
+.ba-guia-cruz {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, var(--ba-text-muted) 60%, transparent);
+}

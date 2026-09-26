@@ -25,7 +25,7 @@ import {
 } from "@boton-ancla/core";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
-import type { ObjetivoDesplazar } from "../AnchorProvider";
+import { esLibre, type ObjetivoDesplazar } from "../AnchorProvider";
 import { useBienvenida } from "../dom/bienvenida";
 import { useBucleDesplazamiento } from "../dom/desplazar";
 import type { ControlCapas } from "../dom/capas";
@@ -49,6 +49,8 @@ export type PropsAncla = {
   capas: ControlCapas;
   /** HM-09 (experimental): desplazar con el ancla. */
   desplazar: boolean;
+  /** HM-11 (experimental): joystick libre para el mapa (useAnchorPan). */
+  desplazarLibre: boolean;
   /** Contenido principal registrado con useAnchorScroll. */
   objetivoDesplazar: RefObject<ObjetivoDesplazar | null>;
   /** Cambia cuando se registra o quita el contenido principal. */
@@ -75,6 +77,7 @@ export function Ancla({
   onEventRef,
   capas,
   desplazar,
+  desplazarLibre,
   objetivoDesplazar,
   versionObjetivo,
   guiaDesplazar,
@@ -168,12 +171,15 @@ export function Ancla({
     if (capas.cantidad > 0) return capas.datosArriba()?.scrollRef?.current ?? null;
     return objetivoDesplazar.current;
   }, [capas, objetivoDesplazar]);
-  const desplazable = useMemo(
-    () => desplazar && (hayCapa ? Boolean(datosArriba()?.scrollRef) : objetivoDesplazar.current !== null),
+  // HM-11: sin capa y con un mapa registrado (useAnchorPan), el joystick es libre y tiene su propio interruptor.
+  const { desplazable, modoDesplazar } = useMemo(() => {
+    if (hayCapa) return { desplazable: desplazar && Boolean(datosArriba()?.scrollRef), modoDesplazar: "vertical" as const };
+    const objetivo = objetivoDesplazar.current;
+    if (esLibre(objetivo)) return { desplazable: desplazarLibre, modoDesplazar: "libre" as const };
+    return { desplazable: desplazar && objetivo !== null, modoDesplazar: "vertical" as const };
     // versionCapas y versionObjetivo: se recalcula al registrar o quitar objetivos.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [desplazar, hayCapa, versionCapas, versionObjetivo, datosArriba, objetivoDesplazar],
-  );
+  }, [desplazar, desplazarLibre, hayCapa, versionCapas, versionObjetivo, datosArriba, objetivoDesplazar]);
 
   // HM-06 / RF-13: con el teclado abierto el ancla NO se oculta: se ubica en el alto visible
   // (sobre el teclado) y agrega "Ocultar teclado" a 180° (RF-17).
@@ -196,8 +202,9 @@ export function Ancla({
       capa: hayCapa,
       teclado: teclado.abierto,
       desplazable,
+      modoDesplazar,
     });
-  }, [vista, medidas, prefs.hand, params, aviso?.tipo, hayCapa, teclado.abierto, teclado.alto, desplazable]);
+  }, [vista, medidas, prefs.hand, params, aviso?.tipo, hayCapa, teclado.abierto, teclado.alto, desplazable, modoDesplazar]);
 
   // Pantalla más reciente para EJECUTAR (acciones de la capa o de la sección, siempre al día).
   const vistaRef = useRef<AnchorScreen | null>(null);
@@ -304,7 +311,10 @@ export function Ancla({
   // D-09: el centro muestra la sección (o la capa abierta, HM-08); con una opción activa, anticipa su ícono.
   const IconoCentro = (idActivo && iconoDe(idActivo)) || (vista.sectionIcon as ReactAnchorIcon);
   const desplazando = estado.tipo === "desplazando";
+  const libre = desplazando && geoDibujo.modoDesplazar === "libre"; // HM-11
   // HM-10, variante "arriba": la cápsula arriba del ancla, corrida hacia el centro y fuera del alcance del pulgar.
+  // HM-11: en el joystick libre es un círculo (el punto se mueve en 2D a la mitad de la distancia).
+  const altoGuia = libre ? DIAMETRO_CIRCULO(params) : 2 * params.R_MAX_DESPLAZAR + ALTO_EXTRA_GUIA;
   const guiaArriba =
     desplazando && guiaDesplazar === "arriba"
       ? posicionGuiaArriba({
@@ -312,7 +322,7 @@ export function Ancla({
           origen: estado.origen,
           hand: prefs.hand,
           params,
-          alto: 2 * params.R_MAX_DESPLAZAR + ALTO_EXTRA_GUIA,
+          alto: altoGuia,
           techo: medidas.safeArea.top + 8,
         })
       : null;
@@ -352,7 +362,29 @@ export function Ancla({
         />
       )}
 
-      {guiaArriba && (
+      {guiaArriba && libre && (
+        // HM-11: círculo arriba del ancla; el punto sigue al pulgar en 2D y la flecha apunta a la dirección real.
+        <div
+          className="ba-guia-circulo"
+          data-testid="guia-desplazar"
+          data-variante="arriba"
+          data-modo="libre"
+          aria-hidden
+          style={{ left: guiaArriba.x, top: guiaArriba.top + guiaArriba.alto / 2, width: guiaArriba.alto, height: guiaArriba.alto }}
+        >
+          <span className="ba-guia-cruz" />
+          <span className="ba-flecha-libre" data-testid="flecha-libre">
+            <FlechaIcono icono={icons.scrollUp} sentido="arriba" tamano={18} />
+          </span>
+          <div
+            ref={puntoGuia}
+            className="ba-guia-punto"
+            data-escala={Math.max(0, guiaArriba.alto / 2 - 12) / params.R_MAX_DESPLAZAR}
+          />
+        </div>
+      )}
+
+      {guiaArriba && !libre && (
         // HM-10 A: cápsula translúcida arriba del ancla; su borde de abajo queda por encima del pulgar.
         <div
           className="ba-guia-desplazar"
@@ -378,6 +410,7 @@ export function Ancla({
           className="ba-anillo-desplazar"
           data-testid="guia-desplazar"
           data-variante="ancla"
+          data-modo={libre ? "libre" : "vertical"}
           aria-hidden
           viewBox="0 0 100 100"
           style={{ left: geoDibujo.centro.x, top: geoDibujo.centro.y, width: params.D_ACTIVO, height: params.D_ACTIVO }}
@@ -458,7 +491,12 @@ export function Ancla({
         onClick={() => controlador.clicEnAncla()}
         onContextMenu={(e) => e.preventDefault()}
       >
-        {desplazando && guiaDesplazar === "ancla" ? (
+        {libre && guiaDesplazar === "ancla" ? (
+          // HM-11: una sola flecha, girada hacia donde apunta el pulgar (--ba-giro).
+          <span className="ba-flecha-libre" data-testid="flecha-libre" aria-hidden>
+            <FlechaIcono icono={icons.scrollUp} sentido="arriba" tamano={24} />
+          </span>
+        ) : desplazando && guiaDesplazar === "ancla" ? (
           // HM-10 B: el ícono pasa a flecha ↑/↓ (el bucle elige cuál con data-direccion).
           <>
             <FlechaDesplazar icono={icons.scrollUp} sentido="arriba" />
@@ -475,18 +513,24 @@ export function Ancla({
 /** Espacio de la cápsula para sus flechas, además del recorrido del punto (HM-09). */
 const ALTO_EXTRA_GUIA = 36;
 const SIN_ELEMENTO: RefObject<HTMLElement | null> = { current: null };
+/** HM-11: diámetro del círculo de la variante "arriba" en el joystick libre. */
+const DIAMETRO_CIRCULO = (params: Params) => params.R_MAX_DESPLAZAR + 24;
 
-function FlechaDesplazar({ icono: Icono, sentido }: { icono?: ReactAnchorIcon; sentido: "arriba" | "abajo" }) {
+function FlechaDesplazar({ icono, sentido }: { icono?: ReactAnchorIcon; sentido: "arriba" | "abajo" }) {
   return (
     <span className={`ba-flecha-desplazar ba-flecha-desplazar--${sentido}`} data-testid={`flecha-${sentido}`} aria-hidden>
-      {Icono ? (
-        <Icono size={24} weight="bold" aria-hidden />
-      ) : (
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d={sentido === "arriba" ? "M12 19V5M5 12l7-7 7 7" : "M12 5v14M5 12l7 7 7-7"} />
-        </svg>
-      )}
+      <FlechaIcono icono={icono} sentido={sentido} tamano={24} />
     </span>
+  );
+}
+
+function FlechaIcono({ icono: Icono, sentido, tamano }: { icono?: ReactAnchorIcon; sentido: "arriba" | "abajo"; tamano: number }) {
+  return Icono ? (
+    <Icono size={tamano} weight="bold" aria-hidden />
+  ) : (
+    <svg viewBox="0 0 24 24" width={tamano} height={tamano} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d={sentido === "arriba" ? "M12 19V5M5 12l7-7 7 7" : "M12 5v14M5 12l7 7 7-7"} />
+    </svg>
   );
 }
 

@@ -23,8 +23,17 @@ type Registro = {
 const ContextoRegistro = createContext<Registro | null>(null);
 const ContextoCapas = createContext<ControlCapas | null>(null);
 
-/** Contenido principal que desplaza el ancla (HM-09): un elemento o la ventana. */
-export type ObjetivoDesplazar = HTMLElement | "ventana";
+/**
+ * Contenido principal que desplaza el ancla: un elemento o la ventana (vertical, HM-09), o
+ * un mapa (libre en todas las direcciones, HM-11).
+ */
+export type ObjetivoDesplazar = HTMLElement | "ventana" | ObjetivoLibre;
+/** HM-11: mueve la vista `dx`, `dy` px hacia donde apunta el pulgar. `false` = llegó al borde. */
+export type ObjetivoLibre = { tipo: "libre"; mover: (dx: number, dy: number) => boolean | void };
+
+export function esLibre(o: ObjetivoDesplazar | null): o is ObjetivoLibre {
+  return typeof o === "object" && o !== null && "tipo" in o && o.tipo === "libre";
+}
 type RegistroDesplazar = {
   objetivo: RefObject<ObjetivoDesplazar | null>;
   /** Avisa que se registró o quitó un objetivo (para recalcular si hay algo desplazable). */
@@ -36,7 +45,7 @@ const ContextoDesplazar = createContext<RegistroDesplazar | null>(null);
 export type ReservaAncla = { lado: "right" | "left"; ancho: number };
 const ContextoReserva = createContext<ReservaAncla | null>(null);
 
-export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, desplazar = false, guiaDesplazar = "ancla", children }: AnchorProviderProps) {
+export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, desplazar = false, desplazarLibre = false, guiaDesplazar = "ancla", children }: AnchorProviderProps) {
   const pantallaRef = useRef<AnchorScreen | null>(null);
   const duenoRef = useRef<symbol | null>(null);
   // Copia para DIBUJAR. Para EJECUTAR se usa pantallaRef (siempre la más reciente).
@@ -89,6 +98,7 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
               onEventRef={onEventRef}
               capas={capas}
               desplazar={desplazar}
+              desplazarLibre={desplazarLibre}
               guiaDesplazar={guiaDesplazar}
               objetivoDesplazar={objetivoDesplazar}
               versionObjetivo={versionObjetivo}
@@ -124,6 +134,33 @@ export function useAnchorScroll(objetivo: RefObject<HTMLElement | null> | "venta
       }
     };
   }, [objetivo, ref, avisar]);
+}
+
+/**
+ * HM-11 (experimental): registra un mapa como contenido principal. Con `desplazarLibre`, el
+ * joystick del ancla lo mueve en todas las direcciones: `mover(dx, dy)` debe correr la vista
+ * esos px hacia donde apunta el pulgar (dx > 0 = ver lo que está a la derecha) y devolver
+ * `false` si ya estaba en el borde. Con una capa abierta encima, manda la capa.
+ */
+export function useAnchorPan(mover: (dx: number, dy: number) => boolean | void): void {
+  const registro = useContext(ContextoDesplazar);
+  if (!registro) throw new Error("useAnchorPan debe usarse dentro de <AnchorProvider>.");
+  const { objetivo: ref, avisar } = registro;
+  const moverRef = useRef(mover);
+  useLayoutEffect(() => {
+    moverRef.current = mover;
+  });
+  useLayoutEffect(() => {
+    const libre: ObjetivoLibre = { tipo: "libre", mover: (dx, dy) => moverRef.current(dx, dy) };
+    ref.current = libre;
+    avisar();
+    return () => {
+      if (ref.current === libre) {
+        ref.current = null;
+        avisar();
+      }
+    };
+  }, [ref, avisar]);
 }
 
 /**
