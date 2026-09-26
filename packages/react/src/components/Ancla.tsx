@@ -32,7 +32,7 @@ import { miraPorDefecto, opcionesApuntar, useBucleDesplazamiento, type InfoApunt
 import type { ControlCapas } from "../dom/capas";
 import { useCambioOrientacion, useTeclado } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
-import type { AnchorIcons, AnchorTheme, GuiaDesplazar, ReactAnchorIcon } from "../types";
+import type { AnchorIcons, AnchorTheme, GuiaDesplazar, OpcionesApuntarLista, ReactAnchorIcon } from "../types";
 
 // El ancla y todo lo que dibuja (design.md §6).
 
@@ -58,6 +58,8 @@ export type PropsAncla = {
   objetivoDesplazar: RefObject<ObjetivoDesplazar | null>;
   /** Cambia cuando se registra o quita el contenido principal. */
   versionObjetivo: number;
+  /** HM-12b: lo que ofrece para apuntar la lista principal (useAnchorScroll). */
+  apuntarPrincipal: RefObject<OpcionesApuntarLista | null>;
   /** HM-10: variante de la guía al desplazar. */
   guiaDesplazar: GuiaDesplazar;
 };
@@ -85,6 +87,7 @@ export function Ancla({
   objetivoDesplazar,
   versionObjetivo,
   guiaDesplazar,
+  apuntarPrincipal,
 }: PropsAncla) {
   const medidas = useMedidas();
   const [machine] = useState(() => createAnchorMachine());
@@ -164,8 +167,12 @@ export function Ancla({
       const accion = vistaRef.current?.actions.find((a) => a.id === id);
       setPista({ texto: accion?.slideHint ?? `Mantén sobre ${accion?.label ?? id}`, hasta: performance.now() + DURACION_AVISO_MS });
     },
-    // RF-21: soltó frenado sobre algo en la mira: la app abre su capa.
-    alElegir: (apuntado) => opcionesApuntar(objetivoDesplazar.current, apuntar)?.elegir(apuntado),
+    // RF-21: soltó frenado sobre algo en la mira: la app abre su capa. RF-23: en una lista, el elemento en foco.
+    alElegir: (apuntado) => {
+      const lista = obtenerApuntarLista();
+      if (lista && apuntado.tipo === "uno") lista.elegir(apuntado.id);
+      else opcionesApuntar(objetivoDesplazar.current, apuntar)?.elegir(apuntado);
+    },
   };
   const efectosRef = useRef(efectos);
   useLayoutEffect(() => {
@@ -190,15 +197,29 @@ export function Ancla({
     if (capas.cantidad > 0) return capas.datosArriba()?.scrollRef?.current ?? null;
     return objetivoDesplazar.current;
   }, [capas, objetivoDesplazar]);
+  // HM-12b: la lista que se puede apuntar ahora (la de la capa de arriba, o la principal si no hay capa).
+  const obtenerApuntarLista = useCallback((): OpcionesApuntarLista | null => {
+    if (!apuntar) return null;
+    if (capas.cantidad > 0) return capas.datosArriba()?.apuntar ?? null;
+    return esLibre(objetivoDesplazar.current) ? null : apuntarPrincipal.current;
+  }, [apuntar, capas, objetivoDesplazar, apuntarPrincipal]);
+
   // HM-11: sin capa y con un mapa registrado (useAnchorPan), el joystick es libre y tiene su propio interruptor.
-  const { desplazable, modoDesplazar } = useMemo(() => {
-    if (hayCapa) return { desplazable: desplazar && Boolean(datosArriba()?.scrollRef), modoDesplazar: "vertical" as const };
+  const { desplazable, modoDesplazar, apuntarLista } = useMemo(() => {
+    if (hayCapa) {
+      const arriba = datosArriba();
+      return { desplazable: desplazar && Boolean(arriba?.scrollRef), modoDesplazar: "vertical" as const, apuntarLista: apuntar && Boolean(arriba?.apuntar) };
+    }
     const objetivo = objetivoDesplazar.current;
-    if (esLibre(objetivo)) return { desplazable: desplazarLibre, modoDesplazar: "libre" as const };
-    return { desplazable: desplazar && objetivo !== null, modoDesplazar: "vertical" as const };
+    if (esLibre(objetivo)) return { desplazable: desplazarLibre, modoDesplazar: "libre" as const, apuntarLista: false };
+    return {
+      desplazable: desplazar && objetivo !== null,
+      modoDesplazar: "vertical" as const,
+      apuntarLista: apuntar && apuntarPrincipal.current !== null,
+    };
     // versionCapas y versionObjetivo: se recalcula al registrar o quitar objetivos.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [desplazar, desplazarLibre, hayCapa, versionCapas, versionObjetivo, datosArriba, objetivoDesplazar]);
+  }, [desplazar, desplazarLibre, apuntar, hayCapa, versionCapas, versionObjetivo, datosArriba, objetivoDesplazar, apuntarPrincipal]);
 
   // HM-06 / RF-13: con el teclado abierto el ancla NO se oculta: se ubica en el alto visible
   // (sobre el teclado) y agrega "Ocultar teclado" a 180° (RF-17).
@@ -222,8 +243,9 @@ export function Ancla({
       teclado: teclado.abierto,
       desplazable,
       modoDesplazar,
+      apuntarLista,
     });
-  }, [vista, medidas, prefs.hand, params, aviso?.tipo, hayCapa, teclado.abierto, teclado.alto, desplazable, modoDesplazar]);
+  }, [vista, medidas, prefs.hand, params, aviso?.tipo, hayCapa, teclado.abierto, teclado.alto, desplazable, modoDesplazar, apuntarLista]);
 
   // Pantalla más reciente para EJECUTAR (acciones de la capa o de la sección, siempre al día).
   const vistaRef = useRef<AnchorScreen | null>(null);
@@ -263,6 +285,7 @@ export function Ancla({
   // HM-09: bucle de desplazamiento y punto de la guía (sin redibujar React en cada cuadro).
   const puntoGuia = useRef<HTMLDivElement>(null);
   const refMira = useRef<HTMLDivElement>(null);
+  const refFranja = useRef<HTMLDivElement>(null);
   const [infoApuntado, setInfoApuntado] = useState<InfoApuntado | null>(null);
   const refRaiz = useRef<HTMLDivElement>(null);
   const indicador = guiaDesplazar === "ancla" ? refRaiz : SIN_ELEMENTO;
@@ -276,6 +299,8 @@ export function Ancla({
     obtenerDeslizador: (id) => vistaRef.current?.actions.find((a) => a.id === id)?.onSlide,
     apuntar,
     mira: refMira,
+    obtenerApuntarLista,
+    franja: refFranja,
     enviar: (e) => controlador.enviar(e),
     emitir: (m) => onEventRef.current?.(m),
     alApuntar: setInfoApuntado,
@@ -469,6 +494,11 @@ export function Ancla({
             </span>
           )}
         </div>
+      )}
+
+      {desplazando && estado.submodo === "apuntar" && (
+        // RF-23: franja de foco, fija en el centro de la parte visible de la lista (la ubica el bucle).
+        <div ref={refFranja} className="ba-franja" data-testid="franja-foco" aria-hidden />
       )}
 
       {pista && (
@@ -828,7 +858,8 @@ function mismaVista(a: AnchorState, b: AnchorState): boolean {
     presion(a) === presion(b) &&
     (a.tipo !== "confirmacion_toque" || (b.tipo === "confirmacion_toque" && a.modo === b.modo)) &&
     (a.tipo !== "abierto_teclado" || (b.tipo === "abierto_teclado" && a.foco === b.foco)) &&
-    (a.tipo !== "desplazando" || (b.tipo === "desplazando" && mismoApuntado(a.apuntado ?? null, b.apuntado ?? null)))
+    (a.tipo !== "desplazando" ||
+      (b.tipo === "desplazando" && mismoApuntado(a.apuntado ?? null, b.apuntado ?? null) && a.submodo === b.submodo))
   );
 }
 

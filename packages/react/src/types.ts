@@ -41,6 +41,17 @@ export type AnchorIcons = {
   scrollDown?: ReactAnchorIcon;
 };
 
+/** HM-12b (RF-23): un elemento de una lista que se puede apuntar (su fila en el DOM). */
+export type ElementoApuntable = { id: string; el: HTMLElement; label: string; icon?: ReactAnchorIcon };
+
+/** HM-12b (RF-23): lo que una lista ofrece para apuntar y elegir. */
+export type OpcionesApuntarLista = {
+  /** Los elementos en orden, con su fila (se piden cuadro a cuadro mientras se apunta). */
+  elementos: () => ElementoApuntable[];
+  /** Soltar en "apuntar" con este elemento en foco: abrir su capa encima de la lista. */
+  elegir: (id: string) => void;
+};
+
 /** HM-10: dónde se ve la guía al desplazar. "ancla" = flecha y anillo en el propio ancla; "arriba" = cápsula arriba del ancla. */
 export type GuiaDesplazar = "ancla" | "arriba";
 

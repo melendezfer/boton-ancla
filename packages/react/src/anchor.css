@@ -547,3 +547,17 @@
 .ba-raiz:has(.ba-ancla--apuntando) .ba-anillo-desplazar-lleno {
   stroke: var(--ba-surface);
 }
+
+/* --- HM-12b (RF-23): apuntar en listas. --- */
+
+/* Franja de foco: fija en el centro de la parte visible de la lista; no tapa el texto (solo un borde). */
+.ba-franja {
+  position: absolute;
+  border-radius: 12px;
+  border: 2px solid var(--ba-accent);
+  background: color-mix(in srgb, var(--ba-accent) 8%, transparent);
+  pointer-events: none;
+  transition:
+    height 120ms ease-out,
+    top 120ms ease-out;
+}

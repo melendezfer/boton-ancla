@@ -4,6 +4,7 @@ import {
   indicadorDesplazamiento,
   indicadorJoystick,
   mismoApuntado,
+  pasosApuntar,
   resolverApuntado,
   velocidadDesplazamiento,
   velocidadJoystick,
@@ -17,6 +18,7 @@ import {
 } from "@boton-ancla/core";
 import { useEffect, useRef, type RefObject } from "react";
 import { esLibre, type ObjetivoApuntable, type ObjetivoDesplazar, type ObjetivoLibre, type OpcionesApuntar } from "../AnchorProvider";
+import type { OpcionesApuntarLista } from "../types";
 
 // HM-09, RF-18: mientras la máquina está en "desplazando", desplaza el objetivo cuadro a
 // cuadro con la velocidad del núcleo y mueve el punto de la guía. No usa estado de React
@@ -49,7 +51,27 @@ type Opciones = {
   emitir: (metrica: MetricEvent) => void;
   /** Avisa a React que cambió lo apuntado (solo cuando cambia: para el ícono y el nombre). */
   alApuntar: (info: InfoApuntado | null) => void;
+  /** HM-12b (RF-23): la lista que se puede apuntar ahora, si hay. */
+  obtenerApuntarLista: () => OpcionesApuntarLista | null;
+  /** La franja de foco (se ubica desde aquí). */
+  franja: RefObject<HTMLElement | null>;
 };
+
+/** RF-23: centro vertical de la parte visible de la lista (donde va la franja de foco). */
+function centroVisible(o: ObjetivoVertical): number {
+  const vv = window.visualViewport;
+  const alto = vv ? vv.height : window.innerHeight;
+  if (o === "ventana") return alto / 2;
+  const r = o.getBoundingClientRect();
+  const arriba = Math.max(r.top, 0);
+  const abajo = Math.min(r.bottom, alto);
+  return (arriba + abajo) / 2;
+}
+
+function centroY(el: HTMLElement): number {
+  const r = el.getBoundingClientRect();
+  return r.top + r.height / 2;
+}
 
 type ObjetivoVertical = HTMLElement | "ventana";
 
@@ -104,7 +126,62 @@ export function useBucleDesplazamiento(o: Opciones) {
     // RF-21, nivel 3: desde cuándo la mira está quieta sobre el mismo grupo.
     let grupoQuieto: { clave: string; desde: number; hecho: boolean } | null = null;
     let apuntadoAntes: Apuntado | null = null;
-    const { puntoGuia, indicador, mira } = ref.current;
+    // RF-23: estado del "apuntar" en listas (índice base al entrar, elemento en foco).
+    let listaOrigen: unknown = null;
+    let listaBase = 0;
+    let listaIndice = -1;
+    let listaFoco: HTMLElement | null = null;
+    const { puntoGuia, indicador, mira, franja } = ref.current;
+
+    const soltarFoco = () => {
+      if (listaFoco) delete listaFoco.dataset.baFoco;
+      if (listaIndice !== -1) ref.current.alApuntar(null);
+      listaFoco = null;
+      listaIndice = -1;
+      listaOrigen = null;
+    };
+
+    /** RF-23: apuntar en una lista. Pasos de uno en uno; la lista se desliza para centrar el foco en la franja. */
+    const apuntarEnLista = (o: ObjetivoVertical, s: Extract<AnchorState, { tipo: "desplazando" }>) => {
+      const opciones = ref.current.obtenerApuntarLista();
+      const elementos = opciones?.elementos() ?? [];
+      if (!s.origenApuntar || elementos.length === 0) return;
+      const yFranja = centroVisible(o);
+      if (listaOrigen !== s.origenApuntar) {
+        // Al entrar: el elemento más cercano a la franja.
+        listaOrigen = s.origenApuntar;
+        let mejor = 0;
+        elementos.forEach((e, i) => {
+          if (Math.abs(centroY(e.el) - yFranja) < Math.abs(centroY(elementos[mejor]!.el) - yFranja)) mejor = i;
+        });
+        listaBase = mejor;
+        listaIndice = -1;
+      }
+      const indice = Math.max(0, Math.min(elementos.length - 1, listaBase + pasosApuntar(s.ultimo.y - s.origenApuntar.y, params)));
+      const e = elementos[indice]!;
+      if (indice !== listaIndice) {
+        if (listaFoco) delete listaFoco.dataset.baFoco;
+        e.el.dataset.baFoco = "";
+        listaFoco = e.el;
+        listaIndice = indice;
+        vibrar(params.VIB_MS);
+        const apuntado: Apuntado = { tipo: "uno", id: e.id };
+        ref.current.enviar({ tipo: "APUNTAR", apuntado });
+        ref.current.alApuntar({ apuntado, label: e.label, icon: e.icon });
+      }
+      // La lista se desliza (suave) hasta que el elemento en foco queda centrado en la franja.
+      const r = e.el.getBoundingClientRect();
+      const delta = r.top + r.height / 2 - yFranja;
+      if (Math.abs(delta) >= 1) desplazar(o, Math.abs(delta) < 3 ? Math.sign(delta) : Math.round(delta * 0.3));
+      const f = franja.current;
+      if (f) {
+        const alto = r.height + 8;
+        f.style.top = `${yFranja - alto / 2}px`;
+        f.style.height = `${alto}px`;
+        f.style.left = `${r.left - 4}px`;
+        f.style.width = `${r.width + 8}px`;
+      }
+    };
 
     /** Flecha y anillo (HM-10) para un movimiento vertical: desplazar o ajustar. */
     const guiaVertical = (dy: number) => {
@@ -231,6 +308,14 @@ export function useBucleDesplazamiento(o: Opciones) {
         return;
       }
 
+      // HM-12b: en "apuntar" la lista no corre por velocidad: salta de uno en uno.
+      if (s.submodo === "apuntar") {
+        apuntarEnLista(objetivo, s);
+        cuadro = requestAnimationFrame(paso);
+        return;
+      }
+      if (listaOrigen !== null) soltarFoco();
+
       const v = velocidadDesplazamiento(dy, params, reducido);
       acumulado += (v * dt) / 1000;
       const entero = Math.trunc(acumulado);
@@ -257,6 +342,7 @@ export function useBucleDesplazamiento(o: Opciones) {
         ancla.style.removeProperty("--ba-giro");
       }
       if (apuntadoAntes) ref.current.alApuntar(null);
+      soltarFoco();
     };
   }, [activo, machine, params]);
 }

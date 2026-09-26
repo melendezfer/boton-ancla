@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { createPortal } from "react-dom";
 import { Ancla } from "./components/Ancla";
 import { useCapas, type CapaReact, type ControlCapas } from "./dom/capas";
-import type { AnchorProviderProps, ReactAnchorIcon } from "./types";
+import type { AnchorProviderProps, OpcionesApuntarLista, ReactAnchorIcon } from "./types";
 
 // Proveedor del botón-ancla (spec §7). Guarda la pantalla actual y dibuja el
 // ancla en un portal sobre document.body, fuera del contenido de la app
@@ -58,6 +58,8 @@ export function esLibre(o: ObjetivoDesplazar | null): o is ObjetivoLibre {
 }
 type RegistroDesplazar = {
   objetivo: RefObject<ObjetivoDesplazar | null>;
+  /** HM-12b: lo que ofrece para apuntar la lista principal (useAnchorScroll). */
+  apuntarPrincipal: RefObject<OpcionesApuntarLista | null>;
   /** Avisa que se registró o quitó un objetivo (para recalcular si hay algo desplazable). */
   avisar: () => void;
 };
@@ -93,8 +95,9 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
   const capas = useCapas(onEventRef);
   const objetivoDesplazar = useRef<ObjetivoDesplazar | null>(null);
   const [versionObjetivo, setVersionObjetivo] = useState(0);
+  const apuntarPrincipal = useRef<OpcionesApuntarLista | null>(null);
   const registroDesplazar = useMemo<RegistroDesplazar>(
-    () => ({ objetivo: objetivoDesplazar, avisar: () => setVersionObjetivo((v) => v + 1) }),
+    () => ({ objetivo: objetivoDesplazar, apuntarPrincipal, avisar: () => setVersionObjetivo((v) => v + 1) }),
     [],
   );
   const reserva = useMemo<ReservaAncla>(
@@ -124,6 +127,7 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
               apuntar={apuntar}
               guiaDesplazar={guiaDesplazar}
               objetivoDesplazar={objetivoDesplazar}
+              apuntarPrincipal={apuntarPrincipal}
               versionObjetivo={versionObjetivo}
             />,
             document.body,
@@ -141,22 +145,33 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
  * el mapa, que no se registra, sigue igual (HU-13). Mientras una capa esté abierta, se
  * desplaza la capa (su `scrollRef`), no esto.
  */
-export function useAnchorScroll(objetivo: RefObject<HTMLElement | null> | "ventana"): void {
+export function useAnchorScroll(objetivo: RefObject<HTMLElement | null> | "ventana", apuntar?: OpcionesApuntarLista): void {
   const registro = useContext(ContextoDesplazar);
   if (!registro) throw new Error("useAnchorScroll debe usarse dentro de <AnchorProvider>.");
-  const { objetivo: ref, avisar } = registro;
+  const { objetivo: ref, apuntarPrincipal, avisar } = registro;
+  // HM-12b: las funciones cambian en cada render; el ancla usa siempre las últimas.
+  const apuntarRef = useRef(apuntar);
+  useLayoutEffect(() => {
+    apuntarRef.current = apuntar;
+  });
+  const conApuntar = Boolean(apuntar);
   useLayoutEffect(() => {
     const el = objetivo === "ventana" ? "ventana" : objetivo.current;
     if (!el) return;
     ref.current = el;
+    const opciones: OpcionesApuntarLista | null = conApuntar
+      ? { elementos: () => apuntarRef.current?.elementos() ?? [], elegir: (id) => apuntarRef.current?.elegir(id) }
+      : null;
+    apuntarPrincipal.current = opciones;
     avisar();
     return () => {
       if (ref.current === el) {
         ref.current = null;
+        if (apuntarPrincipal.current === opciones) apuntarPrincipal.current = null;
         avisar();
       }
     };
-  }, [objetivo, ref, avisar]);
+  }, [objetivo, ref, apuntarPrincipal, avisar, conApuntar]);
 }
 
 /**
@@ -228,6 +243,7 @@ export function useAnchorLayer(abierta: boolean, onClose: () => void, capa: Capa
   ].join("|");
   const icono = capa.icon;
   const conDesplazar = Boolean(capa.scrollRef);
+  const conApuntar = Boolean(capa.apuntar);
   useLayoutEffect(() => {
     if (!abierta) return;
     if (process.env.NODE_ENV !== "production") {
@@ -237,7 +253,7 @@ export function useAnchorLayer(abierta: boolean, onClose: () => void, capa: Capa
       if (errores.length > 0) throw new Error(`Capa del ancla inválida:\n- ${errores.join("\n- ")}`);
     }
     actualizar();
-  }, [abierta, firma, icono, conDesplazar, actualizar]);
+  }, [abierta, firma, icono, conDesplazar, conApuntar, actualizar]);
   const claveRef = useRef<symbol | null>(null);
   useLayoutEffect(() => {
     if (!abierta) return;

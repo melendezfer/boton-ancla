@@ -3,8 +3,13 @@
 import type { CapaAncla, MetricEvent } from "@boton-ancla/core";
 
 /** Lo que declara una capa en React: lo del núcleo + qué desplaza el ancla (HM-09). */
-export type CapaReact = CapaAncla & { scrollRef?: RefObject<HTMLElement | null> };
+export type CapaReact = CapaAncla & {
+  scrollRef?: RefObject<HTMLElement | null>;
+  /** HM-12b (RF-23): la lista de la capa ofrece sus elementos para apuntar y elegir. */
+  apuntar?: OpcionesApuntarLista;
+};
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import type { OpcionesApuntarLista } from "../types";
 
 // Capas (HM-03, spec RF-15): lo que la app abre ENCIMA del contenido (hojas, listas,
 // búsqueda). Mientras haya alguna, el ancla ofrece "Cerrar" a 90°, y el botón atrás
