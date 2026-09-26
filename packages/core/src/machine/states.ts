@@ -63,7 +63,12 @@ type Gesto = ConPuntero & {
   /** Cómo empezó: directo desde el ancla, o desde el modo toque presionando el centro. */
   modoApertura: "gesto" | "toque";
   presel?: string;
+  /** Desde cuándo está preseleccionada `presel` (RF-20: esperar sobre un deslizador). */
+  tPresel?: number;
 };
+
+/** RF-21 (HM-12a): lo que hay en la mira. */
+export type Apuntado = { tipo: "uno"; id: string } | { tipo: "grupo"; ids: string[] };
 
 /** Un dedo apoyado mientras el menú está abierto en modo toque (C-06). */
 export type Presion = {
@@ -87,7 +92,9 @@ export type CancelReason =
   | "segundo_dedo"
   | "pointercancel"
   | "orientacion"
-  | "cambio_seccion";
+  | "cambio_seccion"
+  /** RF-20: soltó sobre un deslizador sin esperar (la banda muestra la pista). */
+  | "deslizador_sin_espera";
 
 export type AnchorState =
   | { tipo: "reposo" }
@@ -95,7 +102,9 @@ export type AnchorState =
   | ({ tipo: "descanso"; puntoDescanso: Point } & ConPuntero)
   | ({ tipo: "abierto_gesto" } & Gesto)
   /** HM-09: desplazando el contenido con el pulgar, hasta soltar. `origen` = donde empezó el modo. */
-  | ({ tipo: "desplazando"; origen: Point; tInicio: number } & ConPuntero)
+  | ({ tipo: "desplazando"; origen: Point; tInicio: number; apuntado?: Apuntado | null } & ConPuntero)
+  /** RF-20: ajustando una opción deslizador (Zoom) con el pulgar, hasta soltar. */
+  | ({ tipo: "ajustando"; id: string; origen: Point; tInicio: number } & ConPuntero)
   | ({ tipo: "confirmacion_armada"; presel: string } & Gesto)
   | {
       tipo: "abierto_toque";
@@ -119,7 +128,9 @@ export type AnchorState =
   | { tipo: "abierto_teclado"; geo: Geometry; foco: number; t0: number }
   // Transitorios: el adaptador hace el efecto y envía COMPLETADO.
   | { tipo: "ejecutando"; id: string; modo: ModoEjecucion; experto: boolean; ms: number; recorridoPx: number }
-  | { tipo: "cancelado"; motivo: CancelReason }
+  | { tipo: "cancelado"; motivo: CancelReason; id?: string }
+  /** RF-21: soltó frenado sobre algo en la mira; el adaptador abre su capa. */
+  | { tipo: "elegido"; apuntado: Apuntado; ms: number }
   | { tipo: "bloqueado_sensible"; id: string };
 
 export type TipoEstado = AnchorState["tipo"];
@@ -154,8 +165,10 @@ export type AnchorEvent =
   | { tipo: "TECLA"; tecla: Tecla; t: number; geo?: Geometry }
   | { tipo: "ORIENTACION" }
   | { tipo: "CAMBIO_SECCION" }
-  | { tipo: "COMPLETADO" };
+  | { tipo: "COMPLETADO" }
+  /** RF-21: el adaptador avisa qué hay en la mira (hit-test en pantalla). */
+  | { tipo: "APUNTAR"; apuntado: Apuntado | null };
 
-export const ESTADOS_TRANSITORIOS: readonly TipoEstado[] = ["ejecutando", "cancelado", "bloqueado_sensible"];
+export const ESTADOS_TRANSITORIOS: readonly TipoEstado[] = ["ejecutando", "cancelado", "bloqueado_sensible", "elegido"];
 
 export const REPOSO: AnchorState = Object.freeze({ tipo: "reposo" });

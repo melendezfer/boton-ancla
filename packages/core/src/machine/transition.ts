@@ -1,7 +1,7 @@
 import { anguloDesde, anguloParaMano, distancia } from "../geometry";
 import { resolveSelection } from "../selection";
 import type { Point } from "../types";
-import { ESTADOS_TRANSITORIOS, REPOSO, type AnchorEvent, type AnchorState, type Geometry } from "./states";
+import { ESTADOS_TRANSITORIOS, REPOSO, type AnchorEvent, type AnchorState, type Apuntado, type Geometry } from "./states";
 
 // transition(estado, evento) → estado (spec §3, design.md §3.3).
 // Función PURA: no lee el reloj, no toca el DOM, no llama onSelect.
@@ -26,6 +26,8 @@ export function transition(estado: AnchorState, evento: AnchorEvent): AnchorStat
       return desdeGesto(estado, evento);
     case "desplazando":
       return desdeDesplazando(estado, evento);
+    case "ajustando":
+      return desdeAjustando(estado, evento);
     case "abierto_toque":
       return desdeToque(estado, evento);
     case "confirmacion_toque":
@@ -35,6 +37,7 @@ export function transition(estado: AnchorState, evento: AnchorEvent): AnchorStat
     case "ejecutando":
     case "cancelado":
     case "bloqueado_sensible":
+    case "elegido":
       // Fila 34: el adaptador ya hizo el efecto.
       return evento.tipo === "COMPLETADO" ? REPOSO : estado;
     default:
@@ -184,11 +187,11 @@ function abrirGesto(datos: DatosPuntero, t: number, modoApertura: "gesto" | "toq
     modoApertura,
     presel: undefined,
   };
-  return moverGesto(abierto, datos.ultimo);
+  return moverGesto(abierto, datos.ultimo, t);
 }
 
-/** Recalcula la preselección para `punto` (filas 11, 12 y 18). */
-function moverGesto(estado: EstadoGesto, punto: Point): EstadoGesto {
+/** Recalcula la preselección para `punto` (filas 11, 12 y 18). `t` marca desde cuándo (RF-20). */
+function moverGesto(estado: EstadoGesto, punto: Point, t: number): EstadoGesto {
   const { geo } = estado;
   const sel = resolveSelection({
     center: geo.centro,
@@ -199,17 +202,43 @@ function moverGesto(estado: EstadoGesto, punto: Point): EstadoGesto {
     params: geo.params,
   });
   const slot = geo.slots.find((s) => s.id === sel.id);
+  const tPresel = sel.id === estado.presel ? estado.tPresel : t;
   // Fila 12: irreversible (y habilitada) más allá del anillo exterior → confirmación armada.
   if (slot && slot.kind === "irreversible" && !slot.disabled && sel.beyondOuter) {
-    return { ...estado, tipo: "confirmacion_armada", presel: slot.id };
+    return { ...estado, tipo: "confirmacion_armada", presel: slot.id, tPresel };
   }
   // Fila 11, o fila 18 al volver dentro del anillo o cambiar de sector.
-  return { ...estado, tipo: "abierto_gesto", presel: sel.id };
+  return { ...estado, tipo: "abierto_gesto", presel: sel.id, tPresel };
+}
+
+/** RF-20: ¿ya esperó lo suficiente sobre un deslizador? */
+function esperoDeslizador(estado: EstadoGesto, t: number): boolean {
+  if (estado.tipo !== "abierto_gesto" || estado.tPresel === undefined) return false;
+  const slot = estado.geo.slots.find((s) => s.id === estado.presel);
+  return Boolean(slot?.deslizador && !slot.disabled) && t - estado.tPresel >= estado.geo.params.T_ESPERA_DESLIZADOR;
+}
+
+function aAjustando(estado: EstadoGesto, t: number): Estado<"ajustando"> {
+  return {
+    tipo: "ajustando",
+    id: estado.presel!,
+    pointerId: estado.pointerId,
+    inicio: estado.inicio,
+    ultimo: estado.ultimo,
+    recorridoPx: estado.recorridoPx,
+    t0: estado.t0,
+    geo: estado.geo,
+    origen: estado.ultimo, // la velocidad se mide desde donde se completó la espera
+    tInicio: t,
+  };
 }
 
 function desdeGesto(estado: EstadoGesto, evento: AnchorEvent): AnchorState {
+  // Fila 47 (RF-20): se quedó sobre un deslizador; un MOVE tardío primero completa la espera.
+  if (evento.tipo === "TICK") return esperoDeslizador(estado, evento.t) ? aAjustando(estado, evento.t) : estado;
   if (evento.tipo === "POINTER_MOVE" && evento.pointerId === estado.pointerId) {
-    return moverGesto(avanzar(estado, evento.punto), evento.punto);
+    if (esperoDeslizador(estado, evento.t)) return desdeAjustando(aAjustando(estado, evento.t), evento);
+    return moverGesto(avanzar(estado, evento.punto), evento.punto, evento.t);
   }
   if (evento.tipo === "POINTER_UP" && evento.pointerId === estado.pointerId) {
     return soltarGesto(estado, evento);
@@ -219,7 +248,9 @@ function desdeGesto(estado: EstadoGesto, evento: AnchorEvent): AnchorState {
 
 /** Filas 13–17 y 19: qué pasa al soltar. Se evalúa en el punto de soltar, no en el último MOVE. */
 function soltarGesto(estado: EstadoGesto, evento: Evento<"POINTER_UP">): AnchorState {
-  const final = moverGesto(avanzar(estado, evento.punto), evento.punto);
+  // RF-20: la espera se completó y el TICK no llegó a tiempo: fue un ajuste sin mover.
+  if (esperoDeslizador(estado, evento.t)) return REPOSO;
+  const final = moverGesto(avanzar(estado, evento.punto), evento.punto, evento.t);
   const { geo } = final;
   const r = distancia(geo.centro, evento.punto);
 
@@ -227,6 +258,8 @@ function soltarGesto(estado: EstadoGesto, evento: Evento<"POINTER_UP">): AnchorS
   const slot = geo.slots.find((s) => s.id === final.presel);
   if (!slot) return { tipo: "cancelado", motivo: "fuera_de_arco" }; // fila 14
   if (slot.disabled) return { tipo: "cancelado", motivo: "deshabilitada" }; // fila 15
+  // Fila 48 (RF-20): un deslizador no se ejecuta al soltar sin esperar (tampoco en experto ni en C-05).
+  if (slot.deslizador) return { tipo: "cancelado", motivo: "deslizador_sin_espera", id: slot.id };
   // Fila 17: irreversible sin haber cruzado el anillo. (Si lo cruzó, `final` es confirmacion_armada.)
   if (slot.kind === "irreversible" && final.tipo !== "confirmacion_armada") {
     return { tipo: "bloqueado_sensible", id: slot.id };
@@ -360,6 +393,7 @@ function punteroActivo(estado: AnchorState): number | undefined {
     case "confirmacion_armada":
       return estado.pointerId;
     case "desplazando":
+    case "ajustando":
       return estado.pointerId;
     case "abierto_toque":
       return estado.presion?.pointerId;
@@ -479,8 +513,34 @@ function desdeDesplazando(estado: Estado<"desplazando">, evento: AnchorEvent): A
   if (evento.tipo === "POINTER_MOVE" && evento.pointerId === estado.pointerId) {
     return avanzar(estado, evento.punto); // fila 43: la velocidad la calcula el adaptador
   }
+  if (evento.tipo === "APUNTAR") {
+    // Fila 45 (RF-21): el adaptador avisa qué hay en la mira.
+    return mismoApuntado(estado.apuntado ?? null, evento.apuntado) ? estado : { ...estado, apuntado: evento.apuntado };
+  }
   if (evento.tipo === "POINTER_UP" && evento.pointerId === estado.pointerId) {
+    // Fila 46 (RF-21): soltar FRENADO sobre algo en la mira lo elige. En movimiento, solo se detiene.
+    const frenado = distancia(estado.origen, evento.punto) <= estado.geo.params.R_MUERTA_DESPLAZAR;
+    if (estado.apuntado && estado.geo.modoDesplazar === "libre" && frenado) {
+      return { tipo: "elegido", apuntado: estado.apuntado, ms: evento.t - estado.t0 };
+    }
     return REPOSO; // fila 44: parada en seco, sin inercia
   }
+  return estado;
+}
+
+export function mismoApuntado(a: Apuntado | null, b: Apuntado | null): boolean {
+  if (a === null || b === null) return a === b;
+  if (a.tipo === "uno" && b.tipo === "uno") return a.id === b.id;
+  if (a.tipo === "grupo" && b.tipo === "grupo") return a.ids.length === b.ids.length && a.ids.every((id, i) => id === b.ids[i]);
+  return false;
+}
+
+// ---------------------------------------------------------------------------
+// ajustando (filas 49 y 50; RF-20)
+// ---------------------------------------------------------------------------
+
+function desdeAjustando(estado: Estado<"ajustando">, evento: AnchorEvent): AnchorState {
+  if (evento.tipo === "POINTER_MOVE" && evento.pointerId === estado.pointerId) return avanzar(estado, evento.punto);
+  if (evento.tipo === "POINTER_UP" && evento.pointerId === estado.pointerId) return REPOSO;
   return estado;
 }

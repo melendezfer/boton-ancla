@@ -45,13 +45,15 @@ export {
   type AnchorState,
   type CancelReason,
   type Geometry,
+  type Apuntado,
   type ModoDesplazar,
   type ModoEjecucion,
   type Presion,
   type Tecla,
   type TipoEstado,
 } from "./machine/states";
-export { transition } from "./machine/transition";
+export { mismoApuntado, transition } from "./machine/transition";
+export { agrupar, resolverApuntado, zoomParaSeparar, type ObjetivoEnPantalla, type Resultado as ResultadoApuntar } from "./apuntar";
 export { createAnchorMachine, type Listener, type Machine } from "./machine/machine";
 export { derivarMetricas, type MetricEvent } from "./metrics";
 export {

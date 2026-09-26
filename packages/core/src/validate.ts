@@ -60,6 +60,9 @@ export function validateScreen(screen: AnchorScreen, params: Params): string[] {
     if (accion.kind === "reversible" && typeof accion.onUndo !== "function") {
       errores.push(`La acción ${etiqueta} es reversible y necesita onUndo (D-14, RF-08).`);
     }
+    if (accion.onSlide && accion.kind === "irreversible") {
+      errores.push(`La acción ${etiqueta} es un deslizador (onSlide) y no puede ser irreversible (RF-20).`);
+    }
   }
 
   return errores;

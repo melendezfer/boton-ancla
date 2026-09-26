@@ -15,6 +15,11 @@ export function proximoPlazo(estado: AnchorState): number | undefined {
       return estado.sinCierrePorTiempo || estado.presion ? undefined : estado.ultimaActividad + estado.geo.params.T_INACTIVO;
     case "confirmacion_toque":
       return estado.sinCierrePorTiempo ? undefined : estado.ultimaActividad + estado.geo.params.T_INACTIVO;
+    case "abierto_gesto": {
+      // RF-20: esperar sobre un deslizador.
+      const slot = estado.geo.slots.find((s) => s.id === estado.presel);
+      return slot?.deslizador && estado.tPresel !== undefined ? estado.tPresel + estado.geo.params.T_ESPERA_DESLIZADOR : undefined;
+    }
     default:
       return undefined;
   }

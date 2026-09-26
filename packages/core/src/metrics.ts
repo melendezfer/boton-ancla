@@ -16,7 +16,15 @@ export type MetricEvent =
   | { type: "layer_close"; via: "sistema" | "teclado" }
   /** HM-09: empezó y terminó el modo desplazamiento. `modo`: listas (vertical) o mapa (libre, HM-11). */
   | { type: "scroll_start"; modo: ModoDesplazar }
-  | { type: "scroll_end"; ms: number };
+  | { type: "scroll_end"; ms: number }
+  /** RF-20 (HM-12a): empezó y terminó el ajuste de un deslizador (Zoom). */
+  | { type: "slider_start"; id: string }
+  | { type: "slider_end"; id: string; ms: number }
+  /** RF-21 (HM-12a): algo nuevo en la mira; se eligió un pin; se abrió un grupo; zoom automático (lo registra el adaptador). */
+  | { type: "aim"; tipo: "uno" | "grupo" }
+  | { type: "pick"; id: string }
+  | { type: "group_open"; n: number }
+  | { type: "auto_zoom"; n: number };
 
 type Tipo = AnchorState["tipo"];
 
@@ -56,8 +64,17 @@ export function derivarMetricas(prev: AnchorState, next: AnchorState, evento: An
 
   // --- desplazamiento (HM-09) ---
   if (next.tipo === "desplazando" && prev.tipo !== "desplazando") metricas.push({ type: "scroll_start", modo: next.geo.modoDesplazar ?? "vertical" });
-  if (prev.tipo === "desplazando" && next.tipo === "reposo" && evento.tipo === "POINTER_UP") {
+  if (prev.tipo === "desplazando" && (next.tipo === "reposo" || next.tipo === "elegido") && evento.tipo === "POINTER_UP") {
     metricas.push({ type: "scroll_end", ms: Math.round(evento.t - prev.tInicio) });
+  }
+  if (prev.tipo === "desplazando" && next.tipo === "desplazando" && next.apuntado && next.apuntado !== prev.apuntado) {
+    metricas.push({ type: "aim", tipo: next.apuntado.tipo });
+  }
+
+  // --- deslizador (RF-20) ---
+  if (next.tipo === "ajustando" && prev.tipo !== "ajustando") metricas.push({ type: "slider_start", id: next.id });
+  if (prev.tipo === "ajustando" && next.tipo !== "ajustando" && "t" in evento) {
+    metricas.push({ type: "slider_end", id: prev.id, ms: Math.round(evento.t - prev.tInicio) });
   }
 
   // --- rest_enter ---
@@ -82,6 +99,10 @@ export function derivarMetricas(prev: AnchorState, next: AnchorState, evento: An
       break;
     case "bloqueado_sensible":
       metricas.push({ type: "sensitive_blocked", id: next.id });
+      break;
+    case "elegido":
+      if (next.apuntado.tipo === "uno") metricas.push({ type: "pick", id: next.apuntado.id });
+      else metricas.push({ type: "group_open", n: next.apuntado.ids.length });
       break;
   }
 

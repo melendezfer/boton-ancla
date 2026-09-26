@@ -168,7 +168,8 @@ function cabeEnZonaUtil(centro: Point, viewport: Rect, safeArea: Insets, params:
 // ---------------------------------------------------------------------------
 
 /** Lo que la geometría necesita saber de cada acción. */
-export type OrderedAction = { id: string; kind: ActionKind; disabled: boolean };
+/** `deslizador` solo aparece (en true) en las acciones con `onSlide` (RF-20). */
+export type OrderedAction = { id: string; kind: ActionKind; disabled: boolean; deslizador?: true };
 
 /** Una posición del abanico con su acción asignada. */
 export type Slot = FanSlot & OrderedAction;
@@ -198,6 +199,7 @@ export function orderActions(screen: AnchorScreen, opciones: { deshacer?: boolea
       id: accion.id,
       kind: accion.kind ?? "normal",
       disabled: accion.disabled ?? false,
+      ...(accion.onSlide ? { deslizador: true as const } : {}),
     }));
 
   if (opciones.deshacer) {

@@ -147,6 +147,18 @@ function detalle(m: RegistroMetrica): string {
       return `${e.modo === "libre" ? "mover el mapa" : "desplazar"} · ${m.pantalla}`;
     case "scroll_end":
       return `${Math.round(e.ms)} ms`;
+    case "slider_start":
+      return `ajustar ${e.id} · ${m.pantalla}`;
+    case "slider_end":
+      return `${e.id} · ${Math.round(e.ms)} ms`;
+    case "aim":
+      return e.tipo === "uno" ? "un negocio en la mira" : "un grupo en la mira";
+    case "pick":
+      return `elegido ${e.id}`;
+    case "group_open":
+      return `grupo de ${e.n}`;
+    case "auto_zoom":
+      return `zoom automático · grupo de ${e.n}`;
   }
 }
 

@@ -33,6 +33,14 @@ export type AnchorAction = {
   /** Texto del aviso, por ejemplo "Marcado no disponible". */
   undoMessage?: string;
   disabled?: boolean;
+  /**
+   * RF-20 (HM-12a): la opción es un deslizador (p. ej. Zoom). Quedarse sobre ella
+   * T_ESPERA_DESLIZADOR la ajusta: se llama cuadro a cuadro con `paso` (px/s × s de la curva
+   * de RF-18; positivo = pulgar arriba = más). En toque y teclado se llama `onSelect`.
+   */
+  onSlide?: (paso: number) => void;
+  /** Pista si se suelta sobre el deslizador sin esperar. Por defecto "Mantén sobre {label}". */
+  slideHint?: string;
 };
 
 export type AnchorScreen = {
