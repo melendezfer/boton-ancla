@@ -65,10 +65,13 @@ test("Ajustes: mover los deslizadores cambia el valor visible y se guarda", asyn
   await expect(page.getByTestId("valor-duracion-centrado")).toHaveText("100 ms");
 });
 
-test("mapa: con los valores de inicio el pin se centra enseguida", async ({ page }) => {
+test("mapa: con los valores de inicio el pin se centra en la mira", async ({ page }) => {
+  // La duración exacta la prueban las pruebas del núcleo (hm15-centrado.test.ts), que no dependen
+  // de la carga de la máquina; aquí basta con que se centre.
   const { g, gestos, falta } = await mapaConPinCerca(page);
   const origen = await entrarQuieto(page, gestos, g);
-  await expect.poll(falta, { timeout: 1500 }).toBeLessThan(1.5);
+  await expect(page.getByTestId("ancla")).toHaveAttribute("data-apuntado", "arepas-dona-rosa");
+  await expect.poll(falta, { timeout: 5000 }).toBeLessThan(1.5);
   await gestos.soltar(origen);
 });
 
@@ -78,8 +81,13 @@ test("mapa: la espera retrasa el imán (nada se mueve antes) y después centra",
   const antes = await falta();
   const origen = await entrarQuieto(page, gestos, g);
   await expect(page.getByTestId("ancla")).toHaveAttribute("data-apuntado", "arepas-dona-rosa");
-  await page.waitForTimeout(150);
-  expect(Math.abs((await falta()) - antes)).toBeLessThan(0.5); // todavía esperando
+  // Todavía esperando: muestras SOLO en los primeros 300 ms desde que se ve el pin apuntado (la
+  // espera es de 500). Con tiempo fijo, una máquina cargada podía comprobar cuando ya había empezado.
+  const desde = Date.now();
+  while (Date.now() - desde < 300) {
+    const f = await falta();
+    if (Date.now() - desde < 300) expect(Math.abs(f - antes)).toBeLessThan(0.5);
+  }
   await expect.poll(falta, { timeout: 5000 }).toBeLessThan(1.5);
   await gestos.soltar(origen);
 });
