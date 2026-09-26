@@ -7,6 +7,7 @@ import { usePantallaPerfil } from "@/components/pantallas-conectadas";
 import { NEGOCIO_DEMO } from "@/lib/datos";
 import { useDemo } from "@/lib/demo-store";
 import { ANCHOR_ICONS, MOBILITY_ICONS, SEMANTIC_ICONS } from "@/lib/icons/semantic-icons";
+import { FONDO_FOTO } from "@/lib/ruta";
 
 const Abierto = SEMANTIC_ICONS.openNow;
 const Local = MOBILITY_ICONS.fixed;
@@ -24,7 +25,7 @@ export default function PaginaPerfil() {
       <EspacioBarra />
       <div
         className="h-44 w-full bg-cover bg-center"
-        style={{ backgroundImage: "url(/fondos/foto.jpg), url(/fondos/foto.svg)" }}
+        style={{ backgroundImage: FONDO_FOTO }}
         role="img"
         aria-label="Foto del negocio"
       />

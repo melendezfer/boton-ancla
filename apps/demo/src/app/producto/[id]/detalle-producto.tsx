@@ -5,6 +5,7 @@ import { EspacioBarra } from "@/components/barra-demo";
 import { usePantallaProducto } from "@/components/pantallas-conectadas";
 import { formatoPesos } from "@/lib/datos";
 import { useDemo } from "@/lib/demo-store";
+import { FONDO_FOTO } from "@/lib/ruta";
 
 export function DetalleProducto({ id }: { id: string }) {
   const { productos, abrirHoja } = useDemo();
@@ -26,7 +27,7 @@ export function DetalleProducto({ id }: { id: string }) {
   return (
     <main className="mx-auto flex max-w-lg flex-col gap-3 px-4 pb-48">
       <EspacioBarra />
-      <div className="h-40 rounded-card bg-cover bg-center" style={{ backgroundImage: "url(/fondos/foto.jpg), url(/fondos/foto.svg)" }} role="img" aria-label={`Foto de ${p.nombre}`} />
+      <div className="h-40 rounded-card bg-cover bg-center" style={{ backgroundImage: FONDO_FOTO }} role="img" aria-label={`Foto de ${p.nombre}`} />
       <h1 className="font-heading text-title-1 font-bold text-text">{p.nombre}</h1>
       <p className="font-sans text-title-2 text-text">{formatoPesos(p.precio)}</p>
       {p.disponible ? (

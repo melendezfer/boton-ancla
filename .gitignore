@@ -40,3 +40,6 @@ Thumbs.db
 .turbo/
 .vercel/
 *.pem
+
+# Exportación estática para GitHub Pages (apps/demo, EXPORTAR_PAGES=1)
+.next-pages/

@@ -1,7 +1,22 @@
 import path from "node:path";
 import type { NextConfig } from "next";
 
+// Publicación en GitHub Pages (EXPORTAR_PAGES=1, lo usa .github/workflows/pages.yml): sitio
+// estático (sin servidor) bajo https://melendezfer.github.io/boton-ancla/. En desarrollo y en
+// las pruebas no cambia nada.
+const paraPages = process.env.EXPORTAR_PAGES === "1";
+const BASE_PATH = paraPages ? "/boton-ancla" : "";
+
 const nextConfig: NextConfig = {
+  ...(paraPages && {
+    output: "export",
+    basePath: BASE_PATH,
+    // Carpeta de compilación aparte: no pisa la de `next dev` si está corriendo.
+    distDir: ".next-pages",
+  }),
+  // Para las rutas escritas a mano (imágenes de fondo en estilos): ver lib/ruta.ts.
+  env: { NEXT_PUBLIC_BASE_PATH: BASE_PATH },
+
   // El núcleo publica su código TypeScript sin compilar (packages/core/src);
   // Next lo compila junto con la demo.
   transpilePackages: ["@boton-ancla/core", "@boton-ancla/react"],

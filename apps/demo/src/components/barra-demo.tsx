@@ -35,6 +35,14 @@ export function BarraDemo() {
           </button>
         )}
         <p className="min-w-0 flex-1 truncate font-heading text-title-2 font-semibold text-text">{pantalla?.sectionLabel ?? "Demo"}</p>
+        {/* Aviso corto: es una demo de prueba (los datos y las métricas se quedan en este celular). */}
+        <span
+          className="shrink-0 rounded-full bg-terracota/10 px-2 py-0.5 font-sans text-caption font-medium text-terracota"
+          title="Demo de prueba: tus datos y métricas se quedan en este celular"
+          data-testid="aviso-demo"
+        >
+          Demo de prueba
+        </span>
         <Enlace href="/diagnostico" etiqueta="Diagnóstico" activo={ruta === "/diagnostico"}>
           <Diagnostico size={22} />
         </Enlace>

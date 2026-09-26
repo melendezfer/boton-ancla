@@ -14,6 +14,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({ variable: "--font-plus-jakarta-sans"
 export const metadata: Metadata = {
   title: "Botón-ancla · demo",
   description: "Demo del botón-ancla con pantallas simuladas de RUTEANDO.",
+  // Demo de prueba: no debe aparecer en buscadores (también publicada en GitHub Pages).
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
 };
 
 export const viewport: Viewport = {

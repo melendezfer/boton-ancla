@@ -6,6 +6,7 @@ import { NEGOCIOS, NEGOCIO_DEMO } from "@/lib/datos";
 import { registrarMapa } from "@/lib/mapa-control";
 import { useDemo, type Fondo } from "@/lib/demo-store";
 import { ANCHOR_ICONS } from "@/lib/icons/semantic-icons";
+import { FONDO_FOTO } from "@/lib/ruta";
 
 const MapPin = ANCHOR_ICONS.mapPin;
 
@@ -158,7 +159,7 @@ export function MapaFalso() {
           <div
             className="absolute inset-0"
             // Si existe public/fondos/foto.jpg (una foto real) se ve esa; si no, la ilustración de respaldo.
-            style={{ backgroundImage: "url(/fondos/foto.jpg), url(/fondos/foto.svg)", backgroundSize: "cover", backgroundPosition: "center" }}
+            style={{ backgroundImage: FONDO_FOTO, backgroundSize: "cover", backgroundPosition: "center" }}
           />
         ) : (
           <DibujoMapa c={c} />
