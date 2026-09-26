@@ -557,7 +557,5 @@
   border: 2px solid var(--ba-accent);
   background: color-mix(in srgb, var(--ba-accent) 8%, transparent);
   pointer-events: none;
-  transition:
-    height 120ms ease-out,
-    top 120ms ease-out;
+  /* Sin transición: la ubica el bucle cada cuadro (una transición la haría llegar tarde, HM-15). */
 }

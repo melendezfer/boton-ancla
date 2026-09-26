@@ -80,3 +80,23 @@ export function pasosApuntar(dy: number, params: Params): number {
   const n = Math.trunc(dy / params.PASO_APUNTAR);
   return n === 0 ? 0 : n; // sin -0
 }
+
+/**
+ * HM-15: centrado por TIEMPO (igual en cualquier celular, no por cuadro). Devuelve cuánto
+ * mover en este cuadro para que lo que falta siga la curva `inicial × (1 − salidaSuave(p))`,
+ * con `p = (transcurrido − T_ESPERA_CENTRADO) / T_CENTRADO`. Se usa por eje.
+ * - Antes de la espera: 0.
+ * - Con movimiento reducido (o T_CENTRADO = 0): todo lo que falta, de una vez.
+ * Se mide `restante` en cada cuadro, así un movimiento de afuera no desarma la curva.
+ */
+export function pasoCentrado(o: { restante: number; inicial: number; transcurrido: number; params: Params; reducido?: boolean }): number {
+  const { restante, inicial, transcurrido, params, reducido = false } = o;
+  if (transcurrido < params.T_ESPERA_CENTRADO) return 0;
+  if (reducido || params.T_CENTRADO <= 0) return restante;
+  const p = Math.min(1, (transcurrido - params.T_ESPERA_CENTRADO) / params.T_CENTRADO);
+  const salidaSuave = 1 - (1 - p) ** 3;
+  const paso = restante - inicial * (1 - salidaSuave);
+  // Nunca en contra (si algo de afuera ya lo acercó más que la curva) ni más allá del objetivo.
+  if (Math.sign(paso) !== Math.sign(restante)) return 0;
+  return Math.abs(paso) > Math.abs(restante) ? restante : paso;
+}

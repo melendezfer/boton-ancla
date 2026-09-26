@@ -4,6 +4,7 @@ import {
   indicadorDesplazamiento,
   indicadorJoystick,
   mismoApuntado,
+  pasoCentrado,
   pasosApuntar,
   resolverApuntado,
   velocidadDesplazamiento,
@@ -66,6 +67,13 @@ function centroVisible(o: ObjetivoVertical): number {
   const arriba = Math.max(r.top, 0);
   const abajo = Math.min(r.bottom, alto);
   return (arriba + abajo) / 2;
+}
+
+/** ¿La lista todavía puede desplazarse en el sentido de `delta` (positivo = hacia abajo)? */
+function puedeDesplazar(o: ObjetivoVertical, delta: number): boolean {
+  const pos = o === "ventana" ? window.scrollY : o.scrollTop;
+  const max = o === "ventana" ? document.documentElement.scrollHeight - window.innerHeight : o.scrollHeight - o.clientHeight;
+  return delta > 0 ? pos < max - 0.5 : pos > 0.5;
 }
 
 function centroY(el: HTMLElement): number {
@@ -131,6 +139,9 @@ export function useBucleDesplazamiento(o: Opciones) {
     let listaBase = 0;
     let listaIndice = -1;
     let listaFoco: HTMLElement | null = null;
+    // HM-15: centrado por tiempo. Se guarda cuándo empezó y cuánto faltaba al empezar.
+    let centradoLista: { desde: number; inicial: number } | null = null;
+    let centradoMapa: { clave: string; desde: number; inicial: { x: number; y: number } } | null = null;
     const { puntoGuia, indicador, mira, franja } = ref.current;
 
     const soltarFoco = () => {
@@ -139,10 +150,11 @@ export function useBucleDesplazamiento(o: Opciones) {
       listaFoco = null;
       listaIndice = -1;
       listaOrigen = null;
+      centradoLista = null;
     };
 
     /** RF-23: apuntar en una lista. Pasos de uno en uno; la lista se desliza para centrar el foco en la franja. */
-    const apuntarEnLista = (o: ObjetivoVertical, s: Extract<AnchorState, { tipo: "desplazando" }>) => {
+    const apuntarEnLista = (o: ObjetivoVertical, s: Extract<AnchorState, { tipo: "desplazando" }>, ahora: number) => {
       const opciones = ref.current.obtenerApuntarLista();
       const elementos = opciones?.elementos() ?? [];
       if (!s.origenApuntar || elementos.length === 0) return;
@@ -160,6 +172,7 @@ export function useBucleDesplazamiento(o: Opciones) {
       const indice = Math.max(0, Math.min(elementos.length - 1, listaBase + pasosApuntar(s.ultimo.y - s.origenApuntar.y, params)));
       const e = elementos[indice]!;
       if (indice !== listaIndice) {
+        centradoLista = null; // otro elemento: el centrado empieza de nuevo
         if (listaFoco) delete listaFoco.dataset.baFoco;
         e.el.dataset.baFoco = "";
         listaFoco = e.el;
@@ -169,15 +182,18 @@ export function useBucleDesplazamiento(o: Opciones) {
         ref.current.enviar({ tipo: "APUNTAR", apuntado });
         ref.current.alApuntar({ apuntado, label: e.label, icon: e.icon });
       }
-      // La lista se desliza (suave) hasta que el elemento en foco queda centrado en la franja.
+      // La lista se desliza hasta que el elemento en foco queda centrado en la franja (HM-15: por tiempo).
       const r = e.el.getBoundingClientRect();
       const delta = r.top + r.height / 2 - yFranja;
       let yDibujo = yFranja;
-      if (Math.abs(delta) >= 1) {
+      if (Math.abs(delta) >= 0.5) {
+        centradoLista ??= { desde: ahora, inicial: delta };
+        const m = pasoCentrado({ restante: delta, inicial: centradoLista.inicial, transcurrido: ahora - centradoLista.desde, params, reducido });
         const antes = posicion(o);
-        desplazar(o, Math.abs(delta) < 3 ? Math.sign(delta) : Math.round(delta * 0.3));
+        if (m !== 0) desplazar(o, m);
         // En un extremo de la lista ya no se puede desplazar: la franja va hasta el elemento.
-        if (Math.abs(posicion(o) - antes) < 0.5) yDibujo = r.top + r.height / 2;
+        if (m !== 0 && Math.abs(posicion(o) - antes) < 0.25) yDibujo = r.top + r.height / 2;
+        else if (m === 0 && !puedeDesplazar(o, delta)) yDibujo = r.top + r.height / 2;
       }
       const f = franja.current;
       if (f) {
@@ -236,14 +252,16 @@ export function useBucleDesplazamiento(o: Opciones) {
         if (apuntado) vibrar(params.VIB_MS);
       }
 
-      // Imán: con el pulgar quieto, lo apuntado se acerca a la mira un poco en cada cuadro.
+      // Imán: con el pulgar quieto, lo apuntado se centra en la mira (HM-15: espera y duración por tiempo).
       if (apuntado && destino && quieto) {
-        const ix = (destino.x - puntoMira.x) * params.IMAN_FUERZA;
-        const iy = (destino.y - puntoMira.y) * params.IMAN_FUERZA;
-        const rx = Math.abs(ix) < 1 ? Math.round(destino.x - puntoMira.x) : Math.round(ix);
-        const ry = Math.abs(iy) < 1 ? Math.round(destino.y - puntoMira.y) : Math.round(iy);
-        if (rx !== 0 || ry !== 0) libre.mover(rx, ry);
-      }
+        const clave = apuntado.tipo === "uno" ? apuntado.id : apuntado.ids.join("|");
+        const falta = { x: destino.x - puntoMira.x, y: destino.y - puntoMira.y };
+        if (centradoMapa?.clave !== clave) centradoMapa = { clave, desde: ahora, inicial: falta };
+        const t = ahora - centradoMapa.desde;
+        const mx = pasoCentrado({ restante: falta.x, inicial: centradoMapa.inicial.x, transcurrido: t, params, reducido });
+        const my = pasoCentrado({ restante: falta.y, inicial: centradoMapa.inicial.y, transcurrido: t, params, reducido });
+        if (Math.abs(mx) >= 0.01 || Math.abs(my) >= 0.01) libre.mover(mx, my);
+      } else centradoMapa = null;
 
       // Nivel 3: zoom automático solo con la mira QUIETA sobre el mismo grupo T_ZOOM_GRUPO.
       if (apuntado?.tipo === "grupo" && quieto && destino) {
@@ -316,7 +334,7 @@ export function useBucleDesplazamiento(o: Opciones) {
 
       // HM-12b: en "apuntar" la lista no corre por velocidad: salta de uno en uno.
       if (s.submodo === "apuntar") {
-        apuntarEnLista(objetivo, s);
+        apuntarEnLista(objetivo, s, ahora);
         cuadro = requestAnimationFrame(paso);
         return;
       }

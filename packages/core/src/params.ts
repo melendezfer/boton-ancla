@@ -86,8 +86,10 @@ export type Params = {
   IMAN_RADIO: number;
   /** RF-21: radio mínimo del imán con pines vecinos cerca, en px. */
   IMAN_RADIO_MIN: number;
-  /** RF-21: fracción de la distancia pin–mira que se corrige por cuadro con el pulgar quieto. */
-  IMAN_FUERZA: number;
+  /** HM-15: espera antes de que empiece el centrado (mira del mapa y foco de las listas), en ms. */
+  T_ESPERA_CENTRADO: number;
+  /** HM-15: duración del centrado (salida suave), en ms. Con movimiento reducido, instantáneo. */
+  T_CENTRADO: number;
   /** RF-21: factor de velocidad del joystick con algo en la mira. */
   FRENO_APUNTAR: number;
   /** RF-21: pines más cerca que esto (px en pantalla) forman un grupo. */
@@ -146,7 +148,8 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   T_ESPERA_DESLIZADOR: 300,
   IMAN_RADIO: 28,
   IMAN_RADIO_MIN: 12,
-  IMAN_FUERZA: 0.2,
+  T_ESPERA_CENTRADO: 0,
+  T_CENTRADO: 100,
   FRENO_APUNTAR: 0.35,
   GRUPO_DISTANCIA: 24,
   T_ZOOM_GRUPO: 500,
