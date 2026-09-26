@@ -12,12 +12,24 @@ import type { RegistroMetrica } from "./exportar";
 export type Rol = "visitante" | "dueno";
 export type Fondo = "claro" | "foto" | "oscuro";
 
+/** HM-15: rangos de los deslizadores del centrado en Ajustes (ms). */
+export const ESPERA_CENTRADO_MAX = 500;
+export const DURACION_CENTRADO_MAX = 600;
+
+function numeroEntre(v: unknown, min: number, max: number, porDefecto: number): number {
+  return typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : porDefecto;
+}
+
 export type Preferencias = {
   mano: Hand;
   rol: Rol;
   fondo: Fondo;
   /** Parámetro ANCLA_ALTURA (HM-01), ajustable con el control deslizante de Ajustes. */
   anclaAltura: number;
+  /** HM-15: espera antes del centrado (mira y foco de las listas), en ms. */
+  tEsperaCentrado: number;
+  /** HM-15: duración del centrado, en ms. */
+  tCentrado: number;
   /** HM-09 (experimental): desplazar con el ancla. Activado por defecto en la demo. */
   desplazar: boolean;
   /** HM-11 (experimental): mover el mapa con el ancla (joystick libre). Activado por defecto en la demo. */
@@ -33,6 +45,8 @@ export const PREFERENCIAS_INICIALES: Preferencias = {
   rol: "visitante",
   fondo: "claro",
   anclaAltura: DEFAULT_PARAMS.ANCLA_ALTURA,
+  tEsperaCentrado: DEFAULT_PARAMS.T_ESPERA_CENTRADO,
+  tCentrado: DEFAULT_PARAMS.T_CENTRADO,
   desplazar: true,
   moverMapa: true,
   apuntar: true,
@@ -129,6 +143,8 @@ function leerPrefs(): Preferencias {
       rol: d.rol === "dueno" ? "dueno" : "visitante",
       fondo: d.fondo === "foto" || d.fondo === "oscuro" ? d.fondo : "claro",
       anclaAltura: typeof d.anclaAltura === "number" && Number.isFinite(d.anclaAltura) ? d.anclaAltura : PREFERENCIAS_INICIALES.anclaAltura,
+      tEsperaCentrado: numeroEntre(d.tEsperaCentrado, 0, ESPERA_CENTRADO_MAX, PREFERENCIAS_INICIALES.tEsperaCentrado),
+      tCentrado: numeroEntre(d.tCentrado, 0, DURACION_CENTRADO_MAX, PREFERENCIAS_INICIALES.tCentrado),
       desplazar: d.desplazar !== false,
       moverMapa: d.moverMapa !== false,
       apuntar: d.apuntar !== false,

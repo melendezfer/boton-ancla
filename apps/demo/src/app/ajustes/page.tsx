@@ -4,7 +4,7 @@ import { computeAnchorPosition, DEFAULT_PARAMS } from "@boton-ancla/core";
 import { reiniciarBienvenida, useMedidas } from "@boton-ancla/react";
 import { EspacioBarra } from "@/components/barra-demo";
 import { usePantallaDemo } from "@/components/pantallas-conectadas";
-import { useDemo, type Fondo, type Preferencias, type Rol } from "@/lib/demo-store";
+import { DURACION_CENTRADO_MAX, ESPERA_CENTRADO_MAX, useDemo, type Fondo, type Preferencias, type Rol } from "@/lib/demo-store";
 
 const ALTURA_MIN = 0;
 const ALTURA_MAX = 0.6;
@@ -98,6 +98,30 @@ export default function PaginaAjustes() {
         </span>
       </label>
 
+      <section className="flex flex-col gap-3 rounded-card border border-terracota/40 bg-surface p-4">
+        <h2 className="font-heading text-title-2 font-semibold text-text">Centrado al apuntar</h2>
+        <p className="font-sans text-body-sm text-text-muted">
+          Hallazgo HM-15. Cuánto espera y cuánto tarda el pin en ir a la mira, o la fila en ir a la franja. Con &quot;reducir
+          movimiento&quot; del teléfono, el centrado es instantáneo.
+        </p>
+        <Milisegundos
+          id="espera-centrado"
+          titulo="Espera antes de centrar"
+          valor={prefs.tEsperaCentrado}
+          max={ESPERA_CENTRADO_MAX}
+          inicial={DEFAULT_PARAMS.T_ESPERA_CENTRADO}
+          alCambiar={(v) => setPref("tEsperaCentrado", v)}
+        />
+        <Milisegundos
+          id="duracion-centrado"
+          titulo="Duración del centrado"
+          valor={prefs.tCentrado}
+          max={DURACION_CENTRADO_MAX}
+          inicial={DEFAULT_PARAMS.T_CENTRADO}
+          alCambiar={(v) => setPref("tCentrado", v)}
+        />
+      </section>
+
       <label className="flex cursor-pointer items-start gap-3 rounded-card border border-border bg-surface p-4">
         <input
           type="checkbox"
@@ -177,6 +201,49 @@ export default function PaginaAjustes() {
         alCambiar={(v) => setPref("fondo", v)}
       />
     </main>
+  );
+}
+
+/** HM-15: deslizador en milisegundos, con el valor visible y "volver al inicial". */
+function Milisegundos({
+  id,
+  titulo,
+  valor,
+  max,
+  inicial,
+  alCambiar,
+}: {
+  id: string;
+  titulo: string;
+  valor: number;
+  max: number;
+  inicial: number;
+  alCambiar: (v: number) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="flex items-baseline justify-between font-sans text-body text-text">
+        <span>{titulo}</span>
+        <strong className="font-semibold tabular-nums" data-testid={`valor-${id}`}>
+          {valor} ms
+        </strong>
+      </label>
+      <input
+        id={id}
+        type="range"
+        min={0}
+        max={max}
+        step={10}
+        value={valor}
+        onChange={(e) => alCambiar(Number(e.target.value))}
+        aria-valuetext={`${valor} milisegundos`}
+        className="h-11 w-full cursor-pointer accent-terracota"
+        data-testid={`slider-${id}`}
+      />
+      <button type="button" onClick={() => alCambiar(inicial)} className="self-start font-sans text-body-sm font-semibold text-terracota">
+        Volver al valor inicial ({inicial} ms)
+      </button>
+    </div>
   );
 }
 

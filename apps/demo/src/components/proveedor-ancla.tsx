@@ -32,7 +32,7 @@ export function ProveedorAncla({ children }: { children: React.ReactNode }) {
       prefs={{ hand: prefs.mano }}
       theme={TEMA}
       icons={ICONOS}
-      params={{ ANCLA_ALTURA: prefs.anclaAltura }}
+      params={{ ANCLA_ALTURA: prefs.anclaAltura, T_ESPERA_CENTRADO: prefs.tEsperaCentrado, T_CENTRADO: prefs.tCentrado }}
       onEvent={registrarMetrica}
       desplazar={prefs.desplazar}
       desplazarLibre={prefs.moverMapa}
