@@ -1,15 +1,14 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **26-09-2026**, después de **HM-15** (centrado por tiempo, ajustable en Ajustes).
+Última actualización: **26-09-2026**, después de HM-15 y de registrar **HM-16** (pendiente). Siguiente paso: **cerrar la Fase 1** (publicar la demo y las sesiones con personas). Todo subido a `origin/main`.
 
 ---
 
 ## 0. Retomar mañana
 
-1. **Levanta la demo** (§4) y ábrela en el Nubia (§5). Si cambió la IP del PC o de WSL, vuelve a correr `npm run lan` y los comandos de PowerShell que genera (como administrador, los corres tú).
-2. **Prueba HM-12b** con `prueba-hm12b.md` (listas, Mi ubicación arriba, la hoja del negocio) y, si falta, HM-10 (`prueba-hm10.md`). Anota las respuestas de sus §4.
-3. **Abre Claude** y empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. Probé HM-12b: …"*. Con eso se ajustan los parámetros (umbral, paso) y se decide qué sigue: T-27 (sesiones) o más hallazgos.
-4. Cuando puedas, **las sesiones con 3 personas** (§2) para cerrar la Fase 1.
+1. **Decide la publicación de la demo** (propuesta en §2, "Publicar la demo"): con tu visto bueno, Claude prepara la exportación estática y el flujo de GitHub Pages; tú activas Pages en GitHub.
+2. Con el enlace público, **las sesiones con 3 personas** y la entrevista a distancia (§2). Cada persona exporta su JSON desde Métricas y te lo manda.
+3. **Abre Claude** con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. …"* y los resultados de las sesiones.
 
 ---
 
@@ -60,11 +59,14 @@
 
 La Fase 1 se cierra con el **criterio de salida** (spec §10): pruebas en verde (✅ hoy), lista manual completa y **3 personas**, una solo deslizando.
 
+**Para cerrar la Fase 1** (en orden):
+
 | ID | Qué falta | Quién |
 |---|---|---|
-| **HM-10** | Probar en el Nubia **las dos variantes** de la guía al desplazar (`prueba-hm10.md`) y elegir una. HM-09 sigue experimental hasta entonces. | Usuario, luego juntos |
-| **HM-12b / HM-15** | Probar apuntar en listas (`prueba-hm12b.md`) y ajustar el centrado en Ajustes → "Centrado al apuntar" hasta que se sienta bien; decirme los valores para dejarlos como inicio. | Usuario, luego juntos |
+| **Publicar** | Demo en un **enlace público gratis** (GitHub Pages; el repositorio es público), **sin buscadores** (noindex + robots.txt), con **aviso de demo de prueba**, y las métricas solo en el celular de cada persona (ya es así) con su botón de exportar. **Espera tu visto bueno.** | Claude prepara; tú activas Pages |
+| **HM-10** | Elegir una variante de la guía al desplazar (en el ancla / arriba). Se puede decidir con lo que digan las sesiones. | Usuario |
 | **T-27** | Sesiones con **3 personas** (una solo deslizando): procedimiento y tabla en `pruebas-manuales.md` §1 y §3. Cada sesión termina exportando el JSON desde Métricas. | Usuario (Claude puede preparar un guion) |
+| **T-27** | Una **entrevista a distancia** (otra ciudad) con el enlace público; mismo guion (`guion-sesiones.md`) y exportar el JSON. | Usuario |
 | **T-27** | Medir rendimiento en un **Android de gama baja real** (`pruebas-manuales.md` §5). Hay cuadros sueltos largos con la CPU frenada ×6. | Usuario |
 | — | Cuando estén: completar `pruebas-manuales.md`, marcar T-27 `[x]`, registrar hallazgos como HM-xx y decidir si hay Fase 1.1 o se pasa a la Fase 2 (P-01…P-05). | Juntos |
 
@@ -72,7 +74,13 @@ Tareas T-01…T-26 y T-28: hechas (ver `tasks.md`).
 
 ## 3. Pendientes y cabos sueltos
 
-**Decisiones pendientes:** ninguna escrita. **HM-10** espera tu comparación para dejar una sola variante. HM-09, HM-11 y HM-12 siguen experimentales.
+**Pendiente para después de la Fase 1** (no bloquea el cierre):
+- **HM-16 — el imán más fuerte, no más rápido** (spec §12): con HM-15 no se sintió diferencia. Ideas a evaluar: radio de captura mayor, frenado del joystick más marcado cerca del pin, enganche inmediato del pin a la mira al entrar al radio, vibración corta al enganchar (Android).
+- **Zoom fino:** el Zoom (RF-20) va con la curva de velocidad del joystick; falta un ajuste más preciso para acercar poco a poco (por ejemplo, una zona lenta más ancha o pasos).
+- **HM-15:** los deslizadores de espera y duración quedan en Ajustes; si las sesiones no los usan, se pueden quitar.
+- HM-09, HM-11 y HM-12 siguen **experimentales**: decidir cuáles quedan activados por defecto en el componente.
+
+**Decisiones pendientes:** ninguna escrita (`decisiones-pendientes.md` vacío).
 
 **Posible prueba inestable (vigilar):** `e2e/hm11-joystick-mapa.spec.ts` › *"mueve el mapa hacia donde apunta el pulgar, con la flecha girada, y se detiene en seco al soltar"*, en **iPhone 14 (WebKit)**. Falló **una vez** (26-09-2026) en un `toHaveAttribute` corriendo con 8 navegadores a la vez; no se reprodujo en 80 repeticiones. Si vuelve a fallar: guardar el error completo y la traza (`test-results/…/trace.zip`), y revisar si el bucle alcanzó a dibujar un cuadro antes del tiempo límite.
 
