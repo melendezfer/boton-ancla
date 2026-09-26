@@ -44,6 +44,7 @@
 | `prueba-bloque-b.md`, `prueba-bloque-c.md`, `prueba-bloque-d.md` | Guías de prueba manual por bloque. |
 | `pruebas-manuales.md` | Registro de sesiones con personas, contraste y rendimiento (T-27). |
 | `guion-sesiones.md` | Guion en lenguaje sencillo para las sesiones con 3 personas. |
+| `compartir-demo.md` | Mensajes para WhatsApp: invitación, enlace, cómo exportar las métricas y la entrevista a distancia. |
 | `prueba-hm03-hm07.md` | Guía de prueba de los hallazgos HM-03 a HM-07. |
 | `prueba-hm08.md` | Guía de prueba de HM-08 (acciones de capa) y HM-06 (ancla sobre el teclado). |
 | `prueba-hm09.md` | Guía de prueba de HM-09 (desplazar con el ancla): pasos con el pulgar en carta, Ofertas y Favoritos. |
