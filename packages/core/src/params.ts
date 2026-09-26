@@ -80,6 +80,20 @@ export type Params = {
   GUIA_CORRIMIENTO: number;
   /** Variante "arriba" (HM-10): espacio sobre el punto más alto que alcanza el pulgar, en px. */
   GUIA_SEPARACION: number;
+  /** RF-20 (HM-12a): tiempo sobre una opción deslizador para pasar a ajustarla, en ms. */
+  T_ESPERA_DESLIZADOR: number;
+  /** RF-21 (HM-12a): radio del imán de un pin alrededor de la mira, en px. */
+  IMAN_RADIO: number;
+  /** RF-21: radio mínimo del imán con pines vecinos cerca, en px. */
+  IMAN_RADIO_MIN: number;
+  /** RF-21: fracción de la distancia pin–mira que se corrige por cuadro con el pulgar quieto. */
+  IMAN_FUERZA: number;
+  /** RF-21: factor de velocidad del joystick con algo en la mira. */
+  FRENO_APUNTAR: number;
+  /** RF-21: pines más cerca que esto (px en pantalla) forman un grupo. */
+  GRUPO_DISTANCIA: number;
+  /** RF-21: mira quieta sobre un grupo antes del zoom automático, en ms. */
+  T_ZOOM_GRUPO: number;
 };
 
 /** "horizontal" = gana la más cercana al extremo lateral; "vertical" = la más cercana a "arriba". */
@@ -123,4 +137,11 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   V_MAX_REDUCIDO: 500,
   GUIA_CORRIMIENTO: 16,
   GUIA_SEPARACION: 24,
+  T_ESPERA_DESLIZADOR: 300,
+  IMAN_RADIO: 28,
+  IMAN_RADIO_MIN: 12,
+  IMAN_FUERZA: 0.2,
+  FRENO_APUNTAR: 0.35,
+  GRUPO_DISTANCIA: 24,
+  T_ZOOM_GRUPO: 500,
 });
