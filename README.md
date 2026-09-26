@@ -82,3 +82,7 @@ Máximo 5 opciones por pantalla, contando "Atrás" (`back`). Las reversibles nec
 | `decisiones-pendientes.md` | Preguntas abiertas que esperan decisión. |
 | `pruebas-manuales.md` | Prueba manual, contraste y rendimiento. |
 | `prueba-*.md` | Guías de prueba por bloque. |
+
+## Licencia
+
+Copyright (c) 2026 Jose Fernando Melendez Cogollo. **Todos los derechos reservados.** Ver [`LICENSE`](LICENSE).
