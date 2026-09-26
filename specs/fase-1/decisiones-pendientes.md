@@ -27,4 +27,6 @@ Tocar el ancla dos veces rápido y, en el segundo toque, deslizar arriba o abajo
 - **Pro:** es un gesto que muchos ya conocen de Google Maps y no ocupa posiciones del abanico.
 - **Contra:** choca con el modo toque (C-06): el primer toque abre el abanico, así que habría que esperar para saber si viene un segundo, y eso hace más lento el toque normal. Es difícil de descubrir y de explicar en la bienvenida.
 
-**Propuesta:** **B**, y si se quiere algo para las sesiones ya, **A** como paso intermedio. Espera tu decisión; no se implementa nada.
+**Propuesta:** **B**, y si se quiere algo para las sesiones ya, **A** como paso intermedio.
+
+**Estado (26-09-2026):** el usuario **prefiere B**, pero **no se implementa todavía**. Cómo se activaría sin chocar: "Zoom" es una opción más del abanico del mapa; el deslizador se activa solo si el pulgar **se queda sobre ella** `T_ZOOM_ESPERA` (≈ 300 ms, parámetro). Pasar por encima o soltar rápido (modo experto) no lo activa. El joystick no se toca: él entra **hacia abajo desde el ancla**, y el zoom **desde una opción del arco** (arriba o de lado). Dentro del deslizador: arriba = acercar, abajo = alejar, más lejos = más rápido; al soltar se queda en ese zoom.

@@ -72,6 +72,8 @@ Tareas T-01…T-26 y T-28: hechas (ver `tasks.md`).
 
 **Decisiones pendientes:** **zoom del mapa con una mano** (`decisiones-pendientes.md` §1: A, B recomendada, o C). **HM-10** espera tu comparación en el Nubia para dejar una sola variante. HM-09 y HM-11 siguen experimentales.
 
+**Posible prueba inestable (vigilar):** `e2e/hm11-joystick-mapa.spec.ts` › *"mueve el mapa hacia donde apunta el pulgar, con la flecha girada, y se detiene en seco al soltar"*, en **iPhone 14 (WebKit)**. Falló **una vez** (26-09-2026) en un `toHaveAttribute` corriendo con 8 navegadores a la vez; no se reprodujo en 80 repeticiones. Si vuelve a fallar: guardar el error completo y la traza (`test-results/…/trace.zip`), y revisar si el bucle alcanzó a dibujar un cuadro antes del tiempo límite.
+
 **Pruebas E2E con mucha carga:** con 8 navegadores a la vez, el WebKit de prueba dibuja pocos cuadros por segundo y algunas pruebas se vuelven lentas (una de t16 no llegó a cargar el mapa; una de HM-11 falló una vez y no se pudo reproducir en 80 repeticiones). Con la configuración normal la suite pasa entera. Las pruebas de desplazamiento esperan a que el contenido avance, en vez de medir a tiempo fijo.
 
 **Preguntas abiertas para fases siguientes** (spec §11, no bloquean): P-01 descanso + mover (cerrada por HM-09); P-02 teclado (cerrada por HM-06/HM-08); P-03 cambiar de mano rápido; P-04 modos del abanico; P-05 ¿abrir el abanico hacia abajo cuando el ancla está alta?
