@@ -1,7 +1,15 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **25-09-2026**, después de HM-10 (dos variantes de la guía al desplazar).
-Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`"* y dile qué resultados trajiste de las sesiones de prueba (§2).
+Última actualización: **25-09-2026**, cierre del día después de HM-10 (dos variantes de la guía al desplazar). Todo está subido a `origin/main` (último commit de código: `b78fb80`); no hay cambios sin guardar.
+
+---
+
+## 0. Retomar mañana
+
+1. **Levanta la demo** (§4) y ábrela en el Nubia (§5). Si cambió la IP del PC o de WSL, vuelve a correr `npm run lan` y los comandos de PowerShell que genera (como administrador, los corres tú).
+2. **Prueba HM-10** con `prueba-hm10.md`: la carta, Ofertas y Favoritos, **una vez con cada variante** (Ajustes → "Guía al desplazar": *En el ancla* / *Arriba*). Anota las respuestas de su §4.
+3. **Abre Claude** y empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. Probé HM-10: prefiero la variante … porque …"*. Con eso se deja una sola variante (o las dos como opción) y se registra en `spec.md` §12.
+4. Cuando puedas, **las sesiones con 3 personas** (§2) para cerrar la Fase 1.
 
 ---
 
@@ -23,7 +31,8 @@ Si retomas con Claude, empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`
 **Spec:** `spec.md` v0.12. Decisiones clave recientes:
 - `ANCLA_ALTURA` = **0,44** (HM-01, dos pruebas manuales).
 - Una sola etiqueta en una **banda encima del abanico** (HM-02).
-- `AnchorProvider` recibe `icons: { back, undo }`.
+- `AnchorProvider` recibe `icons: { back, undo, close, hideKeyboard, scrollUp?, scrollDown? }`, `desplazar` (HM-09) y `guiaDesplazar` (HM-10).
+- Desplazar con el ancla (HM-09, experimental) y su guía en dos variantes (HM-10), a comparar.
 
 **Documentos** (todos en `specs/fase-1/`):
 | Archivo | Para qué |
@@ -50,6 +59,7 @@ La Fase 1 se cierra con el **criterio de salida** (spec §10): pruebas en verde 
 
 | ID | Qué falta | Quién |
 |---|---|---|
+| **HM-10** | Probar en el Nubia **las dos variantes** de la guía al desplazar (`prueba-hm10.md`) y elegir una. HM-09 sigue experimental hasta entonces. | Usuario, luego juntos |
 | **T-27** | Sesiones con **3 personas** (una solo deslizando): procedimiento y tabla en `pruebas-manuales.md` §1 y §3. Cada sesión termina exportando el JSON desde Métricas. | Usuario (Claude puede preparar un guion) |
 | **T-27** | Medir rendimiento en un **Android de gama baja real** (`pruebas-manuales.md` §5). Hay cuadros sueltos largos con la CPU frenada ×6. | Usuario |
 | — | Cuando estén: completar `pruebas-manuales.md`, marcar T-27 `[x]`, registrar hallazgos como HM-xx y decidir si hay Fase 1.1 o se pasa a la Fase 2 (P-01…P-05). | Juntos |
@@ -60,7 +70,7 @@ Tareas T-01…T-26 y T-28: hechas (ver `tasks.md`).
 
 **Decisiones pendientes:** ninguna escrita. **HM-10** espera tu comparación en el Nubia (`prueba-hm10.md` §4) para dejar una sola variante. HM-09 sigue experimental.
 
-**Preguntas abiertas para fases siguientes** (spec §11, no bloquean): P-01 descanso + mover (en estudio con HM-09); P-02 teclado (cerrada por HM-06/HM-08); P-03 cambiar de mano rápido; P-04 modos del abanico; P-05 ¿abrir el abanico hacia abajo cuando el ancla está alta?
+**Preguntas abiertas para fases siguientes** (spec §11, no bloquean): P-01 descanso + mover (cerrada por HM-09); P-02 teclado (cerrada por HM-06/HM-08); P-03 cambiar de mano rápido; P-04 modos del abanico; P-05 ¿abrir el abanico hacia abajo cuando el ancla está alta?
 
 **Cabos sueltos conocidos:**
 - **Remoto:** `origin` = `https://github.com/melendezfer/boton-ancla.git` (corregido por el usuario el 25-09-2026). Push solo con autorización explícita.
