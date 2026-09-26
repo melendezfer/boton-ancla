@@ -33,7 +33,7 @@ export function pantallaMapa(a: AccionesMapa): AnchorScreen {
     sectionLabel: "Mapa",
     actions: [
       accion("buscar", "Buscar", ANCHOR_ICONS.search, a.buscar, { priority: 1 }),
-      accion("mi-ubicacion", "Mi ubicación", ANCHOR_ICONS.myLocation, a.miUbicacion, { priority: 2 }),
+      accion("mi-ubicacion", "Mi ubicación", ANCHOR_ICONS.myLocation, a.miUbicacion, { priority: 2, atTop: true }), // RF-22: 90° sin "Atrás"
       accion("ofertas-cerca", "Ofertas cerca", SEMANTIC_ICONS.offer, a.ofertasCerca, { priority: 3 }),
       accion("favoritos", "Favoritos", ANCHOR_ICONS.favoritesList, a.favoritos, { priority: 4 }),
       accion("zoom", "Zoom", ANCHOR_ICONS.zoom, a.zoomPaso, {

@@ -41,6 +41,11 @@ export type AnchorAction = {
   onSlide?: (paso: number) => void;
   /** Pista si se suelta sobre el deslizador sin esperar. Por defecto "Mantén sobre {label}". */
   slideHint?: string;
+  /**
+   * RF-22 (HM-14): acción inofensiva que ocupa 90° cuando la pantalla no tiene "Atrás"
+   * (90° es de la familia "volver"). Con "Atrás" o con una capa abierta no cambia nada.
+   */
+  atTop?: boolean;
 };
 
 export type AnchorScreen = {

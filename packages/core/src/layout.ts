@@ -168,8 +168,11 @@ function cabeEnZonaUtil(centro: Point, viewport: Rect, safeArea: Insets, params:
 // ---------------------------------------------------------------------------
 
 /** Lo que la geometría necesita saber de cada acción. */
-/** `deslizador` solo aparece (en true) en las acciones con `onSlide` (RF-20). */
-export type OrderedAction = { id: string; kind: ActionKind; disabled: boolean; deslizador?: true };
+/**
+ * `deslizador` solo aparece (en true) en las acciones con `onSlide` (RF-20); `arriba`, en la
+ * acción `atTop` de una pantalla sin "Atrás" (RF-22).
+ */
+export type OrderedAction = { id: string; kind: ActionKind; disabled: boolean; deslizador?: true; arriba?: true };
 
 /** Una posición del abanico con su acción asignada. */
 export type Slot = FanSlot & OrderedAction;
@@ -200,6 +203,8 @@ export function orderActions(screen: AnchorScreen, opciones: { deshacer?: boolea
       kind: accion.kind ?? "normal",
       disabled: accion.disabled ?? false,
       ...(accion.onSlide ? { deslizador: true as const } : {}),
+      // RF-22: sin "Atrás", la acción inofensiva marcada va a 90°.
+      ...(accion.atTop && !screen.back ? { arriba: true as const } : {}),
     }));
 
   if (opciones.deshacer) {
@@ -227,7 +232,8 @@ export function assignActions(layout: FanLayout, ordered: OrderedAction[], param
   let pendientes = ordered;
   const asignadas: Slot[] = [];
 
-  const atras = ordered.find((a) => FIJAS_ARRIBA.includes(a.id));
+  // 90° es de la familia "volver" (D-10); sin ella, de la acción inofensiva `atTop` (RF-22).
+  const atras = ordered.find((a) => FIJAS_ARRIBA.includes(a.id)) ?? ordered.find((a) => a.arriba);
   if (atras) {
     // El extremo "arriba" es la posición de menor ángulo base (index 0).
     const arriba = libres.reduce((min, s) => (s.anguloBase < min.anguloBase ? s : min));

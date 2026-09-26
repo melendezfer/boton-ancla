@@ -15,7 +15,7 @@ export const mapa: AnchorScreen = {
   sectionLabel: "Mapa",
   actions: [
     accion("buscar", "Buscar", { priority: 1 }),
-    accion("mi-ubicacion", "Mi ubicación", { priority: 2 }),
+    accion("mi-ubicacion", "Mi ubicación", { priority: 2, atTop: true }), // RF-22: 90° sin "Atrás"
     accion("ofertas-cerca", "Ofertas cerca", { priority: 3 }),
     accion("favoritos", "Favoritos", { priority: 4 }),
   ],

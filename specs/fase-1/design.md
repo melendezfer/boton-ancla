@@ -401,7 +401,7 @@ assignActions(layout: FanLayout, ordered: OrderedAction[], params: Params): Slot
 5. Si el número de acciones no coincide con el de slots, `assignActions` lanza un error: es un error de programación, no del usuario.
 
 Ejemplos con la mano derecha:
-- Mapa (4): Buscar 150°, Mi ubicación 120°, Ofertas cerca 180°, Favoritos 90°.
+- Mapa (4): Mi ubicación 90° (`atTop`, RF-22), Buscar 150°, Ofertas cerca 120°, Favoritos 180°. (Con Zoom, 5: Mi ubicación 90°, Favoritos 112,5°, Buscar 135°, Ofertas 157,5°, Zoom 180°.)
 - Perfil visitante (4 + Atrás): Atrás 90°, Carta 135°, Cómo llegar 157,5°, Favorito 112,5°, Compartir 180°.
 - Producto dueño (3 + Atrás): Atrás 90°, Editar 150°, Marcar no disponible 120°, Eliminar 180°.
 - Producto dueño con aviso de deshacer: Atrás 90°, **Deshacer 150°**, Marcar no disponible 120°, Eliminar 180° (Editar queda oculta hasta que vence el aviso).

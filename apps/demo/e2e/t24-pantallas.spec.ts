@@ -21,7 +21,7 @@ async function angulos(page: Page) {
 }
 
 const CASOS = [
-  { ruta: "/mapa", rol: "visitante", seccion: "Mapa", esperado: { zoom: 90, "ofertas-cerca": 112.5, buscar: 135, "mi-ubicacion": 157.5, favoritos: 180 } }, // HM-12a: Zoom (5) arriba
+  { ruta: "/mapa", rol: "visitante", seccion: "Mapa", esperado: { "mi-ubicacion": 90, favoritos: 112.5, buscar: 135, "ofertas-cerca": 157.5, zoom: 180 } }, // RF-22: Mi ubicación en 90°
   { ruta: "/negocio", rol: "visitante", seccion: "Perfil de negocio", esperado: { atras: 90, favorito: 112.5, carta: 135, "como-llegar": 157.5, compartir: 180 } },
   { ruta: "/negocio", rol: "dueno", seccion: "Perfil de negocio", esperado: { atras: 90, "agregar-plato": 135, editar: 180 } },
   { ruta: "/negocio/carta", rol: "visitante", seccion: "Carta", esperado: { atras: 90, compartir: 135, favorito: 180 } },

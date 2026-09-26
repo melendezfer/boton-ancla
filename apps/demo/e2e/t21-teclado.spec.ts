@@ -24,15 +24,15 @@ test("RNF-05: Enter abre con el foco en la prioridad 1, las flechas lo mueven y 
   await expect(page.getByRole("menuitem", { name: "Buscar" })).toBeFocused();
   await expect(page.getByTestId("banda")).toHaveText("Buscar");
 
-  // HM-12a: con Zoom el mapa tiene 5 posiciones (Zoom 90°, Ofertas 112,5°, Buscar 135°, Mi ubicación 157,5°, Favoritos 180°).
+  // 5 posiciones (RF-22, HM-12a): Mi ubicación 90°, Favoritos 112,5°, Buscar 135°, Ofertas 157,5°, Zoom 180°.
   await page.keyboard.press("ArrowUp");
-  await expect(page.getByRole("menuitem", { name: "Ofertas cerca" })).toBeFocused();
-  await page.keyboard.press("Home");
-  await expect(page.getByRole("menuitem", { name: "Zoom" })).toBeFocused();
-  await page.keyboard.press("End");
   await expect(page.getByRole("menuitem", { name: "Favoritos" })).toBeFocused();
-  await page.keyboard.press("ArrowRight"); // mano derecha: → va hacia arriba
+  await page.keyboard.press("Home");
   await expect(page.getByRole("menuitem", { name: "Mi ubicación" })).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(page.getByRole("menuitem", { name: "Zoom" })).toBeFocused();
+  await page.keyboard.press("ArrowRight"); // mano derecha: → va hacia arriba
+  await expect(page.getByRole("menuitem", { name: "Ofertas cerca" })).toBeFocused();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("menuitem", { name: "Buscar" })).toBeFocused();
 

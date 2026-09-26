@@ -33,7 +33,7 @@ describe("validateScreen", () => {
     });
 
     it("6 acciones sin Atrás se rechaza", () => {
-      const acciones = ["a", "b", "c", "d", "e", "f"].map((id) => accion(id, id.toUpperCase()));
+      const acciones = ["a", "b", "c", "d", "e", "f"].map((id) => accion(id, id.toUpperCase(), { atTop: id === "a" }));
       expect(validateScreen({ ...mapa, actions: acciones }, P)).toHaveLength(1);
     });
 
@@ -44,7 +44,7 @@ describe("validateScreen", () => {
 
   describe("ids", () => {
     it("rechaza ids repetidos", () => {
-      const pantalla = { ...mapa, actions: [accion("buscar", "Buscar"), accion("buscar", "Buscar otra vez")] };
+      const pantalla = { ...mapa, actions: [accion("buscar", "Buscar", { atTop: true }), accion("buscar", "Buscar otra vez")] };
       expect(validateScreen(pantalla, P)).toEqual([
         'La pantalla "mapa" repite el id de acción "buscar".',
       ]);
@@ -83,7 +83,7 @@ describe("validateScreen", () => {
     });
 
     it("acepta acciones sin priority y prioridades repetidas", () => {
-      const pantalla = { ...mapa, actions: [accion("a", "A"), accion("b", "B", { priority: 2 }), accion("c", "C", { priority: 2 })] };
+      const pantalla = { ...mapa, actions: [accion("a", "A", { atTop: true }), accion("b", "B", { priority: 2 }), accion("c", "C", { priority: 2 })] };
       expect(validateScreen(pantalla, P)).toEqual([]);
     });
   });
@@ -100,7 +100,7 @@ describe("validateScreen", () => {
     });
 
     it("no exige onUndo a las normales ni a las irreversibles", () => {
-      const pantalla = { ...mapa, actions: [accion("a", "A", { kind: "normal" }), accion("b", "B", { kind: "irreversible" })] };
+      const pantalla = { ...mapa, actions: [accion("a", "A", { kind: "normal", atTop: true }), accion("b", "B", { kind: "irreversible" })] };
       expect(validateScreen(pantalla, P)).toEqual([]);
     });
   });

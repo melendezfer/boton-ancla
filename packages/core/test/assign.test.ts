@@ -86,12 +86,12 @@ describe("orderActions", () => {
 
 describe("assignActions", () => {
   describe("ejemplos de design.md §4.4 (mano derecha, DESEMPATE horizontal)", () => {
-    it("Mapa (4): Buscar 150°, Mi ubicación 120°, Ofertas cerca 180°, Favoritos 90°", () => {
+    it("Mapa (4): Mi ubicación 90° (atTop, RF-22), Buscar 150°, Ofertas cerca 120°, Favoritos 180°", () => {
       expect(mapaDeAngulos(asignar(mapa))).toEqual({
         buscar: 150,
-        "mi-ubicacion": 120,
-        "ofertas-cerca": 180,
-        favoritos: 90,
+        "mi-ubicacion": 90,
+        "ofertas-cerca": 120,
+        favoritos: 180,
       });
     });
 
@@ -131,8 +131,8 @@ describe("assignActions", () => {
     const vertical = { ...P, DESEMPATE: "vertical" as const };
     expect(mapaDeAngulos(asignar(mapa, { params: vertical }))).toEqual({
       buscar: 120,
-      "mi-ubicacion": 150,
-      "ofertas-cerca": 90,
+      "mi-ubicacion": 90, // atTop no se mueve con el desempate (RF-22)
+      "ofertas-cerca": 150,
       favoritos: 180,
     });
   });

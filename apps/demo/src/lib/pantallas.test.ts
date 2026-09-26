@@ -67,6 +67,22 @@ describe("pantallas de la demo (spec §8)", () => {
     });
   });
 
+  it("RF-22 (HM-14): en 90° va siempre 'Atrás' o la acción inofensiva marcada (atTop)", () => {
+    for (const p of PANTALLAS) {
+      const { slots } = layoutParaPantalla({
+        screen: p,
+        viewport: { x: 0, y: 0, width: 375, height: 667 },
+        safeArea: { top: 0, right: 0, bottom: 0, left: 0 },
+        hand: "right",
+        params: DEFAULT_PARAMS,
+      });
+      const en90 = slots.find((s) => Math.abs(s.anguloBase - 90) < 1e-9)?.id;
+      const permitidas = [ID_ATRAS, ...p.actions.filter((a) => a.atTop).map((a) => a.id)];
+      expect(permitidas, p.id).toContain(en90);
+    }
+    expect(PANTALLAS[0]!.actions.find((a) => a.atTop)?.id).toBe("mi-ubicacion");
+  });
+
   it('una pantalla con solo "Atrás" lo pone arriba (C-22)', () => {
     const { slots } = layoutParaPantalla({
       screen: PANTALLAS[5]!,

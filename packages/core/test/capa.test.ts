@@ -23,11 +23,11 @@ describe("capa abierta (HM-03)", () => {
     for (const id of ["carta", "como-llegar", "favorito", "compartir"]) expect(conCapa[id]).toBe(normal[id]);
   });
 
-  it("sin 'Atrás' (Mapa): 'Cerrar' reemplaza a la opción de 90° (Favoritos) y nada más se mueve (sub-pregunta A-1)", () => {
+  it("sin 'Atrás' (Mapa): 'Cerrar' reemplaza a la opción de 90° (Mi ubicación, RF-22) y nada más se mueve (sub-pregunta A-1)", () => {
     const normal = angulos(con(mapa));
-    expect(normal.favoritos).toBe(90);
+    expect(normal["mi-ubicacion"]).toBe(90);
     const conCapa = angulos(con(mapa, { capa: true }));
-    expect(conCapa).toEqual({ [ID_CERRAR]: 90, "mi-ubicacion": 120, buscar: 150, "ofertas-cerca": 180 });
+    expect(conCapa).toEqual({ [ID_CERRAR]: 90, "ofertas-cerca": 120, buscar: 150, favoritos: 180 });
   });
 
   it("nunca cambia el número de opciones (tope de 5)", () => {
