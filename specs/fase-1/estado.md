@@ -6,7 +6,7 @@
 
 ## 0. Retomar mañana
 
-1. **Decide la publicación de la demo** (propuesta en §2, "Publicar la demo"): con tu visto bueno, Claude prepara la exportación estática y el flujo de GitHub Pages; tú activas Pages en GitHub.
+1. La demo está publicada en **https://melendezfer.github.io/boton-ancla/**. Ábrela en tu celular con datos móviles para confirmarlo.
 2. Con el enlace público, **las sesiones con 3 personas** y la entrevista a distancia (§2). Cada persona exporta su JSON desde Métricas y te lo manda.
 3. **Abre Claude** con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. …"* y los resultados de las sesiones.
 
@@ -63,7 +63,7 @@ La Fase 1 se cierra con el **criterio de salida** (spec §10): pruebas en verde 
 
 | ID | Qué falta | Quién |
 |---|---|---|
-| **Publicar** | **Preparado** (sin publicar): exportación estática, `noindex`, aviso "Demo de prueba", métricas solo en el celular, flujo `.github/workflows/pages.yml`. Probado en local con un servidor que imita GitHub Pages (22 pruebas en Pixel 7 e iPhone 14). **Falta:** (1) tú: GitHub → *Settings* → *Pages* → *Source: GitHub Actions*; (2) autorizar el push; (3) abrir `https://melendezfer.github.io/boton-ancla/` en tu celular con datos móviles (no Wi-Fi). | Tú (1–3) |
+| **Publicar** | ✅ **Publicada** (26-09-2026) en **https://melendezfer.github.io/boton-ancla/**: `noindex`, aviso "Demo de prueba", métricas solo en el celular. Se vuelve a publicar sola en cada push a `main` si pasan las pruebas (`.github/workflows/pages.yml`, pestaña *Actions*). Probada contra el sitio real en Pixel 7 e iPhone 14. **Falta:** abrirla en tu celular con datos móviles. | Tú |
 | **HM-10** | Elegir una variante de la guía al desplazar (en el ancla / arriba). Se puede decidir con lo que digan las sesiones. | Usuario |
 | **T-27** | Sesiones con **3 personas** (una solo deslizando): procedimiento y tabla en `pruebas-manuales.md` §1 y §3. Cada sesión termina exportando el JSON desde Métricas. | Usuario (Claude puede preparar un guion) |
 | **T-27** | Una **entrevista a distancia** (otra ciudad) con el enlace público; mismo guion (`guion-sesiones.md`) y exportar el JSON. | Usuario |
