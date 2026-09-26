@@ -53,7 +53,7 @@ export {
   type TipoEstado,
 } from "./machine/states";
 export { mismoApuntado, transition } from "./machine/transition";
-export { agrupar, resolverApuntado, zoomParaSeparar, type ObjetivoEnPantalla, type Resultado as ResultadoApuntar } from "./apuntar";
+export { agrupar, pasosApuntar, resolverApuntado, zoomParaSeparar, type ObjetivoEnPantalla, type Resultado as ResultadoApuntar } from "./apuntar";
 export { createAnchorMachine, type Listener, type Machine } from "./machine/machine";
 export { derivarMetricas, type MetricEvent } from "./metrics";
 export {

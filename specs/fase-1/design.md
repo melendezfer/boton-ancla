@@ -295,6 +295,9 @@ Notación: `d` = distancia del puntero a `inicio` (movimiento); `r` = distancia 
 | 48 | abierto_gesto / armado (C-05) | POINTER_UP | la opción soltada es deslizador (sin esperar) | cancelado(deslizador_sin_espera, id) + pista | RF-20 |
 | 49 | ajustando | POINTER_MOVE | — | ajustando (actualiza `ultimo`) | RF-20 |
 | 50 | ajustando | POINTER_UP | — | reposo | RF-20 |
+| 51 | desplazando (lista, `geo.apuntarLista`) | POINTER_MOVE | pulgar hacia el centro > `UMBRAL_APUNTAR` desde `origen.x` | desplazando {submodo: apuntar, origenApuntar} | RF-23 |
+| 52 | desplazando (apuntar) | POINTER_MOVE | hacia el centro < `UMBRAL_APUNTAR − HISTERESIS_APUNTAR` | desplazando {submodo: desplazar, apuntado: null} | RF-23 |
+| 53 | desplazando (apuntar) | POINTER_UP | `apuntado` | elegido {apuntado} (capa encima de la lista) | RF-23 |
 
 `abierto_toque` y `confirmacion_toque` actualizan `ultimaActividad = t` con cualquier evento de puntero o teclado.
 

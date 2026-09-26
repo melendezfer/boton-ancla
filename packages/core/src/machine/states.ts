@@ -19,6 +19,8 @@ export type Geometry = {
   desplazable?: boolean;
   /** Cómo se desplaza: "vertical" (listas, HM-09) o "libre" (mapa, HM-11, RF-19). */
   modoDesplazar?: ModoDesplazar;
+  /** HM-12b (RF-23): la lista ofrece sus elementos para apuntar (y el interruptor está activado). */
+  apuntarLista?: boolean;
 };
 
 export type ModoDesplazar = "vertical" | "libre";
@@ -36,11 +38,13 @@ export function crearGeometria(input: {
   desplazable?: boolean;
   /** HM-11: "libre" si lo registrado es un mapa. Por defecto "vertical". */
   modoDesplazar?: ModoDesplazar;
+  /** HM-12b: la lista ofrece sus elementos para apuntar. */
+  apuntarLista?: boolean;
 }): Geometry {
   const { anchor, ordered, slots } = layoutParaPantalla(input);
   // La prioridad 1 es la primera acción propia (no "Atrás") de orderActions.
   const prioridad1 = ordered.find((a) => ![ID_ATRAS, ID_CERRAR, ID_OCULTAR_TECLADO].includes(a.id))?.id;
-  return { centro: anchor, slots, params: input.params, hand: input.hand, prioridad1, desplazable: input.desplazable ?? false, modoDesplazar: input.modoDesplazar ?? "vertical" };
+  return { centro: anchor, slots, params: input.params, hand: input.hand, prioridad1, desplazable: input.desplazable ?? false, modoDesplazar: input.modoDesplazar ?? "vertical", apuntarLista: input.apuntarLista ?? false };
 }
 
 /** Datos de un dedo apoyado desde que tocó el ancla. */
@@ -102,7 +106,16 @@ export type AnchorState =
   | ({ tipo: "descanso"; puntoDescanso: Point } & ConPuntero)
   | ({ tipo: "abierto_gesto" } & Gesto)
   /** HM-09: desplazando el contenido con el pulgar, hasta soltar. `origen` = donde empezó el modo. */
-  | ({ tipo: "desplazando"; origen: Point; tInicio: number; apuntado?: Apuntado | null } & ConPuntero)
+  | ({
+      tipo: "desplazando";
+      origen: Point;
+      tInicio: number;
+      apuntado?: Apuntado | null;
+      /** HM-12b (RF-23): en una lista, "apuntar" al mover el pulgar hacia el centro de la pantalla. */
+      submodo?: "desplazar" | "apuntar";
+      /** Dónde empezó "apuntar": los pasos se cuentan desde aquí. */
+      origenApuntar?: Point;
+    } & ConPuntero)
   /** RF-20: ajustando una opción deslizador (Zoom) con el pulgar, hasta soltar. */
   | ({ tipo: "ajustando"; id: string; origen: Point; tInicio: number } & ConPuntero)
   | ({ tipo: "confirmacion_armada"; presel: string } & Gesto)

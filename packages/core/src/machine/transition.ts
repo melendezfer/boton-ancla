@@ -511,7 +511,8 @@ function aDesplazando(datos: DatosPuntero, evento: Evento<"POINTER_MOVE">): Anch
 
 function desdeDesplazando(estado: Estado<"desplazando">, evento: AnchorEvent): AnchorState {
   if (evento.tipo === "POINTER_MOVE" && evento.pointerId === estado.pointerId) {
-    return avanzar(estado, evento.punto); // fila 43: la velocidad la calcula el adaptador
+    const movido = avanzar(estado, evento.punto); // fila 43: la velocidad la calcula el adaptador
+    return estado.geo.apuntarLista && estado.geo.modoDesplazar !== "libre" ? submodoLista(movido, evento.punto) : movido;
   }
   if (evento.tipo === "APUNTAR") {
     // Fila 45 (RF-21): el adaptador avisa qué hay en la mira.
@@ -523,7 +524,28 @@ function desdeDesplazando(estado: Estado<"desplazando">, evento: AnchorEvent): A
     if (estado.apuntado && estado.geo.modoDesplazar === "libre" && frenado) {
       return { tipo: "elegido", apuntado: estado.apuntado, ms: evento.t - estado.t0 };
     }
+    // Fila 53 (RF-23): en una lista, soltar en "apuntar" elige lo que está en foco.
+    if (estado.apuntado && estado.submodo === "apuntar") {
+      return { tipo: "elegido", apuntado: estado.apuntado, ms: evento.t - estado.t0 };
+    }
     return REPOSO; // fila 44: parada en seco, sin inercia
+  }
+  return estado;
+}
+
+/**
+ * Filas 51–52 (RF-23): en una lista, el pulgar hacia el centro de la pantalla (según la mano)
+ * más de UMBRAL_APUNTAR pasa a "apuntar"; volver bajo UMBRAL_APUNTAR − HISTERESIS_APUNTAR
+ * regresa a "desplazar" (y ya no hay nada en foco). El margen evita el parpadeo.
+ */
+function submodoLista(estado: Estado<"desplazando">, punto: Point): Estado<"desplazando"> {
+  const P = estado.geo.params;
+  const haciaCentro = estado.geo.hand === "right" ? estado.origen.x - punto.x : punto.x - estado.origen.x;
+  if (estado.submodo !== "apuntar" && haciaCentro > P.UMBRAL_APUNTAR) {
+    return { ...estado, submodo: "apuntar", origenApuntar: punto };
+  }
+  if (estado.submodo === "apuntar" && haciaCentro < P.UMBRAL_APUNTAR - P.HISTERESIS_APUNTAR) {
+    return { ...estado, submodo: "desplazar", origenApuntar: undefined, apuntado: null };
   }
   return estado;
 }

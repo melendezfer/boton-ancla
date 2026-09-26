@@ -71,3 +71,12 @@ export function zoomParaSeparar(grupo: ObjetivoEnPantalla[], params: Params): nu
 function promedio(v: number[]): number {
   return v.reduce((a, b) => a + b, 0) / v.length;
 }
+
+/**
+ * HM-12b (RF-23): cuántos elementos avanzar en una lista según el pulgar vertical desde donde
+ * empezó "apuntar". Cada PASO_APUNTAR px es uno; hacia abajo, el siguiente (positivo).
+ */
+export function pasosApuntar(dy: number, params: Params): number {
+  const n = Math.trunc(dy / params.PASO_APUNTAR);
+  return n === 0 ? 0 : n; // sin -0
+}
