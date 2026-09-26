@@ -81,16 +81,23 @@ test("HU-06: modo experto: un deslizamiento relámpago hacia Buscar lo ejecuta",
   await expect(page.getByRole("dialog", { name: "Buscar" })).toBeVisible();
 });
 
-test("HU-13: deslizar desde el ancla no mueve el mapa", async ({ page }) => {
-  const g = await abrirMapa(page);
-  const lienzo = page.getByTestId("mapa-lienzo");
-  const antes = [await lienzo.getAttribute("data-offset-x"), await lienzo.getAttribute("data-offset-y")];
-  const gestos = await crearGestos(page);
-  // Hacia afuera del arco (abajo-izquierda): cancela y el mapa no debe moverse.
-  await gestos.deslizar(g.centro, { x: g.centro.x - 120, y: g.centro.y + 90 }, { pasos: 10, ms: 150 });
-  expect([await lienzo.getAttribute("data-offset-x"), await lienzo.getAttribute("data-offset-y")]).toEqual(antes);
-  expect(await estadoAncla(page)).toBe("reposo");
-});
+// HU-13 (ajustada por HM-11): solo el joystick (hacia abajo, con su interruptor) mueve el mapa.
+for (const [nombre, prefs, hasta] of [
+  ["con 'Mover el mapa' apagado, deslizar hacia abajo-izquierda", { moverMapa: false }, { dx: -120, dy: 90 }],
+  ["con el joystick activado, deslizar fuera del arco sin ir hacia abajo (arriba-derecha)", {}, { dx: 45, dy: -45 }],
+] as const) {
+  test(`HU-13: ${nombre} no mueve el mapa`, async ({ page }) => {
+    await page.addInitScript((p) => window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify(p)), prefs);
+    const g = await abrirMapa(page);
+    const lienzo = page.getByTestId("mapa-lienzo");
+    const antes = [await lienzo.getAttribute("data-offset-x"), await lienzo.getAttribute("data-offset-y")];
+    const gestos = await crearGestos(page);
+    // Cancela y el mapa no debe moverse.
+    await gestos.deslizar(g.centro, { x: g.centro.x + hasta.dx, y: g.centro.y + hasta.dy }, { pasos: 10, ms: 150 });
+    expect([await lienzo.getAttribute("data-offset-x"), await lienzo.getAttribute("data-offset-y")]).toEqual(antes);
+    expect(await estadoAncla(page)).toBe("reposo");
+  });
+}
 
 test("HU-13: arrastrar el mapa pasando por encima del ancla no la activa", async ({ page }) => {
   const g = await abrirMapa(page);

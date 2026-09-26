@@ -20,6 +20,8 @@ export type Preferencias = {
   anclaAltura: number;
   /** HM-09 (experimental): desplazar con el ancla. Activado por defecto en la demo. */
   desplazar: boolean;
+  /** HM-11 (experimental): mover el mapa con el ancla (joystick libre). Activado por defecto en la demo. */
+  moverMapa: boolean;
   /** HM-10: dónde se ve la guía al desplazar. "ancla" por defecto. */
   guiaDesplazar: "ancla" | "arriba";
 };
@@ -30,6 +32,7 @@ export const PREFERENCIAS_INICIALES: Preferencias = {
   fondo: "claro",
   anclaAltura: DEFAULT_PARAMS.ANCLA_ALTURA,
   desplazar: true,
+  moverMapa: true,
   guiaDesplazar: "ancla",
 };
 
@@ -111,6 +114,7 @@ function leerPrefs(): Preferencias {
       fondo: d.fondo === "foto" || d.fondo === "oscuro" ? d.fondo : "claro",
       anclaAltura: typeof d.anclaAltura === "number" && Number.isFinite(d.anclaAltura) ? d.anclaAltura : PREFERENCIAS_INICIALES.anclaAltura,
       desplazar: d.desplazar !== false,
+      moverMapa: d.moverMapa !== false,
       guiaDesplazar: d.guiaDesplazar === "arriba" ? "arriba" : "ancla",
     };
   } catch {

@@ -107,7 +107,7 @@ for (const mano of ["right", "left"] as const) {
   });
 }
 
-test("Ajustes: el selector aparece solo con el desplazamiento activado y recuerda la variante", async ({ page }) => {
+test("Ajustes: el selector aparece con algún desplazamiento activado (listas o mapa) y recuerda la variante", async ({ page }) => {
   await page.goto("/ajustes");
   const arriba = page.getByRole("radio", { name: "Arriba" });
   const enAncla = page.getByRole("radio", { name: "En el ancla" });
@@ -116,8 +116,10 @@ test("Ajustes: el selector aparece solo con el desplazamiento activado y recuerd
   await expect(arriba).toBeChecked();
 
   await page.getByTestId("interruptor-desplazar").uncheck();
+  await expect(arriba).toBeVisible(); // sigue: el mapa también la usa (HM-11)
+  await page.getByTestId("interruptor-mover-mapa").uncheck();
   await expect(arriba).toHaveCount(0);
-  await page.getByTestId("interruptor-desplazar").check();
+  await page.getByTestId("interruptor-mover-mapa").check();
   await expect(page.getByRole("radio", { name: "Arriba" })).toBeChecked();
 
   await page.reload();

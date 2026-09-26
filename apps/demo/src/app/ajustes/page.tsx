@@ -82,7 +82,23 @@ export default function PaginaAjustes() {
         </span>
       </label>
 
-      {prefs.desplazar && (
+      <label className="flex cursor-pointer items-start gap-3 rounded-card border border-border bg-surface p-4">
+        <input
+          type="checkbox"
+          checked={prefs.moverMapa}
+          onChange={(e) => setPref("moverMapa", e.target.checked)}
+          className="mt-1 size-5 accent-terracota"
+          data-testid="interruptor-mover-mapa"
+        />
+        <span className="flex flex-col">
+          <span className="font-sans text-body font-semibold text-text">Mover el mapa con el ancla (experimental)</span>
+          <span className="font-sans text-body-sm text-text-muted">
+            En el mapa, presiona el ancla y desliza hacia abajo: después mueve el pulgar hacia donde quieras ir (HM-11).
+          </span>
+        </span>
+      </label>
+
+      {(prefs.desplazar || prefs.moverMapa) && (
         <Opciones<Preferencias["guiaDesplazar"]>
           titulo="Guía al desplazar"
           detalle="Para comparar (HM-10). En el ancla: flecha ↑/↓ y un anillo que se llena con la velocidad. Arriba: la cápsula con el punto, sobre el ancla."

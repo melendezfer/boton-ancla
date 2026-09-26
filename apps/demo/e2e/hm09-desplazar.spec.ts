@@ -28,9 +28,10 @@ test("en la carta, bajar el pulgar desplaza la página; al soltar se detiene en 
   const gestos = await crearGestos(page);
   expect(await ventana(page)).toBe(0);
 
-  await empujar(page, gestos, g.centro, 70, 600);
+  await empujar(page, gestos, g.centro, 70, 0);
+  // Se espera a que avance (el WebKit de prueba con mucha carga dibuja pocos cuadros por segundo).
+  await expect.poll(() => ventana(page), { timeout: 5000 }).toBeGreaterThan(50);
   const alSoltar = await ventana(page);
-  expect(alSoltar).toBeGreaterThan(50);
   await gestos.soltar({ x: g.centro.x, y: g.centro.y + 70 });
   await expect.poll(() => estadoAncla(page)).toBe("reposo");
   await expect(page.getByTestId("guia-desplazar")).toHaveCount(0);
@@ -79,14 +80,19 @@ for (const [opcion, nombre] of [
     expect(await lista(page)).toBe(0);
 
     const capa = await leerGeometria(page);
-    await empujar(page, gestos, capa.centro, 70, 500);
+    const mapaAntes = await page.getByTestId("mapa-lienzo").getAttribute("data-offset-y");
+    await empujar(page, gestos, capa.centro, 70, 0);
+    await expect(page.getByTestId("guia-desplazar")).toHaveAttribute("data-modo", "vertical");
+    await expect.poll(() => lista(page), { timeout: 5000 }).toBeGreaterThan(30);
     await gestos.soltar({ x: capa.centro.x, y: capa.centro.y + 70 });
-    expect(await lista(page)).toBeGreaterThan(30);
     await expect(page.getByRole("dialog", { name: nombre })).toBeVisible(); // no se abrió ninguna opción
+    // HM-11 × HM-03: con una capa encima, manda la capa; el mapa de atrás no se mueve aunque su joystick esté activado.
+    expect(await page.getByTestId("mapa-lienzo").getAttribute("data-offset-y")).toBe(mapaAntes);
   });
 }
 
-test("en el mapa no se desplaza: bajar el pulgar abre el abanico como siempre", async ({ page }) => {
+test("con 'Mover el mapa' apagado (HM-11), en el mapa bajar el pulgar no entra al joystick", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify({ moverMapa: false })));
   await page.goto("/mapa");
   await expect(page.getByTestId("mapa-lienzo")).toHaveAttribute("data-offset-x", /-?\d+/);
   const g = await leerGeometria(page);

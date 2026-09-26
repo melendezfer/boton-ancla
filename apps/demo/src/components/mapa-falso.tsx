@@ -1,5 +1,6 @@
 "use client";
 
+import { useAnchorPan } from "@boton-ancla/react";
 import { useCallback, useEffect, useRef } from "react";
 import { NEGOCIOS, NEGOCIO_DEMO } from "@/lib/datos";
 import { useDemo, type Fondo } from "@/lib/demo-store";
@@ -9,8 +10,8 @@ const MapPin = ANCHOR_ICONS.mapPin;
 
 // Mapa FALSO: un lienzo SVG grande que se arrastra con un dedo. Sin Leaflet ni
 // teselas de internet, así las pruebas E2E no dependen de la red (design.md §8).
-// Sirve para HU-13 (el ancla no debe mover el mapa, y arrastrar el mapa por
-// encima del ancla no debe activarla) y para revisar la legibilidad del ancla
+// Sirve para HU-13 (el ancla no mueve el mapa, salvo el joystick de HM-11, y
+// arrastrar el mapa por encima del ancla no debe activarla) y para revisar la legibilidad del ancla
 // sobre fondo claro, foto y oscuro.
 
 const LADO = 2000;
@@ -48,6 +49,14 @@ export function MapaFalso() {
     if (!cont) return;
     aplicar(cont.clientWidth / 2 - NEGOCIO_DEMO.x, cont.clientHeight / 2 - NEGOCIO_DEMO.y);
   }, [aplicar]);
+
+  // HM-11: el joystick del ancla mueve la vista hacia donde apunta el pulgar (el lienzo va al revés).
+  // Devuelve false en el borde, para que el ancla vibre.
+  useAnchorPan((dx, dy) => {
+    const { x, y } = offset.current;
+    aplicar(x - dx, y - dy);
+    return offset.current.x !== x || offset.current.y !== y;
+  });
 
   // Centrar al montar y cada vez que se pide "Mi ubicación".
   useEffect(() => centrar(), [centrar, recentrarMapa]);

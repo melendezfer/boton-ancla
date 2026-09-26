@@ -35,6 +35,7 @@ export function ProveedorAncla({ children }: { children: React.ReactNode }) {
       params={{ ANCLA_ALTURA: prefs.anclaAltura }}
       onEvent={registrarMetrica}
       desplazar={prefs.desplazar}
+      desplazarLibre={prefs.moverMapa}
       guiaDesplazar={prefs.guiaDesplazar}
     >
       {children}
