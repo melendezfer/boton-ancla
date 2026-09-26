@@ -63,7 +63,7 @@ La Fase 1 se cierra con el **criterio de salida** (spec §10): pruebas en verde 
 
 | ID | Qué falta | Quién |
 |---|---|---|
-| **Publicar** | Demo en un **enlace público gratis** (GitHub Pages; el repositorio es público), **sin buscadores** (noindex + robots.txt), con **aviso de demo de prueba**, y las métricas solo en el celular de cada persona (ya es así) con su botón de exportar. **Espera tu visto bueno.** | Claude prepara; tú activas Pages |
+| **Publicar** | **Preparado** (sin publicar): exportación estática, `noindex`, aviso "Demo de prueba", métricas solo en el celular, flujo `.github/workflows/pages.yml`. Probado en local con un servidor que imita GitHub Pages (22 pruebas en Pixel 7 e iPhone 14). **Falta:** (1) tú: GitHub → *Settings* → *Pages* → *Source: GitHub Actions*; (2) autorizar el push; (3) abrir `https://melendezfer.github.io/boton-ancla/` en tu celular con datos móviles (no Wi-Fi). | Tú (1–3) |
 | **HM-10** | Elegir una variante de la guía al desplazar (en el ancla / arriba). Se puede decidir con lo que digan las sesiones. | Usuario |
 | **T-27** | Sesiones con **3 personas** (una solo deslizando): procedimiento y tabla en `pruebas-manuales.md` §1 y §3. Cada sesión termina exportando el JSON desde Métricas. | Usuario (Claude puede preparar un guion) |
 | **T-27** | Una **entrevista a distancia** (otra ciudad) con el enlace público; mismo guion (`guion-sesiones.md`) y exportar el JSON. | Usuario |
@@ -83,6 +83,10 @@ Tareas T-01…T-26 y T-28: hechas (ver `tasks.md`).
 **Decisiones pendientes:** ninguna escrita (`decisiones-pendientes.md` vacío).
 
 **Posible prueba inestable (vigilar):** `e2e/hm11-joystick-mapa.spec.ts` › *"mueve el mapa hacia donde apunta el pulgar, con la flecha girada, y se detiene en seco al soltar"*, en **iPhone 14 (WebKit)**. Falló **una vez** (26-09-2026) en un `toHaveAttribute` corriendo con 8 navegadores a la vez; no se reprodujo en 80 repeticiones. Si vuelve a fallar: guardar el error completo y la traza (`test-results/…/trace.zip`), y revisar si el bucle alcanzó a dibujar un cuadro antes del tiempo límite.
+
+**Otra prueba a vigilar:** `e2e/hm15-centrado.spec.ts` › *"movimiento reducido: el centrado es instantáneo…"* comprueba en 400 ms; si la máquina está muy cargada y el navegador no dibuja cuadros, podría fallar sin que haya un error real.
+
+**Publicación:** `robots.txt` no se agregó a propósito: en GitHub Pages de un proyecto (`/boton-ancla`) los buscadores solo leen el de la raíz del dominio, que no es nuestro; lo que funciona es el `noindex` de cada página (ya está). `foto.jpg` da 404 a propósito (es opcional; se usa `foto.svg`).
 
 **Pruebas E2E con mucha carga:** con 8 navegadores a la vez, el WebKit de prueba dibuja pocos cuadros por segundo y algunas pruebas se vuelven lentas (una de t16 no llegó a cargar el mapa; una de HM-11 falló una vez y no se pudo reproducir en 80 repeticiones). Con la configuración normal la suite pasa entera. Las pruebas de desplazamiento esperan a que el contenido avance, en vez de medir a tiempo fijo.
 
