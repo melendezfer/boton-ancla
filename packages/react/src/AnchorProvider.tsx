@@ -1,11 +1,11 @@
 "use client";
 
-import { DEFAULT_PARAMS, pantallaDeCapa, validateScreen, type AnchorScreen, type CapaAncla, type Params } from "@boton-ancla/core";
+import { DEFAULT_PARAMS, pantallaDeCapa, validateScreen, type AnchorScreen, type Apuntado, type CapaAncla, type Params } from "@boton-ancla/core";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Ancla } from "./components/Ancla";
 import { useCapas, type CapaReact, type ControlCapas } from "./dom/capas";
-import type { AnchorProviderProps } from "./types";
+import type { AnchorProviderProps, ReactAnchorIcon } from "./types";
 
 // Proveedor del botón-ancla (spec §7). Guarda la pantalla actual y dibuja el
 // ancla en un portal sobre document.body, fuera del contenido de la app
@@ -29,7 +29,29 @@ const ContextoCapas = createContext<ControlCapas | null>(null);
  */
 export type ObjetivoDesplazar = HTMLElement | "ventana" | ObjetivoLibre;
 /** HM-11: mueve la vista `dx`, `dy` px hacia donde apunta el pulgar. `false` = llegó al borde. */
-export type ObjetivoLibre = { tipo: "libre"; mover: (dx: number, dy: number) => boolean | void };
+export type ObjetivoLibre = {
+  tipo: "libre";
+  mover: (dx: number, dy: number) => boolean | void;
+  /** RF-21 (HM-12a): apuntar y elegir, si la app lo ofrece. */
+  apuntar: () => OpcionesApuntar | undefined;
+};
+
+/** RF-21: un objetivo que se puede apuntar, en coordenadas de pantalla. */
+export type ObjetivoApuntable = { id: string; x: number; y: number; label: string; icon?: ReactAnchorIcon };
+
+/** RF-21 (HM-12a): lo que la app ofrece para apuntar y elegir en su mapa. */
+export type OpcionesApuntar = {
+  /** Los objetivos visibles, en pantalla (se piden cuadro a cuadro mientras se usa el joystick). */
+  objetivos: () => ObjetivoApuntable[];
+  /** Soltar frenado sobre un objetivo o un grupo: abre su capa (HM-08). */
+  elegir: (apuntado: Apuntado) => void;
+  /** Zoom automático sobre un grupo (nivel 3): acercar `factor` veces alrededor de `centro`. */
+  acercar: (factor: number, centro: { x: number; y: number }) => void;
+  /** Dónde está la mira. Por defecto, el centro de la parte visible. */
+  mira?: () => { x: number; y: number };
+  /** Texto de un grupo junto a la mira. Por defecto "N lugares". */
+  etiquetaGrupo?: (n: number) => string;
+};
 
 export function esLibre(o: ObjetivoDesplazar | null): o is ObjetivoLibre {
   return typeof o === "object" && o !== null && "tipo" in o && o.tipo === "libre";
@@ -45,7 +67,7 @@ const ContextoDesplazar = createContext<RegistroDesplazar | null>(null);
 export type ReservaAncla = { lado: "right" | "left"; ancho: number };
 const ContextoReserva = createContext<ReservaAncla | null>(null);
 
-export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, desplazar = false, desplazarLibre = false, guiaDesplazar = "ancla", children }: AnchorProviderProps) {
+export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, desplazar = false, desplazarLibre = false, apuntar = false, guiaDesplazar = "ancla", children }: AnchorProviderProps) {
   const pantallaRef = useRef<AnchorScreen | null>(null);
   const duenoRef = useRef<symbol | null>(null);
   // Copia para DIBUJAR. Para EJECUTAR se usa pantallaRef (siempre la más reciente).
@@ -99,6 +121,7 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
               capas={capas}
               desplazar={desplazar}
               desplazarLibre={desplazarLibre}
+              apuntar={apuntar}
               guiaDesplazar={guiaDesplazar}
               objetivoDesplazar={objetivoDesplazar}
               versionObjetivo={versionObjetivo}
@@ -137,21 +160,24 @@ export function useAnchorScroll(objetivo: RefObject<HTMLElement | null> | "venta
 }
 
 /**
- * HM-11 (experimental): registra un mapa como contenido principal. Con `desplazarLibre`, el
+ * HM-11 (experimental): registra un mapa como contenido principal. Con `apuntar` (RF-21,
+ * HM-12a) y la prop `apuntar` del proveedor, la mira elige pines y grupos al soltar frenado. Con `desplazarLibre`, el
  * joystick del ancla lo mueve en todas las direcciones: `mover(dx, dy)` debe correr la vista
  * esos px hacia donde apunta el pulgar (dx > 0 = ver lo que está a la derecha) y devolver
  * `false` si ya estaba en el borde. Con una capa abierta encima, manda la capa.
  */
-export function useAnchorPan(mover: (dx: number, dy: number) => boolean | void): void {
+export function useAnchorPan(mover: (dx: number, dy: number) => boolean | void, apuntar?: OpcionesApuntar): void {
   const registro = useContext(ContextoDesplazar);
   if (!registro) throw new Error("useAnchorPan debe usarse dentro de <AnchorProvider>.");
   const { objetivo: ref, avisar } = registro;
   const moverRef = useRef(mover);
+  const apuntarRef = useRef(apuntar);
   useLayoutEffect(() => {
     moverRef.current = mover;
+    apuntarRef.current = apuntar;
   });
   useLayoutEffect(() => {
-    const libre: ObjetivoLibre = { tipo: "libre", mover: (dx, dy) => moverRef.current(dx, dy) };
+    const libre: ObjetivoLibre = { tipo: "libre", mover: (dx, dy) => moverRef.current(dx, dy), apuntar: () => apuntarRef.current };
     ref.current = libre;
     avisar();
     return () => {

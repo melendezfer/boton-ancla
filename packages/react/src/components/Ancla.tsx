@@ -9,6 +9,7 @@ import {
   ID_CERRAR,
   ID_DESHACER,
   ID_OCULTAR_TECLADO,
+  mismoApuntado,
   pantallaDeCapa,
   posicionGuiaArriba,
   mostrarEtiqueta,
@@ -27,7 +28,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, use
 import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
 import { esLibre, type ObjetivoDesplazar } from "../AnchorProvider";
 import { useBienvenida } from "../dom/bienvenida";
-import { useBucleDesplazamiento } from "../dom/desplazar";
+import { miraPorDefecto, opcionesApuntar, useBucleDesplazamiento, type InfoApuntado } from "../dom/desplazar";
 import type { ControlCapas } from "../dom/capas";
 import { useCambioOrientacion, useTeclado } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
@@ -51,6 +52,8 @@ export type PropsAncla = {
   desplazar: boolean;
   /** HM-11 (experimental): joystick libre para el mapa (useAnchorPan). */
   desplazarLibre: boolean;
+  /** HM-12a (experimental): apuntar y elegir en el mapa (RF-21). */
+  apuntar: boolean;
   /** Contenido principal registrado con useAnchorScroll. */
   objetivoDesplazar: RefObject<ObjetivoDesplazar | null>;
   /** Cambia cuando se registra o quita el contenido principal. */
@@ -78,6 +81,7 @@ export function Ancla({
   capas,
   desplazar,
   desplazarLibre,
+  apuntar,
   objetivoDesplazar,
   versionObjetivo,
   guiaDesplazar,
@@ -109,6 +113,14 @@ export function Ancla({
     }, Math.max(0, aviso.hasta - performance.now()));
     return () => clearTimeout(t);
   }, [aviso]);
+
+  // RF-20: pista del deslizador (aparte del aviso, para no borrar un "Deshacer" vigente).
+  const [pista, setPista] = useState<{ texto: string; hasta: number } | null>(null);
+  useEffect(() => {
+    if (!pista) return;
+    const t = setTimeout(() => setPista(null), Math.max(0, pista.hasta - performance.now()));
+    return () => clearTimeout(t);
+  }, [pista]);
 
   // --- Bienvenida (HU-12, T-23) ---
   const bienvenida = useBienvenida();
@@ -147,6 +159,13 @@ export function Ancla({
       setAviso({ tipo: "bloqueado", texto: "Desliza más allá para confirmar", hasta: performance.now() + DURACION_AVISO_MS }),
     alDeshacer: deshacer,
     alCerrarCapa: () => capas.cerrarArriba("ancla"),
+    // RF-20: soltó sobre un deslizador sin esperar: la banda muestra su pista.
+    alPista: (id) => {
+      const accion = vistaRef.current?.actions.find((a) => a.id === id);
+      setPista({ texto: accion?.slideHint ?? `Mantén sobre ${accion?.label ?? id}`, hasta: performance.now() + DURACION_AVISO_MS });
+    },
+    // RF-21: soltó frenado sobre algo en la mira: la app abre su capa.
+    alElegir: (apuntado) => opcionesApuntar(objetivoDesplazar.current, apuntar)?.elegir(apuntado),
   };
   const efectosRef = useRef(efectos);
   useLayoutEffect(() => {
@@ -232,6 +251,8 @@ export function Ancla({
           alBloquear: (...a) => efectosRef.current.alBloquear?.(...a),
           alDeshacer: () => efectosRef.current.alDeshacer?.(),
           alCerrarCapa: () => efectosRef.current.alCerrarCapa?.(),
+          alPista: (id) => efectosRef.current.alPista?.(id),
+          alElegir: (a) => efectosRef.current.alElegir?.(a),
         },
       }),
   );
@@ -241,9 +262,24 @@ export function Ancla({
 
   // HM-09: bucle de desplazamiento y punto de la guía (sin redibujar React en cada cuadro).
   const puntoGuia = useRef<HTMLDivElement>(null);
+  const refMira = useRef<HTMLDivElement>(null);
+  const [infoApuntado, setInfoApuntado] = useState<InfoApuntado | null>(null);
   const refRaiz = useRef<HTMLDivElement>(null);
   const indicador = guiaDesplazar === "ancla" ? refRaiz : SIN_ELEMENTO;
-  useBucleDesplazamiento({ machine, estado, params, obtenerObjetivo, puntoGuia, indicador });
+  useBucleDesplazamiento({
+    machine,
+    estado,
+    params,
+    obtenerObjetivo,
+    puntoGuia,
+    indicador,
+    obtenerDeslizador: (id) => vistaRef.current?.actions.find((a) => a.id === id)?.onSlide,
+    apuntar,
+    mira: refMira,
+    enviar: (e) => controlador.enviar(e),
+    emitir: (m) => onEventRef.current?.(m),
+    alApuntar: setInfoApuntado,
+  });
 
   // RF-09: un cambio de orientación cancela la interacción.
   useCambioOrientacion(() => controlador.enviar({ tipo: "ORIENTACION" }));
@@ -312,11 +348,17 @@ export function Ancla({
   const IconoCentro = (idActivo && iconoDe(idActivo)) || (vista.sectionIcon as ReactAnchorIcon);
   const desplazando = estado.tipo === "desplazando";
   const libre = desplazando && geoDibujo.modoDesplazar === "libre"; // HM-11
+  // RF-20: ajustar un deslizador (Zoom) usa la misma guía vertical que desplazar.
+  const conGuia = desplazando || estado.tipo === "ajustando";
+  // RF-21: la mira se ve mientras el joystick del mapa está activo y la app ofrece apuntar.
+  const opcionesMira = libre ? opcionesApuntar(objetivoDesplazar.current, apuntar) : undefined;
+  const puntoMira = opcionesMira ? (opcionesMira.mira?.() ?? miraPorDefecto()) : null;
+  const apuntadoVisible = conGuia ? infoApuntado : null;
   // HM-10, variante "arriba": la cápsula arriba del ancla, corrida hacia el centro y fuera del alcance del pulgar.
   // HM-11: en el joystick libre es un círculo (el punto se mueve en 2D a la mitad de la distancia).
   const altoGuia = libre ? DIAMETRO_CIRCULO(params) : 2 * params.R_MAX_DESPLAZAR + ALTO_EXTRA_GUIA;
   const guiaArriba =
-    desplazando && guiaDesplazar === "arriba"
+    conGuia && guiaDesplazar === "arriba"
       ? posicionGuiaArriba({
           centro: geoDibujo.centro,
           origen: estado.origen,
@@ -404,7 +446,30 @@ export function Ancla({
         </div>
       )}
 
-      {desplazando && guiaDesplazar === "ancla" && (
+      {puntoMira && (
+        // RF-21: la mira, fija en el centro de la vista; tenue, y encendida con algo apuntado.
+        <div
+          ref={refMira}
+          className="ba-mira"
+          data-testid="mira"
+          data-apuntado={apuntadoVisible?.apuntado.tipo}
+          aria-hidden
+          style={{ left: puntoMira.x, top: puntoMira.y }}
+        >
+          {apuntadoVisible && (
+            <span className="ba-mira-etiqueta" data-testid="mira-etiqueta">
+              {apuntadoVisible.label}
+            </span>
+          )}
+        </div>
+      )}
+
+      {pista && (
+        // RF-20: pista en la banda al soltar sobre un deslizador sin esperar.
+        <BandaPista geo={geo} medidas={medidas} texto={pista.texto} />
+      )}
+
+      {conGuia && guiaDesplazar === "ancla" && (
         // HM-10 B: anillo sobre el borde del ancla (no por fuera: no sale de su columna) que se llena con la velocidad (--ba-llenado).
         <svg
           className="ba-anillo-desplazar"
@@ -478,8 +543,9 @@ export function Ancla({
       <button
         ref={refBoton}
         type="button"
-        className={`ba-ancla${claseAncla(estado)}`}
+        className={`ba-ancla${claseAncla(estado)}${apuntadoVisible ? " ba-ancla--apuntando" : ""}`}
         data-testid="ancla"
+        data-apuntado={apuntadoVisible ? (apuntadoVisible.apuntado.tipo === "uno" ? apuntadoVisible.apuntado.id : "grupo") : undefined}
         data-geometria={JSON.stringify(resumenGeometria(geo))}
         aria-haspopup="menu"
         aria-expanded={abierto}
@@ -491,12 +557,23 @@ export function Ancla({
         onClick={() => controlador.clicEnAncla()}
         onContextMenu={(e) => e.preventDefault()}
       >
-        {libre && guiaDesplazar === "ancla" ? (
+        {apuntadoVisible ? (
+          // RF-21: el ancla se enciende con el ícono de lo apuntado (o cuántos hay en el grupo).
+          apuntadoVisible.apuntado.tipo === "grupo" ? (
+            <span className="ba-conteo-grupo" data-testid="conteo-grupo" aria-hidden>
+              {apuntadoVisible.apuntado.ids.length}
+            </span>
+          ) : apuntadoVisible.icon ? (
+            <apuntadoVisible.icon size={26} weight="fill" aria-hidden />
+          ) : (
+            <IconoCentro size={26} aria-hidden />
+          )
+        ) : libre && guiaDesplazar === "ancla" ? (
           // HM-11: una sola flecha, girada hacia donde apunta el pulgar (--ba-giro).
           <span className="ba-flecha-libre" data-testid="flecha-libre" aria-hidden>
             <FlechaIcono icono={icons.scrollUp} sentido="arriba" tamano={24} />
           </span>
-        ) : desplazando && guiaDesplazar === "ancla" ? (
+        ) : conGuia && guiaDesplazar === "ancla" ? (
           // HM-10 B: el ícono pasa a flecha ↑/↓ (el bucle elige cuál con data-direccion).
           <>
             <FlechaDesplazar icono={icons.scrollUp} sentido="arriba" />
@@ -506,6 +583,32 @@ export function Ancla({
           <IconoCentro size={26} aria-hidden />
         )}
       </button>
+    </div>
+  );
+}
+
+/** RF-20: la pista del deslizador, en el mismo lugar y con el mismo aspecto que la banda (HM-02). */
+function BandaPista({ geo, medidas, texto }: { geo: Geometry; medidas: Medidas; texto: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const radio = radioDe(geo.centro, geo.slots, geo.params);
+  const pos = posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ancho = el.offsetWidth;
+    el.style.left = `${Math.min(Math.max(pos.x - ancho / 2, pos.izquierda), pos.derecha - ancho)}px`;
+  });
+  return (
+    <div
+      ref={ref}
+      className="ba-banda ba-banda--pista"
+      data-testid="banda"
+      data-tipo="pista-deslizador"
+      role="status"
+      aria-live="polite"
+      style={{ top: pos.yBase - geo.params.BANDA_ALTO, left: pos.x, maxWidth: pos.derecha - pos.izquierda }}
+    >
+      {texto}
     </div>
   );
 }
@@ -717,7 +820,8 @@ function mismaVista(a: AnchorState, b: AnchorState): boolean {
     opcionActiva(a) === opcionActiva(b) &&
     presion(a) === presion(b) &&
     (a.tipo !== "confirmacion_toque" || (b.tipo === "confirmacion_toque" && a.modo === b.modo)) &&
-    (a.tipo !== "abierto_teclado" || (b.tipo === "abierto_teclado" && a.foco === b.foco))
+    (a.tipo !== "abierto_teclado" || (b.tipo === "abierto_teclado" && a.foco === b.foco)) &&
+    (a.tipo !== "desplazando" || (b.tipo === "desplazando" && mismoApuntado(a.apuntado ?? null, b.apuntado ?? null)))
   );
 }
 

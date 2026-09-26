@@ -464,3 +464,86 @@
   transform: translate(-50%, -50%);
   background: color-mix(in srgb, var(--ba-text-muted) 60%, transparent);
 }
+
+/* --- HM-12a (RF-21): apuntar y elegir en el mapa. --- */
+
+/* La mira: fija en el centro de la vista; tenue pero visible mientras se usa el joystick. */
+.ba-mira {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  border: 2px solid color-mix(in srgb, var(--ba-text) 45%, transparent);
+  pointer-events: none;
+  transition:
+    border-color 120ms linear,
+    width 120ms ease-out,
+    height 120ms ease-out;
+}
+
+/* La cruz del centro. */
+.ba-mira::before,
+.ba-mira::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: color-mix(in srgb, var(--ba-text) 45%, transparent);
+  transform: translate(-50%, -50%);
+}
+.ba-mira::before {
+  width: 12px;
+  height: 2px;
+}
+.ba-mira::after {
+  width: 2px;
+  height: 12px;
+}
+
+/* Con algo en la mira: se enciende con el acento y se agranda un poco. */
+.ba-mira[data-apuntado] {
+  width: 44px;
+  height: 44px;
+  border-color: var(--ba-accent);
+}
+.ba-mira[data-apuntado]::before,
+.ba-mira[data-apuntado]::after {
+  background: var(--ba-accent);
+}
+
+/* Nombre de lo apuntado, debajo de la mira (no tapa el pin, que queda en el centro). */
+.ba-mira-etiqueta {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: var(--ba-surface);
+  border: 1px solid var(--ba-border);
+  color: var(--ba-text);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.14);
+}
+
+/* El ancla encendida: fondo de acento e ícono claro. */
+.ba-ancla.ba-ancla--apuntando {
+  background: var(--ba-accent);
+  color: var(--ba-surface);
+  border-color: var(--ba-accent);
+}
+
+/* Grupo: cuántos negocios hay en la mira. */
+.ba-conteo-grupo {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Con el ancla encendida (acento), el anillo de velocidad se dibuja en claro para que se vea. */
+.ba-raiz:has(.ba-ancla--apuntando) .ba-anillo-desplazar-lleno {
+  stroke: var(--ba-surface);
+}

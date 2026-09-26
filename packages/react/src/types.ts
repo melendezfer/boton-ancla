@@ -56,6 +56,8 @@ export type AnchorProviderProps = {
   desplazar?: boolean;
   /** HM-11 (experimental): joystick libre para el mapa registrado con useAnchorPan. Por defecto false. */
   desplazarLibre?: boolean;
+  /** HM-12a (experimental): apuntar y elegir en el mapa (RF-21). Por defecto false. */
+  apuntar?: boolean;
   /** HM-10: variante de la guía al desplazar. Por defecto "ancla". */
   guiaDesplazar?: GuiaDesplazar;
   children: ReactNode;

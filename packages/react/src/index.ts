@@ -8,6 +8,8 @@ export {
   useAnchorScroll,
   type ObjetivoDesplazar,
   type ObjetivoLibre,
+  type ObjetivoApuntable,
+  type OpcionesApuntar,
   type ReservaAncla,
 } from "./AnchorProvider";
 export type { CapaReact } from "./dom/capas";
