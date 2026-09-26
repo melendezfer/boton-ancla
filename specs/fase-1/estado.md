@@ -1,14 +1,14 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **25-09-2026**, cierre del día después de HM-10 (dos variantes de la guía al desplazar). Todo está subido a `origin/main` (último commit de código: `b78fb80`); no hay cambios sin guardar.
+Última actualización: **26-09-2026**, después de HM-11 (mover el mapa con el ancla, experimental). Los commits de HM-11 (`45d90b2` → este) están **en local, sin subir** hasta que autorices el push.
 
 ---
 
 ## 0. Retomar mañana
 
 1. **Levanta la demo** (§4) y ábrela en el Nubia (§5). Si cambió la IP del PC o de WSL, vuelve a correr `npm run lan` y los comandos de PowerShell que genera (como administrador, los corres tú).
-2. **Prueba HM-10** con `prueba-hm10.md`: la carta, Ofertas y Favoritos, **una vez con cada variante** (Ajustes → "Guía al desplazar": *En el ancla* / *Arriba*). Anota las respuestas de su §4.
-3. **Abre Claude** y empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. Probé HM-10: prefiero la variante … porque …"*. Con eso se deja una sola variante (o las dos como opción) y se registra en `spec.md` §12.
+2. **Prueba HM-10** con `prueba-hm10.md` (listas, las dos variantes) y **HM-11** con `prueba-hm11.md` (mapa). Anota las respuestas de sus §4 y §5.
+3. **Abre Claude** y empieza con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. Probé HM-10 y HM-11: prefiero la variante … porque …; para el zoom elijo …"*. Con eso se deja una sola variante de la guía, se decide el zoom y se registra en `spec.md` §12.
 4. Cuando puedas, **las sesiones con 3 personas** (§2) para cerrar la Fase 1.
 
 ---
@@ -24,11 +24,11 @@
 | C — Adaptador | T-15 … T-23 ✅ | `packages/react`: el ancla completa (gesto, toque, descanso, deshacer, irreversibles, teclado, mano izquierda, bienvenida). |
 | D — Cierre | T-24, T-25, T-26, T-28 ✅ · T-27 ⚠️ | Métricas con exportación, recorrido E2E solo deslizando, contraste y rendimiento medidos, README. Falta la prueba con personas (§2). |
 
-**Pruebas (todas en verde):** 446 del núcleo, 53 de la demo (Vitest) y 265 E2E (Playwright, Pixel 7 + iPhone 14; 7 se saltan a propósito: 6 mediciones opcionales de rendimiento y el control deslizante en WebKit).
+**Pruebas (todas en verde):** 500 del núcleo, 53 de la demo (Vitest) y 287 E2E (Playwright, Pixel 7 + iPhone 14; 7 se saltan a propósito: 6 mediciones opcionales de rendimiento y el control deslizante en WebKit).
 
-**Después del Bloque D** (spec v0.8, §12): HM-03 capas y "Cerrar" ✅, HM-04 teclado por `visualViewport` ✅, HM-05 hojas sobre el teclado ✅, HM-07 reserva del espacio del ancla ✅. **HM-06 + HM-08** ✅ (spec v0.10): cada capa declara ícono, nombre y acciones; el ancla sube sobre el teclado con "Ocultar teclado" a 180°. Guías: `prueba-hm03-hm07.md`, `prueba-hm08.md`. **HM-09** ✅ experimental (spec v0.11, RF-18): el ancla como joystick para desplazar; interruptor en Ajustes (activado en la demo, apagado por defecto en el componente). Guía: `prueba-hm09.md`. **HM-10** ✅ (spec v0.12): la guía al desplazar en dos variantes para comparar, elegibles en Ajustes: **en el ancla** (flecha ↑/↓ y anillo; por defecto) o **arriba** del ancla (cápsula). Ninguna sale de la columna del ancla. Guía: `prueba-hm10.md`.
+**Después del Bloque D** (spec v0.8, §12): HM-03 capas y "Cerrar" ✅, HM-04 teclado por `visualViewport` ✅, HM-05 hojas sobre el teclado ✅, HM-07 reserva del espacio del ancla ✅. **HM-06 + HM-08** ✅ (spec v0.10): cada capa declara ícono, nombre y acciones; el ancla sube sobre el teclado con "Ocultar teclado" a 180°. Guías: `prueba-hm03-hm07.md`, `prueba-hm08.md`. **HM-09** ✅ experimental (spec v0.11, RF-18): el ancla como joystick para desplazar; interruptor en Ajustes (activado en la demo, apagado por defecto en el componente). Guía: `prueba-hm09.md`. **HM-10** ✅ (spec v0.12): la guía al desplazar en dos variantes para comparar, elegibles en Ajustes: **en el ancla** (flecha ↑/↓ y anillo; por defecto) o **arriba** del ancla (cápsula). Ninguna sale de la columna del ancla. Guía: `prueba-hm10.md`. **HM-11** ✅ experimental (spec v0.13, RF-19): en el mapa el joystick es libre en todas las direcciones, con su propio interruptor; la guía de HM-10 con la flecha girada (o un círculo arriba). HU-13 ajustada. Guía: `prueba-hm11.md`.
 
-**Spec:** `spec.md` v0.12. Decisiones clave recientes:
+**Spec:** `spec.md` v0.13. Decisiones clave recientes:
 - `ANCLA_ALTURA` = **0,44** (HM-01, dos pruebas manuales).
 - Una sola etiqueta en una **banda encima del abanico** (HM-02).
 - `AnchorProvider` recibe `icons: { back, undo, close, hideKeyboard, scrollUp?, scrollDown? }`, `desplazar` (HM-09) y `guiaDesplazar` (HM-10).
@@ -40,7 +40,7 @@
 | `spec.md` | Fuente de verdad (qué). Hallazgos de prueba manual en §12. |
 | `design.md` | Cómo. §0 = todas las decisiones tomadas. |
 | `tasks.md` | Tareas con estado `[x]` / `[ ]`. |
-| `decisiones-pendientes.md` | Vacío hoy. Aquí van las preguntas nuevas. |
+| `decisiones-pendientes.md` | Preguntas abiertas. Hoy: §1 zoom del mapa con una mano (HM-11). |
 | `prueba-t12.md` | Red del celular (portproxy) y el hallazgo de Next 16. |
 | `prueba-bloque-b.md`, `prueba-bloque-c.md`, `prueba-bloque-d.md` | Guías de prueba manual por bloque. |
 | `pruebas-manuales.md` | Registro de sesiones con personas, contraste y rendimiento (T-27). |
@@ -49,6 +49,7 @@
 | `prueba-hm08.md` | Guía de prueba de HM-08 (acciones de capa) y HM-06 (ancla sobre el teclado). |
 | `prueba-hm09.md` | Guía de prueba de HM-09 (desplazar con el ancla): pasos con el pulgar en carta, Ofertas y Favoritos. |
 | `prueba-hm10.md` | Guía de prueba de HM-10: comparar las dos variantes de la guía al desplazar. |
+| `prueba-hm11.md` | Guía de prueba de HM-11: mover el mapa con el ancla (joystick libre). |
 | `estado.md` | Este archivo. |
 
 ---
@@ -60,6 +61,7 @@ La Fase 1 se cierra con el **criterio de salida** (spec §10): pruebas en verde 
 | ID | Qué falta | Quién |
 |---|---|---|
 | **HM-10** | Probar en el Nubia **las dos variantes** de la guía al desplazar (`prueba-hm10.md`) y elegir una. HM-09 sigue experimental hasta entonces. | Usuario, luego juntos |
+| **HM-11** | Probar el joystick del mapa (`prueba-hm11.md`), sobre todo que los deslizamientos rápidos no muevan el mapa, y **elegir la opción de zoom** (`decisiones-pendientes.md` §1). | Usuario, luego juntos |
 | **T-27** | Sesiones con **3 personas** (una solo deslizando): procedimiento y tabla en `pruebas-manuales.md` §1 y §3. Cada sesión termina exportando el JSON desde Métricas. | Usuario (Claude puede preparar un guion) |
 | **T-27** | Medir rendimiento en un **Android de gama baja real** (`pruebas-manuales.md` §5). Hay cuadros sueltos largos con la CPU frenada ×6. | Usuario |
 | — | Cuando estén: completar `pruebas-manuales.md`, marcar T-27 `[x]`, registrar hallazgos como HM-xx y decidir si hay Fase 1.1 o se pasa a la Fase 2 (P-01…P-05). | Juntos |
@@ -68,7 +70,9 @@ Tareas T-01…T-26 y T-28: hechas (ver `tasks.md`).
 
 ## 3. Pendientes y cabos sueltos
 
-**Decisiones pendientes:** ninguna escrita. **HM-10** espera tu comparación en el Nubia (`prueba-hm10.md` §4) para dejar una sola variante. HM-09 sigue experimental.
+**Decisiones pendientes:** **zoom del mapa con una mano** (`decisiones-pendientes.md` §1: A, B recomendada, o C). **HM-10** espera tu comparación en el Nubia para dejar una sola variante. HM-09 y HM-11 siguen experimentales.
+
+**Pruebas E2E con mucha carga:** con 8 navegadores a la vez, el WebKit de prueba dibuja pocos cuadros por segundo y algunas pruebas se vuelven lentas (una de t16 no llegó a cargar el mapa; una de HM-11 falló una vez y no se pudo reproducir en 80 repeticiones). Con la configuración normal la suite pasa entera. Las pruebas de desplazamiento esperan a que el contenido avance, en vez de medir a tiempo fijo.
 
 **Preguntas abiertas para fases siguientes** (spec §11, no bloquean): P-01 descanso + mover (cerrada por HM-09); P-02 teclado (cerrada por HM-06/HM-08); P-03 cambiar de mano rápido; P-04 modos del abanico; P-05 ¿abrir el abanico hacia abajo cuando el ancla está alta?
 
