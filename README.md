@@ -2,7 +2,7 @@
 
 Un botón flotante que abre un **abanico de acciones con un solo gesto del pulgar**: presionar, deslizar hacia la opción y soltar. Está pensado para usar el celular con una mano. También se puede tocar, usar solo deslizando o manejar con teclado. Primera app base: **RUTEANDO**.
 
-La especificación manda: [`specs/fase-1/spec.md`](specs/fase-1/spec.md). Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
+La especificación manda: [`specs/fase-1/spec.md`](specs/fase-1/spec.md). La Fase 3 (adaptación al espacio) está en borrador en [`specs/fase-3/spec.md`](specs/fase-3/spec.md). Si el código y la spec no coinciden, se corrige uno de los dos a propósito, nunca en silencio.
 
 ## Qué hay en el repositorio
 

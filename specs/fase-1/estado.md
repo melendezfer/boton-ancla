@@ -1,10 +1,14 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **26-09-2026**, después de HM-15 y de registrar **HM-16** (pendiente). Siguiente paso: **cerrar la Fase 1** (publicar la demo y las sesiones con personas). Todo subido a `origin/main`.
+Última actualización: **26-09-2026**. **La Fase 3 (adaptación al espacio) está en marcha**: spec en borrador en `specs/fase-3/spec.md`, con 10 preguntas en `specs/fase-3/decisiones-pendientes.md` (todavía sin código). **Las sesiones con 3 personas de la Fase 1 (T-27) siguen pendientes, en paralelo**; la demo publicada sirve para ellas.
 
 ---
 
 ## 0. Retomar mañana
+
+**Dos frentes en paralelo:**
+- **Fase 3:** decidir las 10 preguntas de `specs/fase-3/decisiones-pendientes.md`. Con eso sigue el diseño (`specs/fase-3/design.md`) y las tareas; después, el código.
+- **Fase 1 (cierre):** las sesiones con 3 personas y la entrevista a distancia (T-27) con https://melendezfer.github.io/boton-ancla/ y los mensajes de `compartir-demo.md`.
 
 1. La demo está publicada en **https://melendezfer.github.io/boton-ancla/**. Ábrela en tu celular con datos móviles para confirmarlo.
 2. Con el enlace público, **las sesiones con 3 personas** y la entrevista a distancia (§2). Cada persona exporta su JSON desde Métricas y te lo manda.
