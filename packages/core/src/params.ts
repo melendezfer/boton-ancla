@@ -94,6 +94,12 @@ export type Params = {
   GRUPO_DISTANCIA: number;
   /** RF-21: mira quieta sobre un grupo antes del zoom automático, en ms. */
   T_ZOOM_GRUPO: number;
+  /** RF-23 (HM-12b): pulgar hacia el centro para pasar de desplazar a apuntar en una lista, en px. */
+  UMBRAL_APUNTAR: number;
+  /** RF-23: margen para volver a desplazar, en px. */
+  HISTERESIS_APUNTAR: number;
+  /** RF-23: pulgar vertical por cada elemento al apuntar en una lista, en px. */
+  PASO_APUNTAR: number;
 };
 
 /** "horizontal" = gana la más cercana al extremo lateral; "vertical" = la más cercana a "arriba". */
@@ -144,4 +150,7 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   FRENO_APUNTAR: 0.35,
   GRUPO_DISTANCIA: 24,
   T_ZOOM_GRUPO: 500,
+  UMBRAL_APUNTAR: 32,
+  HISTERESIS_APUNTAR: 12,
+  PASO_APUNTAR: 28,
 });
