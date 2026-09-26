@@ -83,11 +83,30 @@ test("Favoritos: ordenar invierte la lista y 'Ver en el mapa' cierra la capa", a
   await expect(page.getByRole("button", { name: "Menú, sección Mapa" })).toBeVisible();
 });
 
-test("HM-12a: el resumen de un negocio ofrece Cerrar + Ver perfil, Cómo llegar, Favorito y WhatsApp", async ({ page }) => {
+test("HM-13: el negocio elegido ofrece Cerrar + Carta · Cómo llegar · WhatsApp · Favorito", async ({ page }) => {
   await page.getByRole("button", { name: "Jugos El Parque" }).tap();
   await expect(page.getByRole("dialog", { name: "Jugos El Parque" })).toBeVisible();
-  expect(await angulos(page)).toEqual({ cerrar: 90, favorito: 113, "ver-perfil": 135, "como-llegar": 158, whatsapp: 180 });
+  expect(await angulos(page)).toEqual({ cerrar: 90, whatsapp: 113, carta: 135, "como-llegar": 158, favorito: 180 });
   await expect(page.getByRole("button", { name: "Menú, Jugos El Parque" })).toBeVisible();
+  await page.getByRole("button", { name: "Menú, Jugos El Parque" }).click(); // abre en modo toque
+  await expect(page.getByRole("menuitem", { name: "Carta" })).toBeVisible();
+});
+
+test("HM-13: el rótulo de 'Carta' depende del tipo de negocio y WhatsApp solo aparece si lo tiene", async ({ page }) => {
+  // Servicios (Costuras y Arreglos María, con WhatsApp).
+  await page.getByRole("button", { name: "Costuras y Arreglos María" }).tap();
+  await expect(page.getByRole("dialog", { name: "Costuras y Arreglos María" })).toBeVisible();
+  await page.getByRole("button", { name: "Menú, Costuras y Arreglos María" }).click();
+  await expect(page.getByRole("menuitem", { name: "Servicios" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "WhatsApp" })).toBeVisible();
+  await page.keyboard.press("Escape"); // cierra el menú
+  await page.keyboard.press("Escape"); // cierra la capa
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  // Sin WhatsApp (Empanadas La Esquina): Cerrar + 3.
+  await page.getByRole("button", { name: "Empanadas La Esquina" }).tap();
+  await expect(page.getByRole("dialog", { name: "Empanadas La Esquina" })).toBeVisible();
+  expect(Object.keys(await angulos(page)).sort()).toEqual(["carta", "cerrar", "como-llegar", "favorito"]);
 });
 
 test("una capa sin acciones (Agregar plato, dueño) solo ofrece 'Cerrar'", async ({ page }) => {

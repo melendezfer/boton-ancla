@@ -1,9 +1,15 @@
 // Datos simulados de la demo. Nada sale a la red.
 
+/** Cómo se presenta el catálogo del negocio (como en RUTEANDO: comida = Carta, bienes = Productos, servicios = Servicios). */
+export type TipoCatalogo = "food" | "goods" | "services";
+
 export type Negocio = {
   id: string;
   nombre: string;
   categoria: string;
+  catalogo: TipoCatalogo;
+  /** Tiene WhatsApp (la capa del negocio elegido solo ofrece WhatsApp si lo tiene, HM-13). */
+  whatsapp?: boolean;
   /** Posición en el lienzo del mapa falso, en px. */
   x: number;
   y: number;
@@ -22,30 +28,30 @@ export type CategoriaOferta = "Comida" | "Bebidas";
 export type Oferta = { id: string; titulo: string; negocio: string; categoria: CategoriaOferta; metros: number };
 
 /** El negocio "de la demo": el que tiene perfil, carta y productos. */
-export const NEGOCIO_DEMO: Negocio = { id: "arepas-dona-rosa", nombre: "Arepas Doña Rosa", categoria: "Comida rápida", x: 1000, y: 1000 };
+export const NEGOCIO_DEMO: Negocio = { id: "arepas-dona-rosa", nombre: "Arepas Doña Rosa", categoria: "Comida rápida", catalogo: "food", whatsapp: true, x: 1000, y: 1000 };
 
 export const NEGOCIOS: Negocio[] = [
   NEGOCIO_DEMO,
-  { id: "jugos-el-parque", nombre: "Jugos El Parque", categoria: "Bebidas", x: 1180, y: 900 },
-  { id: "empanadas-la-esquina", nombre: "Empanadas La Esquina", categoria: "Comida rápida", x: 860, y: 1130 },
-  { id: "arreglos-maria", nombre: "Costuras y Arreglos María", categoria: "Servicios", x: 1260, y: 1160 },
-  { id: "tinto-y-pan", nombre: "Tinto y Pan", categoria: "Panadería", x: 780, y: 880 },
-  { id: "frutas-don-jose", nombre: "Frutas Don José", categoria: "Frutas", x: 1100, y: 1290 },
+  { id: "jugos-el-parque", nombre: "Jugos El Parque", categoria: "Bebidas", catalogo: "food", whatsapp: true, x: 1180, y: 900 },
+  { id: "empanadas-la-esquina", nombre: "Empanadas La Esquina", categoria: "Comida rápida", catalogo: "food", x: 860, y: 1130 },
+  { id: "arreglos-maria", nombre: "Costuras y Arreglos María", categoria: "Servicios", catalogo: "services", whatsapp: true, x: 1260, y: 1160 },
+  { id: "tinto-y-pan", nombre: "Tinto y Pan", categoria: "Panadería", catalogo: "food", x: 780, y: 880 },
+  { id: "frutas-don-jose", nombre: "Frutas Don José", categoria: "Frutas", catalogo: "food", x: 1100, y: 1290 },
   // Más negocios, para que la lista de Favoritos sea larga y se pueda desplazar (HM-09).
-  { id: "salchipapas-el-mono", nombre: "Salchipapas El Mono", categoria: "Comida rápida", x: 620, y: 760 },
-  { id: "panaderia-la-espiga", nombre: "Panadería La Espiga", categoria: "Panadería", x: 1420, y: 720 },
-  { id: "tamales-dona-luz", nombre: "Tamales Doña Luz", categoria: "Comida", x: 700, y: 1400 },
-  { id: "raspados-el-polo", nombre: "Raspados El Polo", categoria: "Bebidas", x: 1460, y: 1340 },
-  { id: "cerrajeria-express", nombre: "Cerrajería Express", categoria: "Servicios", x: 560, y: 1080 },
-  { id: "buñuelos-la-abuela", nombre: "Buñuelos La Abuela", categoria: "Panadería", x: 1340, y: 560 },
-  { id: "arepas-de-choclo", nombre: "Arepas de Choclo Don Pedro", categoria: "Comida rápida", x: 900, y: 600 },
-  { id: "tienda-la-esquinita", nombre: "Tienda La Esquinita", categoria: "Tienda", x: 1560, y: 1020 },
-  { id: "mazamorra-dona-ana", nombre: "Mazamorra Doña Ana", categoria: "Postres", x: 760, y: 1560 },
-  { id: "cafe-el-molino", nombre: "Café El Molino", categoria: "Bebidas", x: 1240, y: 1500 },
+  { id: "salchipapas-el-mono", nombre: "Salchipapas El Mono", categoria: "Comida rápida", catalogo: "food", x: 620, y: 760 },
+  { id: "panaderia-la-espiga", nombre: "Panadería La Espiga", categoria: "Panadería", catalogo: "food", x: 1420, y: 720 },
+  { id: "tamales-dona-luz", nombre: "Tamales Doña Luz", categoria: "Comida", catalogo: "food", whatsapp: true, x: 700, y: 1400 },
+  { id: "raspados-el-polo", nombre: "Raspados El Polo", categoria: "Bebidas", catalogo: "food", x: 1460, y: 1340 },
+  { id: "cerrajeria-express", nombre: "Cerrajería Express", categoria: "Servicios", catalogo: "services", whatsapp: true, x: 560, y: 1080 },
+  { id: "buñuelos-la-abuela", nombre: "Buñuelos La Abuela", categoria: "Panadería", catalogo: "food", x: 1340, y: 560 },
+  { id: "arepas-de-choclo", nombre: "Arepas de Choclo Don Pedro", categoria: "Comida rápida", catalogo: "food", x: 900, y: 600 },
+  { id: "tienda-la-esquinita", nombre: "Tienda La Esquinita", categoria: "Tienda", catalogo: "goods", whatsapp: true, x: 1560, y: 1020 },
+  { id: "mazamorra-dona-ana", nombre: "Mazamorra Doña Ana", categoria: "Postres", catalogo: "food", x: 760, y: 1560 },
+  { id: "cafe-el-molino", nombre: "Café El Molino", categoria: "Bebidas", catalogo: "food", x: 1240, y: 1500 },
   // HM-12a: pines muy juntos, para probar grupos (a 16 px no se separan con el zoom inicial)…
-  { id: "drogueria-la-esquinita", nombre: "Droguería La Esquinita", categoria: "Droguería", x: 1574, y: 1028 },
+  { id: "drogueria-la-esquinita", nombre: "Droguería La Esquinita", categoria: "Droguería", catalogo: "goods", x: 1574, y: 1028 },
   // …y dos vecinos a 36 px, para probar que el imán se achica sin formar grupo.
-  { id: "helados-don-jose", nombre: "Helados Don José", categoria: "Postres", x: 1136, y: 1290 },
+  { id: "helados-don-jose", nombre: "Helados Don José", categoria: "Postres", catalogo: "food", whatsapp: true, x: 1136, y: 1290 },
 ];
 
 /** Favoritos con los que empieza la demo (sin el negocio de la demo, que se marca a mano). */
@@ -87,6 +93,11 @@ export const OFERTAS: Oferta[] = [
 ];
 
 export const CATEGORIAS_OFERTA: ("Todas" | CategoriaOferta)[] = ["Todas", "Comida", "Bebidas"];
+
+/** Rótulo del catálogo según el tipo de negocio (RUTEANDO: catalog-label.ts). */
+export function rotuloCatalogo(tipo: TipoCatalogo): string {
+  return { food: "Carta", goods: "Productos", services: "Servicios" }[tipo];
+}
 
 export function formatoPesos(valor: number): string {
   return `$${valor.toLocaleString("es-CO")}`;

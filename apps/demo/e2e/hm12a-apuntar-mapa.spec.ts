@@ -146,10 +146,10 @@ test("soltar FRENADO sobre un pin lo elige: abre su capa con sus acciones; 'Cerr
   await gestos.soltar(origen);
   const capa = page.getByRole("dialog", { name: "Arepas Doña Rosa" });
   await expect(capa).toBeVisible();
-  await expect(capa.getByRole("link", { name: "Ver carta" })).toBeVisible();
+  await expect(capa.getByRole("link", { name: "Ver perfil completo" })).toBeVisible();
 
   const enCapa = await leerGeometria(page);
-  expect(enCapa.slots.map((s) => s.id).sort()).toEqual(["cerrar", "como-llegar", "favorito", "ver-perfil", "whatsapp"]);
+  expect(enCapa.slots.map((s) => s.id).sort()).toEqual(["carta", "cerrar", "como-llegar", "favorito", "whatsapp"]);
   await gestos.deslizar(enCapa.centro, haciaOpcion(enCapa, "cerrar"), { pasos: 8, ms: 150 });
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });

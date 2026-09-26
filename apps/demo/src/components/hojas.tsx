@@ -5,7 +5,7 @@ import { useAnchorLayer, useAnchorReserva, useMedidas, useTeclado } from "@boton
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createRef, useCallback, useLayoutEffect, useRef, useState } from "react";
-import { CATEGORIAS_OFERTA, NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos } from "@/lib/datos";
+import { CATEGORIAS_OFERTA, NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos, rotuloCatalogo } from "@/lib/datos";
 import { useDemo, type Hoja } from "@/lib/demo-store";
 import { ANCHOR_ICONS, SEMANTIC_ICONS } from "@/lib/icons/semantic-icons";
 
@@ -217,8 +217,8 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
 
 /**
  * Resumen de un negocio: al tocar su pin o al elegirlo con la mira (HM-12a). Acciones de capa
- * (HM-08, máx. 4 además de "Cerrar"): Ver perfil, Cómo llegar, Favorito y WhatsApp. "Ver carta"
- * queda como botón del contenido (la quinta no cabe en el abanico: decisiones-pendientes §1).
+ * (HM-13, spec §8): Carta/Productos/Servicios · Cómo llegar · WhatsApp (si lo tiene) · Favorito,
+ * más "Cerrar" en 90°. "Ver perfil completo" es un botón de la hoja.
  */
 function HojaResumenNegocio({ negocioId, cerrar }: { negocioId: string; cerrar: () => void }) {
   const { favoritos, alternarFavorito, avisar } = useDemo();
@@ -227,44 +227,37 @@ function HojaResumenNegocio({ negocioId, cerrar }: { negocioId: string; cerrar: 
   if (!n) return null;
   const esDemo = n.id === NEGOCIO_DEMO.id;
   const esFavorito = favoritos.includes(n.id);
-  const soloDemo = () => avisar(`En la demo solo "${NEGOCIO_DEMO.nombre}" tiene perfil y carta`);
+  const catalogo = rotuloCatalogo(n.catalogo);
+  const acciones: AnchorAction[] = [
+    {
+      id: "carta",
+      label: catalogo,
+      icon: SEMANTIC_ICONS.catalog,
+      priority: 1,
+      onSelect: () => (esDemo ? router.push("/negocio/carta") : avisar(`En la demo solo "${NEGOCIO_DEMO.nombre}" tiene ${catalogo.toLowerCase()}`)),
+    },
+    { id: "como-llegar", label: "Cómo llegar", icon: ANCHOR_ICONS.directions, priority: 2, onSelect: () => avisar("Abriendo indicaciones (simulado)") },
+    ...(n.whatsapp
+      ? [{ id: "whatsapp", label: "WhatsApp", icon: ANCHOR_ICONS.whatsapp, priority: 3, onSelect: () => avisar("Abriendo WhatsApp (simulado)") }]
+      : []),
+    {
+      id: "favorito",
+      label: esFavorito ? "Quitar de favoritos" : "Favorito",
+      icon: ANCHOR_ICONS.favoriteToggle,
+      priority: 4,
+      onSelect: () => {
+        alternarFavorito(n.id);
+        avisar(esFavorito ? "Quitado de favoritos" : "Agregado a favoritos");
+      },
+    },
+  ];
   return (
-    <HojaInferior
-      titulo={n.nombre}
-      onCerrar={cerrar}
-      icono={ANCHOR_ICONS.mapPin}
-      acciones={() => [
-        {
-          id: "ver-perfil",
-          label: "Ver perfil",
-          icon: ANCHOR_ICONS.sectionBusiness,
-          priority: 1,
-          onSelect: () => (esDemo ? router.push("/negocio") : soloDemo()),
-        },
-        { id: "como-llegar", label: "Cómo llegar", icon: ANCHOR_ICONS.directions, priority: 2, onSelect: () => avisar("Abriendo indicaciones (simulado)") },
-        {
-          id: "favorito",
-          label: esFavorito ? "Quitar de favoritos" : "Favorito",
-          icon: ANCHOR_ICONS.favoriteToggle,
-          priority: 3,
-          onSelect: () => {
-            alternarFavorito(n.id);
-            avisar(esFavorito ? "Quitado de favoritos" : "Agregado a favoritos");
-          },
-        },
-        { id: "whatsapp", label: "WhatsApp", icon: ANCHOR_ICONS.whatsapp, priority: 4, onSelect: () => avisar("Abriendo WhatsApp (simulado)") },
-      ]}
-    >
+    <HojaInferior titulo={n.nombre} onCerrar={cerrar} icono={ANCHOR_ICONS.mapPin} acciones={acciones}>
       <p className="font-sans text-body text-text-muted">{n.categoria}</p>
       {esDemo ? (
-        <div className="mt-3 flex gap-2">
-          <Link href="/negocio" onClick={cerrar} className="flex h-btn flex-1 items-center justify-center rounded-input bg-terracota font-sans text-button font-semibold text-white">
-            Ver perfil
-          </Link>
-          <Link href="/negocio/carta" onClick={cerrar} className="flex h-btn flex-1 items-center justify-center rounded-input border border-border bg-surface font-sans text-button font-semibold text-text">
-            Ver carta
-          </Link>
-        </div>
+        <Link href="/negocio" onClick={cerrar} className="mt-3 flex h-btn items-center justify-center rounded-input bg-terracota font-sans text-button font-semibold text-white">
+          Ver perfil completo
+        </Link>
       ) : (
         <p className="mt-3 font-sans text-body-sm text-text-muted">En la demo solo &quot;{NEGOCIO_DEMO.nombre}&quot; tiene perfil.</p>
       )}
