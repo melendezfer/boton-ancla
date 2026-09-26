@@ -129,6 +129,6 @@ describe("métricas", () => {
       m.push(...derivarMetricas(estado, next, e));
       estado = next;
     }
-    expect(m).toEqual([{ type: "scroll_start" }, { type: "scroll_end", ms: 900 }]);
+    expect(m).toEqual([{ type: "scroll_start", modo: "vertical" }, { type: "scroll_end", ms: 900 }]);
   });
 });

@@ -17,7 +17,11 @@ export type Geometry = {
   prioridad1?: string;
   /** Hay algo registrado para desplazar con el ancla (HM-09, RF-18). */
   desplazable?: boolean;
+  /** Cómo se desplaza: "vertical" (listas, HM-09) o "libre" (mapa, HM-11, RF-19). */
+  modoDesplazar?: ModoDesplazar;
 };
+
+export type ModoDesplazar = "vertical" | "libre";
 
 export function crearGeometria(input: {
   screen: AnchorScreen;
@@ -30,11 +34,13 @@ export function crearGeometria(input: {
   teclado?: boolean;
   /** HM-09: hay algo registrado para desplazar (y el desplazamiento está activado). */
   desplazable?: boolean;
+  /** HM-11: "libre" si lo registrado es un mapa. Por defecto "vertical". */
+  modoDesplazar?: ModoDesplazar;
 }): Geometry {
   const { anchor, ordered, slots } = layoutParaPantalla(input);
   // La prioridad 1 es la primera acción propia (no "Atrás") de orderActions.
   const prioridad1 = ordered.find((a) => ![ID_ATRAS, ID_CERRAR, ID_OCULTAR_TECLADO].includes(a.id))?.id;
-  return { centro: anchor, slots, params: input.params, hand: input.hand, prioridad1, desplazable: input.desplazable ?? false };
+  return { centro: anchor, slots, params: input.params, hand: input.hand, prioridad1, desplazable: input.desplazable ?? false, modoDesplazar: input.modoDesplazar ?? "vertical" };
 }
 
 /** Datos de un dedo apoyado desde que tocó el ancla. */

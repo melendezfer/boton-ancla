@@ -1,4 +1,4 @@
-import type { AnchorEvent, AnchorState, CancelReason, ModoEjecucion } from "./machine/states";
+import type { AnchorEvent, AnchorState, CancelReason, ModoDesplazar, ModoEjecucion } from "./machine/states";
 import { ID_DESHACER } from "./validate";
 
 // Métricas locales (spec §9, design.md §3.5). Los nombres de eventos y campos
@@ -14,8 +14,8 @@ export type MetricEvent =
   | { type: "undo"; id: string }
   /** Una capa se cerró sin el abanico: botón atrás del sistema o Escape (HM-03). */
   | { type: "layer_close"; via: "sistema" | "teclado" }
-  /** HM-09: empezó y terminó el modo desplazamiento. */
-  | { type: "scroll_start" }
+  /** HM-09: empezó y terminó el modo desplazamiento. `modo`: listas (vertical) o mapa (libre, HM-11). */
+  | { type: "scroll_start"; modo: ModoDesplazar }
   | { type: "scroll_end"; ms: number };
 
 type Tipo = AnchorState["tipo"];
@@ -55,7 +55,7 @@ export function derivarMetricas(prev: AnchorState, next: AnchorState, evento: An
   if (presel !== undefined && presel !== preseleccion(prev)) metricas.push({ type: "preselect", id: presel });
 
   // --- desplazamiento (HM-09) ---
-  if (next.tipo === "desplazando" && prev.tipo !== "desplazando") metricas.push({ type: "scroll_start" });
+  if (next.tipo === "desplazando" && prev.tipo !== "desplazando") metricas.push({ type: "scroll_start", modo: next.geo.modoDesplazar ?? "vertical" });
   if (prev.tipo === "desplazando" && next.tipo === "reposo" && evento.tipo === "POINTER_UP") {
     metricas.push({ type: "scroll_end", ms: Math.round(evento.t - prev.tInicio) });
   }

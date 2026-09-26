@@ -45,6 +45,7 @@ export {
   type AnchorState,
   type CancelReason,
   type Geometry,
+  type ModoDesplazar,
   type ModoEjecucion,
   type Presion,
   type Tecla,
@@ -72,4 +73,12 @@ export {
   type PosicionBanda,
   type TextoBanda,
 } from "./banda";
-export { indicadorDesplazamiento, posicionGuiaArriba, velocidadDesplazamiento, type IndicadorDesplazamiento } from "./desplazamiento";
+export {
+  indicadorDesplazamiento,
+  indicadorJoystick,
+  posicionGuiaArriba,
+  velocidadDesplazamiento,
+  velocidadJoystick,
+  type IndicadorDesplazamiento,
+  type IndicadorJoystick,
+} from "./desplazamiento";
