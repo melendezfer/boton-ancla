@@ -42,26 +42,26 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 
 ## Bloque B — Adaptador React (`packages/react`)
 
-### [ ] T3-06 · Colocación por orientación en el proveedor
+### [x] T3-06 · Colocación por orientación en el proveedor
 - **Cubre:** RF3-06…RF3-09 · `design.md` §4.5, §5.1
 - **Hacer:** `useOrientacion`; props `placement` / `onPlacementChange` (con `prefs.hand` como compatibilidad); el ancla usa `resolverColocacion`; al girar, cancelar y recolocar sin animación.
 - **Prueba (E2E):** en vertical y en horizontal (`setViewportSize`) el ancla está abajo del lado guardado; al girar ida y vuelta, cada orientación recupera la suya; la primera vez en horizontal copia el lado a 30 %.
 - **Prueba manual:** girar el Nubia con la demo abierta.
 - **Commit:** `feat(react): colocación del ancla por orientación`
 
-### [ ] T3-07 · Zonas reservadas
+### [x] T3-07 · Zonas reservadas
 - **Cubre:** RF3-10…RF3-13, H11, DF3-06 · `design.md` §5.2
 - **Hacer:** `useAnchorReservedArea` (ResizeObserver, recálculo en reposo, aviso en consola si hay conflicto); la banda y los avisos usan la colocación resuelta.
 - **Prueba (E2E):** una zona obligatoria nunca queda bajo el ancla, el abanico abierto, la banda ni un aviso; una zona que crece durante una interacción recoloca el ancla al volver a reposo; al quitar la zona, el ancla vuelve a su posición guardada.
 - **Commit:** `feat(react): zonas reservadas que el ancla no tapa`
 
-### [ ] T3-08 · Modo edición: arrastrar, bandas válidas e imán
+### [x] T3-08 · Modo edición: arrastrar, bandas válidas e imán
 - **Cubre:** RF3-01…RF3-05, RF3-16, HU3-01…HU3-06, DF3-01…DF3-03 · `design.md` §5.3
 - **Hacer:** dibujo del modo edición (bandas, silueta, línea de inicio con clic), velo, imán al soltar con `T_CENTRADO`, `useAnchorMove()`.
 - **Prueba (E2E, solo deslizando):** entrar desde la opción, arrastrar, soltar lejos de todo y ver el imán; soltar en el otro costado cambia la mano y el abanico se refleja; cancelar con segundo dedo; el botón de Ajustes funciona tocando.
 - **Commit:** `feat(react): mover el ancla arrastrándola`
 
-### [ ] T3-09 · Bienvenida: ¿con qué mano?
+### [x] T3-09 · Bienvenida: ¿con qué mano?
 - **Cubre:** RF3-14, HU3-13, H13, DF3-08 · `design.md` §5.4
 - **Hacer:** paso de la mano en la bienvenida (deslizar o botones), `manoPreguntada`, "Repetir la bienvenida".
 - **Prueba (E2E):** con almacenamiento limpio, deslizar a la izquierda deja el ancla a la izquierda; los botones también; la segunda vez no se pregunta.

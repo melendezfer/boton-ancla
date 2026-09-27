@@ -1,13 +1,13 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **26-09-2026**. **La Fase 3 (adaptación al espacio) está lista para programar**: spec v0.3 con todo decidido (`specs/fase-3/spec.md` §1b), `design.md` y `tasks.md` (12 tareas, T3-01…T3-12). Todavía sin código. **Las sesiones con 3 personas de la Fase 1 (T-27) siguen pendientes, en paralelo**; la demo publicada sirve para ellas.
+Última actualización: **26-09-2026**. **Fase 3 (adaptación al espacio) en curso**: Bloque A (núcleo, T3-01…T3-05) y Bloque B (adaptador, T3-06…T3-09) **hechos**; falta el Bloque C (conectar a las pantallas de la demo: T3-10…T3-12). Guía del Bloque B: `specs/fase-3/prueba-bloque-b.md` (se prueba en Diagnóstico → "Prueba de la Fase 3"). **Las sesiones con 3 personas de la Fase 1 (T-27) siguen pendientes, en paralelo**; la demo publicada sirve para ellas.
 
 ---
 
 ## 0. Retomar mañana
 
 **Dos frentes en paralelo:**
-- **Fase 3:** empezar a programar por **T3-01** (`specs/fase-3/tasks.md`), con tu visto bueno.
+- **Fase 3:** probar el Bloque B en el Nubia (`specs/fase-3/prueba-bloque-b.md`); después, el Bloque C (T3-10…T3-12).
 - **Fase 1 (cierre):** las sesiones con 3 personas y la entrevista a distancia (T-27) con https://melendezfer.github.io/boton-ancla/ y los mensajes de `compartir-demo.md`.
 
 1. La demo está publicada en **https://melendezfer.github.io/boton-ancla/**. Ábrela en tu celular con datos móviles para confirmarlo.
