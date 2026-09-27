@@ -111,14 +111,43 @@ test("mapa · Zoom quedándose sobre la opción y subiendo el pulgar, solo desli
   await gestos.soltar({ x: sobreZoom.x, y: sobreZoom.y - 60 });
 });
 
+test("ajustes · mover el ancla al otro costado (cambiar de mano), solo deslizando (Fase 3, RF3-01, RF3-05)", async ({ page }) => {
+  await preparar(page, "visitante");
+  const { g, gestos } = await abrir(page, "/ajustes");
+  const sobre = haciaOpcion(g, "mover-ancla");
+  await gestos.presionar(g.centro);
+  await gestos.mover(sobre);
+  await page.waitForTimeout(450); // quedarse quieto sobre "Mover ancla" (T_ESPERA_DESLIZADOR)
+  await expect(page.locator(".ba-raiz")).toHaveAttribute("data-estado", "editando");
+  const destino = { x: 70, y: sobre.y };
+  for (let i = 1; i <= 10; i++) await gestos.mover({ x: sobre.x + ((destino.x - sobre.x) * i) / 10, y: sobre.y });
+  await gestos.soltar(destino);
+  await expect(page.locator(".ba-raiz")).toHaveAttribute("data-mano", "left");
+});
+
+test("bienvenida · responder con qué mano deslizando el asa (Fase 3, H13)", async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.clear();
+    } catch {}
+  });
+  await page.goto("/mapa");
+  const asa = (await page.getByTestId("asa-mano").boundingBox())!;
+  const c = { x: asa.x + asa.width / 2, y: asa.y + asa.height / 2 };
+  const gestos = await crearGestos(page);
+  await gestos.deslizar(c, { x: c.x - 120, y: c.y }, { pasos: 8, ms: 150 });
+  await expect(page.locator(".ba-raiz")).toHaveAttribute("data-mano", "left");
+});
+
 test("toda acción del abanico de §8 está en este recorrido", async () => {
-  const cubiertas = new Set([...CASOS.map((c) => `${c.ruta}|${c.rol}|${c.id}`), "/producto/arepa-queso|dueno|marcar-no-disponible", "/producto/arepa-queso|dueno|eliminar", "/mapa|visitante|zoom"]);
+  const cubiertas = new Set([...CASOS.map((c) => `${c.ruta}|${c.rol}|${c.id}`), "/producto/arepa-queso|dueno|marcar-no-disponible", "/producto/arepa-queso|dueno|eliminar", "/mapa|visitante|zoom", "/ajustes|visitante|mover-ancla"]);
   const esperadas = [
     ["/mapa", "visitante", ["buscar", "mi-ubicacion", "ofertas-cerca", "favoritos", "zoom"]],
     ["/negocio", "visitante", ["carta", "como-llegar", "favorito", "compartir", "atras"]],
     ["/negocio", "dueno", ["agregar-plato", "editar", "atras"]],
     ["/negocio/carta", "visitante", ["compartir", "favorito", "atras"]],
     ["/producto/arepa-queso", "dueno", ["editar", "marcar-no-disponible", "eliminar", "atras"]],
+    ["/ajustes", "visitante", ["mover-ancla"]], // Fase 3
   ] as const;
   for (const [ruta, rol, ids] of esperadas) for (const id of ids) expect(cubiertas.has(`${ruta}|${rol}|${id}`), `${ruta} ${rol} ${id}`).toBe(true);
 });
