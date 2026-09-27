@@ -1,10 +1,23 @@
 "use client";
 
-import { DEFAULT_PARAMS, pantallaDeCapa, validateScreen, type AnchorScreen, type Apuntado, type CapaAncla, type Params } from "@boton-ancla/core";
+import {
+  colocacionPara,
+  DEFAULT_PARAMS,
+  pantallaDeCapa,
+  prefsDesdeMano,
+  validateScreen,
+  type AnchorPrefs,
+  type AnchorScreen,
+  type Apuntado,
+  type CapaAncla,
+  type Params,
+  type PrefsAncla,
+} from "@boton-ancla/core";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Ancla } from "./components/Ancla";
 import { useCapas, type CapaReact, type ControlCapas } from "./dom/capas";
+import { useOrientacion } from "./dom/entorno";
 import type { AnchorProviderProps, OpcionesApuntarLista, ReactAnchorIcon } from "./types";
 
 // Proveedor del botón-ancla (spec §7). Guarda la pantalla actual y dibuja el
@@ -69,7 +82,20 @@ const ContextoDesplazar = createContext<RegistroDesplazar | null>(null);
 export type ReservaAncla = { lado: "right" | "left"; ancho: number };
 const ContextoReserva = createContext<ReservaAncla | null>(null);
 
-export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales, desplazar = false, desplazarLibre = false, apuntar = false, guiaDesplazar = "ancla", children }: AnchorProviderProps) {
+export function AnchorProvider({
+  prefs,
+  placement,
+  onPlacementChange,
+  theme,
+  icons,
+  onEvent,
+  params: parciales,
+  desplazar = false,
+  desplazarLibre = false,
+  apuntar = false,
+  guiaDesplazar = "ancla",
+  children,
+}: AnchorProviderProps) {
   const pantallaRef = useRef<AnchorScreen | null>(null);
   const duenoRef = useRef<symbol | null>(null);
   // Copia para DIBUJAR. Para EJECUTAR se usa pantallaRef (siempre la más reciente).
@@ -100,9 +126,27 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
     () => ({ objetivo: objetivoDesplazar, apuntarPrincipal, avisar: () => setVersionObjetivo((v) => v + 1) }),
     [],
   );
+  // Fase 3 (RF3-06): la colocación por orientación. Sin `placement`, la guarda el propio ancla,
+  // partiendo de `prefs.hand` (si la app cambia la mano, se vuelve a partir de ella).
+  const orientacion = useOrientacion();
+  const [interna, setInterna] = useState<{ hand: AnchorPrefs["hand"]; prefs: PrefsAncla | null }>({ hand: prefs.hand, prefs: null });
+  if (interna.hand !== prefs.hand) setInterna({ hand: prefs.hand, prefs: null });
+  const colocacion = placement ?? interna.prefs ?? prefsDesdeMano(prefs.hand, params);
+  const onPlacementRef = useRef(onPlacementChange);
+  useLayoutEffect(() => {
+    onPlacementRef.current = onPlacementChange;
+  });
+  const cambiarColocacion = useCallback(
+    (nueva: PrefsAncla) => {
+      if (!placement) setInterna((i) => ({ ...i, prefs: nueva }));
+      onPlacementRef.current?.(nueva);
+    },
+    [placement],
+  );
+  const ladoActual = colocacionPara(colocacion, orientacion, params).lado;
   const reserva = useMemo<ReservaAncla>(
-    () => ({ lado: prefs.hand, ancho: params.MARGEN_LATERAL + params.D_ACTIVO }),
-    [prefs.hand, params.MARGEN_LATERAL, params.D_ACTIVO],
+    () => ({ lado: ladoActual, ancho: params.MARGEN_LATERAL + params.D_ACTIVO }),
+    [ladoActual, params.MARGEN_LATERAL, params.D_ACTIVO],
   );
 
   return (
@@ -116,7 +160,9 @@ export function AnchorProvider({ prefs, theme, icons, onEvent, params: parciales
             <Ancla
               pantalla={pantalla}
               pantallaRef={pantallaRef}
-              prefs={prefs}
+              colocacion={colocacion}
+              orientacion={orientacion}
+              cambiarColocacion={cambiarColocacion}
               theme={theme}
               icons={icons}
               params={params}

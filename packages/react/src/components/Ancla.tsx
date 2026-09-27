@@ -10,7 +10,12 @@ import {
   ID_DESHACER,
   ID_OCULTAR_TECLADO,
   mismoApuntado,
+  colocacionPara,
   pantallaDeCapa,
+  resolverColocacion,
+  type Entorno,
+  type Orientacion,
+  type PrefsAncla,
   posicionGuiaArriba,
   mostrarEtiqueta,
   necesitaDemostracion,
@@ -41,7 +46,11 @@ export type PropsAncla = {
   pantalla: AnchorScreen | null;
   /** La más reciente, para ejecutar acciones. */
   pantallaRef: RefObject<AnchorScreen | null>;
-  prefs: AnchorPrefs;
+  /** Fase 3: colocación por orientación (efectiva: la de la app o la guardada por el ancla). */
+  colocacion: PrefsAncla;
+  orientacion: Orientacion;
+  /** Fase 3: la persona movió el ancla o cambió de mano. */
+  cambiarColocacion: (nueva: PrefsAncla) => void;
   theme: AnchorTheme;
   icons: AnchorIcons;
   params: Params;
@@ -75,7 +84,9 @@ const DURACION_AVISO_MS = 2500;
 export function Ancla({
   pantalla,
   pantallaRef,
-  prefs,
+  colocacion,
+  orientacion,
+  cambiarColocacion,
   theme,
   icons,
   params,
@@ -214,14 +225,34 @@ export function Ancla({
 
   // Geometría para EMPEZAR una interacción. Mientras hay una abierta, se dibuja la de la máquina
   // (la foto tomada al empezar), así el abanico no se mueve bajo el dedo.
+  // Fase 3: el entorno útil (sin teclado) y dónde va el ancla en esta orientación (design.md §4.4).
+  const entorno = useMemo<Entorno | null>(
+    () =>
+      medidas
+        ? {
+            viewport: teclado.abierto ? { ...medidas.viewport, height: medidas.viewport.height - teclado.alto } : medidas.viewport,
+            safeArea: teclado.abierto ? { ...medidas.safeArea, bottom: 0 } : medidas.safeArea,
+          }
+        : null,
+    [medidas, teclado.abierto, teclado.alto],
+  );
+  const colocacionActual = colocacionPara(colocacion, orientacion, params);
+  const resuelta = useMemo(
+    () => (entorno ? resolverColocacion(colocacionActual, entorno, [], params) : null),
+    // colocacionActual se compara por valor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [entorno, colocacionActual.lado, colocacionActual.altura, params],
+  );
+
   const geo = useMemo<Geometry | null>(() => {
-    if (!vista || !medidas) return null;
-    const viewport = teclado.abierto ? { ...medidas.viewport, height: medidas.viewport.height - teclado.alto } : medidas.viewport;
+    if (!vista || !entorno || !resuelta) return null;
     return crearGeometria({
       screen: vista,
-      viewport,
-      safeArea: teclado.abierto ? { ...medidas.safeArea, bottom: 0 } : medidas.safeArea,
-      hand: prefs.hand,
+      viewport: entorno.viewport,
+      safeArea: entorno.safeArea,
+      hand: resuelta.lado,
+      ancla: resuelta.punto,
+      abreHacia: resuelta.abreHacia,
       params,
       // C-21: mientras hay algo para deshacer, "Deshacer" reemplaza a la prioridad 1 (de la capa, si hay: HM-08 1-A).
       deshacer: aviso?.tipo === "deshacer",
@@ -232,7 +263,15 @@ export function Ancla({
       modoDesplazar,
       apuntarLista,
     });
-  }, [vista, medidas, prefs.hand, params, aviso?.tipo, hayCapa, teclado.abierto, teclado.alto, desplazable, modoDesplazar, apuntarLista]);
+  }, [vista, entorno, resuelta, params, aviso?.tipo, hayCapa, teclado.abierto, desplazable, modoDesplazar, apuntarLista]);
+
+  // Fase 3 (§9): métrica al girar el celular (no la primera vez).
+  const orientacionAntes = useRef(orientacion);
+  useEffect(() => {
+    if (orientacionAntes.current === orientacion) return;
+    orientacionAntes.current = orientacion;
+    onEventRef.current?.({ type: "orientation", orientacion });
+  }, [orientacion, onEventRef]);
 
   // Pantalla más reciente para EJECUTAR (acciones de la capa o de la sección, siempre al día).
   const vistaRef = useRef<AnchorScreen | null>(null);
@@ -380,7 +419,7 @@ export function Ancla({
       ? posicionGuiaArriba({
           centro: geoDibujo.centro,
           origen: estado.origen,
-          hand: prefs.hand,
+          hand: geoDibujo.hand,
           params,
           alto: altoGuia,
           techo: medidas.safeArea.top + 8,
@@ -393,7 +432,9 @@ export function Ancla({
       className="ba-raiz"
       style={variablesCss(theme, params)}
       data-estado={estado.tipo}
-      data-mano={prefs.hand}
+      data-mano={geoDibujo.hand}
+      data-orientacion={orientacion}
+      data-abre={geoDibujo.abreHacia}
       data-teclado={teclado.abierto || undefined}
     >
       {velo.visible && (
@@ -714,7 +755,7 @@ function Banda({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const contenido = textoBanda({ estado, screen: pantalla, bienvenida });
-  const pos = posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params });
+  const pos = posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params, abreHacia: geo.abreHacia });
 
   // Se mide el texto y se corre la banda para que no se salga por los costados.
   useLayoutEffect(() => {
@@ -783,15 +824,17 @@ function claseAncla(estado: AnchorState): string {
 function ZonaAviso({ geo, medidas, children }: { geo: Geometry; medidas: Medidas; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const radio = radioDe(geo.centro, geo.slots, geo.params);
-  const pos = posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params });
-  const abajo = pos.yBase - geo.params.BANDA_ALTO - 8;
+  const pos = posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params, abreHacia: geo.abreHacia });
+  // Arriba de la banda; con el abanico hacia abajo (RF3-15), debajo de la banda.
+  const haciaAbajo = geo.abreHacia === "abajo";
+  const abajo = haciaAbajo ? pos.yBase + 8 : pos.yBase - geo.params.BANDA_ALTO - 8;
 
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const ancho = el.offsetWidth;
     el.style.left = `${Math.min(Math.max(pos.x - ancho / 2, pos.izquierda), pos.derecha - ancho)}px`;
-    el.style.top = `${Math.max(medidas.safeArea.top + 4, abajo - el.offsetHeight)}px`;
+    el.style.top = haciaAbajo ? `${abajo}px` : `${Math.max(medidas.safeArea.top + 4, abajo - el.offsetHeight)}px`;
   });
 
   return (

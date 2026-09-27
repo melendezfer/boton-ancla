@@ -1,5 +1,6 @@
 "use client";
 
+import { orientacionDe, type Orientacion } from "@boton-ancla/core";
 import { useEffect, useRef, useState } from "react";
 
 // Señales del entorno que cancelan la interacción u ocultan el ancla (T-20).
@@ -71,4 +72,23 @@ export function useCambioOrientacion(alCambiar: () => void) {
     mq.addEventListener("change", avisar);
     return () => mq.removeEventListener("change", avisar);
   }, []);
+}
+
+/**
+ * Fase 3 (RF3-07): vertical u horizontal, según el tamaño de la ventana (ancho > alto =
+ * horizontal). Se usa la ventana y no la parte visible: el teclado no debe "girar" el ancla.
+ */
+export function useOrientacion(): Orientacion {
+  const [orientacion, setOrientacion] = useState<Orientacion>("vertical");
+  useEffect(() => {
+    const leer = () => setOrientacion(orientacionDe(window.innerWidth, window.innerHeight));
+    leer();
+    window.addEventListener("resize", leer);
+    window.addEventListener("orientationchange", leer);
+    return () => {
+      window.removeEventListener("resize", leer);
+      window.removeEventListener("orientationchange", leer);
+    };
+  }, []);
+  return orientacion;
 }

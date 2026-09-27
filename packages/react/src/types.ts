@@ -1,4 +1,4 @@
-import type { AnchorPrefs, MetricEvent, Params } from "@boton-ancla/core";
+import type { AnchorPrefs, MetricEvent, Params, PrefsAncla } from "@boton-ancla/core";
 import type { ComponentType, ReactNode } from "react";
 
 /** Un ícono como componente (compatible con los de Phosphor). */
@@ -65,6 +65,13 @@ export type AnchorProviderProps = {
   params?: Partial<Params>;
   /** HM-09 (experimental): desplazar el contenido con el ancla. Por defecto false. */
   desplazar?: boolean;
+  /**
+   * Fase 3 (RF3-06): dónde queda el ancla en cada orientación. Si la app no la pasa, el ancla la
+   * guarda por su cuenta a partir de `prefs.hand` (compatibilidad con la Fase 1).
+   */
+  placement?: PrefsAncla;
+  /** Fase 3: la persona movió el ancla (o cambió de mano): la app la guarda. */
+  onPlacementChange?: (placement: PrefsAncla) => void;
   /** HM-11 (experimental): joystick libre para el mapa registrado con useAnchorPan. Por defecto false. */
   desplazarLibre?: boolean;
   /** HM-12a (experimental): apuntar y elegir en el mapa (RF-21). Por defecto false. */
