@@ -105,6 +105,17 @@ export function pantallaProducto(a: AccionesProducto, disponible: boolean): Anch
 }
 
 /** Pantallas propias de la demo (fuera de §8): solo "Atrás", que va arriba (C-22). */
+/** Ajustes (Fase 3, DF3-01): "Mover ancla" se ajusta quedándose quieto; soltar sin esperar = el botón. */
+export function pantallaAjustes(atras: Hacer, mover: Hacer): AnchorScreen {
+  return {
+    id: "ajustes",
+    sectionIcon: ANCHOR_ICONS.sectionSettings,
+    sectionLabel: "Ajustes",
+    back: { onSelect: atras },
+    actions: [accion("mover-ancla", "Mover ancla", ANCHOR_ICONS.moveAnchor, mover, { priority: 1, moveAnchor: true })],
+  };
+}
+
 export function pantallaSoloAtras(id: string, sectionLabel: string, sectionIcon: AnchorScreen["sectionIcon"], atras: Hacer): AnchorScreen {
   return { id, sectionIcon, sectionLabel, back: { onSelect: atras }, actions: [] };
 }

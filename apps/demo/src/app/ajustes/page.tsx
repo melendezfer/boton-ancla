@@ -1,36 +1,59 @@
 "use client";
 
 import { computeAnchorPosition, DEFAULT_PARAMS } from "@boton-ancla/core";
-import { reiniciarBienvenida, useMedidas } from "@boton-ancla/react";
+import { reiniciarBienvenida, useAnchorMove, useMedidas } from "@boton-ancla/react";
 import { EspacioBarra } from "@/components/barra-demo";
-import { usePantallaDemo } from "@/components/pantallas-conectadas";
+import { usePantallaAjustes } from "@/components/pantallas-conectadas";
+import { useOrientacionVentana } from "@/lib/orientacion";
 import { DURACION_CENTRADO_MAX, ESPERA_CENTRADO_MAX, useDemo, type Fondo, type Preferencias, type Rol } from "@/lib/demo-store";
 
 const ALTURA_MIN = 0;
 const ALTURA_MAX = 0.6;
 
 export default function PaginaAjustes() {
-  usePantallaDemo("ajustes");
+  usePantallaAjustes();
   const { prefs, setPref } = useDemo();
+  const { mover, editando } = useAnchorMove();
   const medidas = useMedidas();
+  // Fase 3 (DF3-09): el control de altura ajusta la orientación en la que está el celular.
+  const orientacion = useOrientacionVentana();
+  const enHorizontal = orientacion === "horizontal";
+  const inicio = enHorizontal ? DEFAULT_PARAMS.ANCLA_ALTURA_H : DEFAULT_PARAMS.ANCLA_ALTURA;
+  const altura = enHorizontal ? (prefs.horizontal?.altura ?? DEFAULT_PARAMS.ANCLA_ALTURA_H) : prefs.anclaAltura;
+  const lado = enHorizontal ? (prefs.horizontal?.lado ?? prefs.mano) : prefs.mano;
+  const fijarAltura = (a: number) =>
+    enHorizontal ? setPref("horizontal", { lado, altura: a }) : setPref("anclaAltura", a);
 
   // Distancia real en px entre el borde inferior útil y el centro del ancla (con piso y techo aplicados).
   let px: number | null = null;
   if (medidas) {
-    const params = { ...DEFAULT_PARAMS, ANCLA_ALTURA: prefs.anclaAltura };
-    const { y } = computeAnchorPosition({ viewport: medidas.viewport, safeArea: medidas.safeArea, hand: prefs.mano, params });
+    const params = { ...DEFAULT_PARAMS, ANCLA_ALTURA: altura };
+    const { y } = computeAnchorPosition({ viewport: medidas.viewport, safeArea: medidas.safeArea, hand: lado, params });
     px = Math.round(medidas.viewport.height - medidas.safeArea.bottom - y);
   }
-  const porcentaje = Math.round(prefs.anclaAltura * 100);
+  const porcentaje = Math.round(altura * 100);
 
   return (
     <main className="mx-auto flex max-w-lg flex-col gap-5 px-4 pb-64">
       <EspacioBarra />
 
       <section className="flex flex-col gap-2 rounded-card border border-terracota/40 bg-surface p-4">
-        <h2 className="font-heading text-title-2 font-semibold text-text">Altura del ancla</h2>
+        <h2 className="font-heading text-title-2 font-semibold text-text">Dónde está el ancla</h2>
+        <button
+          type="button"
+          onClick={mover}
+          data-testid="boton-mover-ancla"
+          className="flex h-btn items-center justify-center rounded-input bg-terracota font-sans text-button font-semibold text-white"
+        >
+          {editando ? "Toca el ancla y arrástrala" : "Mover el ancla"}
+        </button>
         <p className="font-sans text-body-sm text-text-muted">
-          Hallazgo HM-01. Desliza para subir o bajar el ancla y mírala moverse. Se guarda en este dispositivo.
+          Arrástrala a cualquier altura de los dos costados; al soltarla en el otro costado, cambias de mano. También desde el
+          abanico: desliza a &quot;Mover ancla&quot; y quédate quieto un momento. Se guarda en este dispositivo, una posición para
+          vertical y otra para horizontal.
+        </p>
+        <p className="font-sans text-body-sm text-text-muted" data-testid="orientacion-altura">
+          Altura en <strong>{enHorizontal ? "horizontal" : "vertical"}</strong> (HM-01; se mantiene para comparar con el arrastre).
         </p>
         <label htmlFor="altura-ancla" className="flex items-baseline justify-between font-sans text-body text-text">
           <span>
@@ -44,8 +67,8 @@ export default function PaginaAjustes() {
           min={ALTURA_MIN}
           max={ALTURA_MAX}
           step={0.01}
-          value={prefs.anclaAltura}
-          onChange={(e) => setPref("anclaAltura", Number(e.target.value))}
+          value={altura}
+          onChange={(e) => fijarAltura(Number(e.target.value))}
           aria-valuetext={`${porcentaje} por ciento del alto útil`}
           className="h-11 w-full cursor-pointer accent-terracota"
           data-testid="slider-altura"
@@ -56,13 +79,14 @@ export default function PaginaAjustes() {
         </div>
         <button
           type="button"
-          onClick={() => setPref("anclaAltura", DEFAULT_PARAMS.ANCLA_ALTURA)}
+          onClick={() => fijarAltura(inicio)}
           className="self-start font-sans text-body-sm font-semibold text-terracota"
         >
-          Volver al valor inicial ({Math.round(DEFAULT_PARAMS.ANCLA_ALTURA * 100)} %)
+          Volver al valor inicial ({Math.round(inicio * 100)} %)
         </button>
         <p className="font-sans text-caption text-text-muted">
-          Si el abanico no cabe arriba, el ancla deja de subir sola (techo). Moverla arrastrándola llega en la Fase 3.
+          Si el abanico no cabe arriba, el ancla deja de subir sola (techo). Tampoco tapa las zonas reservadas (en el mapa, el
+          crédito de OpenStreetMap).
         </p>
       </section>
 
@@ -175,7 +199,11 @@ export default function PaginaAjustes() {
           ["right", "Derecha"],
           ["left", "Izquierda"],
         ]}
-        alCambiar={(v) => setPref("mano", v)}
+        alCambiar={(v) => {
+          // H13: la mano es el costado; cambia en las dos orientaciones.
+          setPref("mano", v);
+          if (prefs.horizontal) setPref("horizontal", { ...prefs.horizontal, lado: v });
+        }}
       />
 
       <Opciones<Rol>

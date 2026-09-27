@@ -1,6 +1,6 @@
 "use client";
 
-import { useAnchorPan, type ObjetivoApuntable } from "@boton-ancla/react";
+import { useAnchorPan, useAnchorReservedArea, type ObjetivoApuntable } from "@boton-ancla/react";
 import { useCallback, useEffect, useRef } from "react";
 import { NEGOCIOS, NEGOCIO_DEMO } from "@/lib/datos";
 import { PASO_ZOOM, registrarMapa } from "@/lib/mapa-control";
@@ -296,7 +296,51 @@ export function MapaFalso() {
           </button>
         ))}
       </div>
+      <ZonasRuteando />
     </div>
+  );
+}
+
+/**
+ * Fase 3 (T3-10, spec §8): lo que RUTEANDO tiene en las esquinas del mapa, declarado como zonas
+ * reservadas. El crédito de OpenStreetMap es OBLIGATORIO (la licencia obliga a mostrarlo: el
+ * ancla nunca lo tapa); el logo y los botones de zoom de Leaflet, preferidos. En la demo, los
+ * botones +/− son solo visuales (el zoom es el del ancla y el directo de HM-18) y el crédito no
+ * es un enlace (RNF-08: la demo no hace pedidos a internet).
+ */
+function ZonasRuteando() {
+  const credito = useRef<HTMLDivElement>(null);
+  const logo = useRef<HTMLDivElement>(null);
+  const zoom = useRef<HTMLDivElement>(null);
+  useAnchorReservedArea(credito, { prioridad: "obligatoria" });
+  useAnchorReservedArea(logo);
+  useAnchorReservedArea(zoom);
+  return (
+    <>
+      <div
+        ref={credito}
+        data-testid="credito-osm"
+        className="pointer-events-none fixed right-0 bottom-0 z-[400] bg-white/80 px-1 font-sans text-[11px] leading-[18px] text-neutral-700"
+      >
+        © OpenStreetMap
+      </div>
+      <div
+        ref={logo}
+        data-testid="logo-ruteando"
+        className="pointer-events-none fixed bottom-6 left-6 z-[400] flex items-center gap-2 rounded-full bg-surface/90 px-3 py-2 shadow-lg backdrop-blur"
+      >
+        <span className="font-heading text-title-2 font-bold text-terracota">Ruteando</span>
+      </div>
+      <div
+        ref={zoom}
+        data-testid="zoom-leaflet"
+        aria-hidden
+        className="pointer-events-none fixed top-[64px] left-3 z-[400] flex flex-col overflow-hidden rounded border-2 border-black/20 bg-white font-sans text-[20px] leading-[30px] text-neutral-800"
+      >
+        <span className="block h-[30px] w-[30px] border-b border-neutral-300 text-center">+</span>
+        <span className="block h-[30px] w-[30px] text-center">−</span>
+      </div>
+    </>
   );
 }
 

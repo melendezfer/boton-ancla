@@ -1,7 +1,7 @@
 "use client";
 
 import type { AnchorScreen } from "@boton-ancla/core";
-import { useAnchorScreen } from "@boton-ancla/react";
+import { useAnchorMove, useAnchorScreen } from "@boton-ancla/react";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { enfocarBuscador } from "@/components/hojas";
@@ -10,6 +10,7 @@ import { useDemo, useRegistrarPantalla } from "@/lib/demo-store";
 import { ANCHOR_ICONS } from "@/lib/icons/semantic-icons";
 import { acercarMapa, factorDePaso } from "@/lib/mapa-control";
 import {
+  pantallaAjustes,
   pantallaCarta,
   pantallaMapa,
   pantallaPerfilDueno,
@@ -124,6 +125,15 @@ const SECCIONES_DEMO = {
   metricas: { label: "Métricas", icon: ANCHOR_ICONS.sectionMetrics },
   diagnostico: { label: "Diagnóstico", icon: ANCHOR_ICONS.sectionDiagnostics },
 } as const;
+
+/** Ajustes (Fase 3): con "Mover ancla" en el abanico (DF3-01). */
+export function usePantallaAjustes(): AnchorScreen {
+  const atras = useVolver();
+  const { mover } = useAnchorMove();
+  const p = pantallaAjustes(atras, mover);
+  useRegistrar(p);
+  return p;
+}
 
 export function usePantallaDemo(id: keyof typeof SECCIONES_DEMO): AnchorScreen {
   const atras = useVolver();

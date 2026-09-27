@@ -1,6 +1,6 @@
 "use client";
 
-import { DEFAULT_PARAMS, type AnchorScreen, type Hand } from "@boton-ancla/core";
+import { DEFAULT_PARAMS, type AnchorScreen, type Colocacion, type Hand } from "@boton-ancla/core";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FAVORITOS_INICIALES, PRODUCTOS_INICIALES, type Producto } from "./datos";
 import type { EventoMetrica, RegistroMetrica } from "./exportar";
@@ -16,6 +16,13 @@ export type Fondo = "claro" | "foto" | "oscuro";
 export const ESPERA_CENTRADO_MAX = 500;
 export const DURACION_CENTRADO_MAX = 600;
 
+function leerColocacion(v: unknown): Colocacion | null {
+  if (typeof v !== "object" || v === null) return null;
+  const c = v as Partial<Colocacion>;
+  if ((c.lado !== "right" && c.lado !== "left") || typeof c.altura !== "number" || !Number.isFinite(c.altura)) return null;
+  return { lado: c.lado, altura: c.altura };
+}
+
 function numeroEntre(v: unknown, min: number, max: number, porDefecto: number): number {
   return typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : porDefecto;
 }
@@ -26,6 +33,12 @@ export type Preferencias = {
   fondo: Fondo;
   /** Parámetro ANCLA_ALTURA (HM-01), ajustable con el control deslizante de Ajustes. */
   anclaAltura: number;
+  /**
+   * Fase 3 (RF3-06): la colocación en horizontal (costado y altura). `mano` + `anclaAltura` son la
+   * vertical (así lo guardado antes de la Fase 3 sigue sirviendo, sin migrar). null = todavía no
+   * se usó en horizontal: copia el costado de la vertical, a ANCLA_ALTURA_H.
+   */
+  horizontal: Colocacion | null;
   /** HM-15: espera antes del centrado (mira y foco de las listas), en ms. */
   tEsperaCentrado: number;
   /** HM-15: duración del centrado, en ms. */
@@ -45,6 +58,7 @@ export const PREFERENCIAS_INICIALES: Preferencias = {
   rol: "visitante",
   fondo: "claro",
   anclaAltura: DEFAULT_PARAMS.ANCLA_ALTURA,
+  horizontal: null,
   tEsperaCentrado: DEFAULT_PARAMS.T_ESPERA_CENTRADO,
   tCentrado: DEFAULT_PARAMS.T_CENTRADO,
   desplazar: true,
@@ -145,6 +159,7 @@ function leerPrefs(): Preferencias {
       rol: d.rol === "dueno" ? "dueno" : "visitante",
       fondo: d.fondo === "foto" || d.fondo === "oscuro" ? d.fondo : "claro",
       anclaAltura: typeof d.anclaAltura === "number" && Number.isFinite(d.anclaAltura) ? d.anclaAltura : PREFERENCIAS_INICIALES.anclaAltura,
+      horizontal: leerColocacion(d.horizontal),
       tEsperaCentrado: numeroEntre(d.tEsperaCentrado, 0, ESPERA_CENTRADO_MAX, PREFERENCIAS_INICIALES.tEsperaCentrado),
       tCentrado: numeroEntre(d.tCentrado, 0, DURACION_CENTRADO_MAX, PREFERENCIAS_INICIALES.tCentrado),
       desplazar: d.desplazar !== false,

@@ -12,6 +12,7 @@ const IDS = [
   "atras", "deshacer",
   "zoom", "ver-perfil", "whatsapp", // HM-12a
   "acercar", "alejar", // HM-17
+  "mover-ancla", // Fase 3
 ];
 
 export async function sinBienvenida(page: Page) {

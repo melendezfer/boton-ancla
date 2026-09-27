@@ -2,6 +2,7 @@ import { DEFAULT_PARAMS, ID_ATRAS, layoutParaPantalla, validateScreen, type Anch
 import { describe, expect, it } from "vitest";
 import { ANCHOR_ICONS, MOBILITY_ICONS, SEMANTIC_ICONS } from "./icons/semantic-icons";
 import {
+  pantallaAjustes,
   pantallaCarta,
   pantallaMapa,
   pantallaPerfilDueno,
@@ -18,6 +19,7 @@ const PANTALLAS: AnchorScreen[] = [
   pantallaCarta({ compartir: nada, favorito: nada, atras: nada }, true),
   pantallaProducto({ editar: nada, marcarNoDisponible: nada, deshacerNoDisponible: nada, eliminar: nada, atras: nada }, true),
   pantallaSoloAtras("ajustes", "Ajustes", ANCHOR_ICONS.sectionSettings, nada),
+  pantallaAjustes(nada, nada), // Fase 3: con "Mover ancla"
 ];
 
 const iconosRegistrados = new Set<unknown>([

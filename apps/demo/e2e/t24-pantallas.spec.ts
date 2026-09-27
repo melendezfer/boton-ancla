@@ -26,7 +26,7 @@ const CASOS = [
   { ruta: "/negocio", rol: "dueno", seccion: "Perfil de negocio", esperado: { atras: 90, "agregar-plato": 135, editar: 180 } },
   { ruta: "/negocio/carta", rol: "visitante", seccion: "Carta", esperado: { atras: 90, compartir: 135, favorito: 180 } },
   { ruta: "/producto/arepa-queso", rol: "dueno", seccion: "Detalle de producto", esperado: { atras: 90, "marcar-no-disponible": 120, editar: 150, eliminar: 180 } },
-  { ruta: "/ajustes", rol: "visitante", seccion: "Ajustes", esperado: { atras: 90 } },
+  { ruta: "/ajustes", rol: "visitante", seccion: "Ajustes", esperado: { atras: 90, "mover-ancla": 180 } }, // Fase 3: Mover ancla
 ] as const;
 
 for (const c of CASOS) {
