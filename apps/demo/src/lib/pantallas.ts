@@ -12,8 +12,8 @@ export type AccionesMapa = {
   miUbicacion: Hacer;
   ofertasCerca: Hacer;
   favoritos: Hacer;
-  /** HM-12a (RF-20): un paso de zoom (toque y teclado). */
-  zoomPaso: Hacer;
+  /** HM-17: soltar sobre Zoom (o tocarlo) abre la capa "Zoom" con Acercar y Alejar. */
+  zoomAbrir: Hacer;
   /** HM-12a (RF-20): zoom continuo al quedarse sobre la opción. */
   zoomDeslizar: (paso: number) => void;
 };
@@ -36,11 +36,8 @@ export function pantallaMapa(a: AccionesMapa): AnchorScreen {
       accion("mi-ubicacion", "Mi ubicación", ANCHOR_ICONS.myLocation, a.miUbicacion, { priority: 2, atTop: true }), // RF-22: 90° sin "Atrás"
       accion("ofertas-cerca", "Ofertas cerca", SEMANTIC_ICONS.offer, a.ofertasCerca, { priority: 3 }),
       accion("favoritos", "Favoritos", ANCHOR_ICONS.favoritesList, a.favoritos, { priority: 4 }),
-      accion("zoom", "Zoom", ANCHOR_ICONS.zoom, a.zoomPaso, {
-        priority: 5,
-        onSlide: a.zoomDeslizar,
-        slideHint: "Mantén sobre Zoom para acercar o alejar",
-      }),
+      // RF-20 / HM-17: soltar abre la capa Zoom; quedarse encima es el deslizador (atajo de expertos).
+      accion("zoom", "Zoom", ANCHOR_ICONS.zoom, a.zoomAbrir, { priority: 5, onSlide: a.zoomDeslizar }),
     ],
   };
 }

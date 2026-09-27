@@ -67,8 +67,10 @@ type Gesto = ConPuntero & {
   /** Cómo empezó: directo desde el ancla, o desde el modo toque presionando el centro. */
   modoApertura: "gesto" | "toque";
   presel?: string;
-  /** Desde cuándo está preseleccionada `presel` (RF-20: esperar sobre un deslizador). */
+  /** Desde cuándo el pulgar está QUIETO sobre `presel` (RF-20: esperar sobre un deslizador; HM-17). */
   tPresel?: number;
+  /** Dónde empezó esa quietud: moverse más de UMBRAL_MOV desde aquí reinicia la espera. */
+  puntoPresel?: Point;
 };
 
 /** RF-21 (HM-12a): lo que hay en la mira. */
@@ -96,9 +98,7 @@ export type CancelReason =
   | "segundo_dedo"
   | "pointercancel"
   | "orientacion"
-  | "cambio_seccion"
-  /** RF-20: soltó sobre un deslizador sin esperar (la banda muestra la pista). */
-  | "deslizador_sin_espera";
+  | "cambio_seccion";
 
 export type AnchorState =
   | { tipo: "reposo" }
@@ -141,7 +141,7 @@ export type AnchorState =
   | { tipo: "abierto_teclado"; geo: Geometry; foco: number; t0: number }
   // Transitorios: el adaptador hace el efecto y envía COMPLETADO.
   | { tipo: "ejecutando"; id: string; modo: ModoEjecucion; experto: boolean; ms: number; recorridoPx: number }
-  | { tipo: "cancelado"; motivo: CancelReason; id?: string }
+  | { tipo: "cancelado"; motivo: CancelReason }
   /** RF-21: soltó frenado sobre algo en la mira; el adaptador abre su capa. */
   | { tipo: "elegido"; apuntado: Apuntado; ms: number }
   | { tipo: "bloqueado_sensible"; id: string };

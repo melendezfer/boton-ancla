@@ -12,7 +12,7 @@ import {
 
 const nada = () => {};
 const PANTALLAS: AnchorScreen[] = [
-  pantallaMapa({ buscar: nada, miUbicacion: nada, ofertasCerca: nada, favoritos: nada, zoomPaso: nada, zoomDeslizar: nada }),
+  pantallaMapa({ buscar: nada, miUbicacion: nada, ofertasCerca: nada, favoritos: nada, zoomAbrir: nada, zoomDeslizar: nada }),
   pantallaPerfilVisitante({ carta: nada, comoLlegar: nada, favorito: nada, compartir: nada, atras: nada }, false),
   pantallaPerfilDueno({ agregarPlato: nada, editar: nada, atras: nada }),
   pantallaCarta({ compartir: nada, favorito: nada, atras: nada }, true),

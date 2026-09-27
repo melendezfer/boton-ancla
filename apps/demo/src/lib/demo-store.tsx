@@ -58,6 +58,8 @@ export type Hoja =
   | { tipo: "resumen-negocio"; negocioId: string }
   /** HM-12a: varios negocios que no se pueden separar en la mira. */
   | { tipo: "grupo-negocios"; ids: string[] }
+  /** HM-17: capa "Zoom" del mapa, con Acercar y Alejar. */
+  | { tipo: "zoom" }
   /** HM-12b: un plato de la carta elegido con "apuntar" (visitante). */
   | { tipo: "plato"; productoId: string }
   | { tipo: "buscar" }

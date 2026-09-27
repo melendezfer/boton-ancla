@@ -73,7 +73,7 @@ export function MapaFalso() {
     [aplicar],
   );
   useEffect(() => {
-    registrarMapa({ acercar });
+    registrarMapa({ acercar, nivel: () => zoom.current });
     return () => registrarMapa(null);
   }, [acercar]);
 

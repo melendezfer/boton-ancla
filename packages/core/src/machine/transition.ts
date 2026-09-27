@@ -202,13 +202,17 @@ function moverGesto(estado: EstadoGesto, punto: Point, t: number): EstadoGesto {
     params: geo.params,
   });
   const slot = geo.slots.find((s) => s.id === sel.id);
-  const tPresel = sel.id === estado.presel ? estado.tPresel : t;
+  // RF-20 (HM-17): la espera cuenta solo con el pulgar QUIETO sobre la opción: cambiar de opción
+  // o moverse más de UMBRAL_MOV la reinicia (así un deslizamiento relajado no se vuelve deslizador).
+  const quieto = sel.id === estado.presel && estado.puntoPresel !== undefined && distancia(estado.puntoPresel, punto) <= geo.params.UMBRAL_MOV;
+  const tPresel = quieto ? estado.tPresel : t;
+  const puntoPresel = quieto ? estado.puntoPresel : punto;
   // Fila 12: irreversible (y habilitada) más allá del anillo exterior → confirmación armada.
   if (slot && slot.kind === "irreversible" && !slot.disabled && sel.beyondOuter) {
-    return { ...estado, tipo: "confirmacion_armada", presel: slot.id, tPresel };
+    return { ...estado, tipo: "confirmacion_armada", presel: slot.id, tPresel, puntoPresel };
   }
   // Fila 11, o fila 18 al volver dentro del anillo o cambiar de sector.
-  return { ...estado, tipo: "abierto_gesto", presel: sel.id, tPresel };
+  return { ...estado, tipo: "abierto_gesto", presel: sel.id, tPresel, puntoPresel };
 }
 
 /** RF-20: ¿ya esperó lo suficiente sobre un deslizador? */
@@ -258,8 +262,7 @@ function soltarGesto(estado: EstadoGesto, evento: Evento<"POINTER_UP">): AnchorS
   const slot = geo.slots.find((s) => s.id === final.presel);
   if (!slot) return { tipo: "cancelado", motivo: "fuera_de_arco" }; // fila 14
   if (slot.disabled) return { tipo: "cancelado", motivo: "deshabilitada" }; // fila 15
-  // Fila 48 (RF-20): un deslizador no se ejecuta al soltar sin esperar (tampoco en experto ni en C-05).
-  if (slot.deslizador) return { tipo: "cancelado", motivo: "deslizador_sin_espera", id: slot.id };
+  // Fila 48 (RF-20, HM-17): un deslizador soltado sin esperar se ejecuta como cualquier opción (onSelect).
   // Fila 17: irreversible sin haber cruzado el anillo. (Si lo cruzó, `final` es confirmacion_armada.)
   if (slot.kind === "irreversible" && final.tipo !== "confirmacion_armada") {
     return { tipo: "bloqueado_sensible", id: slot.id };

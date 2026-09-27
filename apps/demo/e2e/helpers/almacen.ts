@@ -11,6 +11,7 @@ const IDS = [
   "agregar-plato", "editar", "marcar-no-disponible", "eliminar",
   "atras", "deshacer",
   "zoom", "ver-perfil", "whatsapp", // HM-12a
+  "acercar", "alejar", // HM-17
 ];
 
 export async function sinBienvenida(page: Page) {

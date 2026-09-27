@@ -34,8 +34,6 @@ export type EfectosAncla = {
   alDeshacer?: () => void;
   /** Ejecuta "cerrar" (HM-03): cierra la capa de arriba. */
   alCerrarCapa?: () => void;
-  /** RF-20: soltó sobre un deslizador sin esperar: mostrar su pista en la banda. */
-  alPista?: (id: string) => void;
   /** RF-21: soltó frenado sobre algo en la mira: abrir su capa. */
   alElegir?: (apuntado: Apuntado) => void;
 };
@@ -220,7 +218,6 @@ export class Controlador {
         this.enviar({ tipo: "COMPLETADO" });
         break;
       case "cancelado":
-        if (next.motivo === "deslizador_sin_espera" && next.id) this.o.efectos.alPista?.(next.id);
         this.enviar({ tipo: "COMPLETADO" });
         break;
       case "elegido":

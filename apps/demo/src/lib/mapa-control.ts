@@ -4,6 +4,8 @@
 type ControlMapa = {
   /** Multiplica el zoom por `factor` alrededor de `centro` (en pantalla; por defecto, el centro). */
   acercar: (factor: number, centro?: { x: number; y: number }) => void;
+  /** Nivel de zoom actual (1 = inicial). */
+  nivel: () => number;
 };
 
 let actual: ControlMapa | null = null;
@@ -15,6 +17,13 @@ export function registrarMapa(control: ControlMapa | null) {
 export function acercarMapa(factor: number, centro?: { x: number; y: number }) {
   actual?.acercar(factor, centro);
 }
+
+export function nivelMapa(): number {
+  return actual?.nivel() ?? 1;
+}
+
+/** HM-17: cuánto cambia el zoom cada vez que se elige Acercar o Alejar (un nivel). */
+export const PASO_ZOOM = 1.5;
 
 /** RF-20: `paso` del deslizador (px de la curva, + = pulgar arriba) → factor de zoom. */
 export function factorDePaso(paso: number): number {

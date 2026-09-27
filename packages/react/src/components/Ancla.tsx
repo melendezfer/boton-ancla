@@ -117,14 +117,6 @@ export function Ancla({
     return () => clearTimeout(t);
   }, [aviso]);
 
-  // RF-20: pista del deslizador (aparte del aviso, para no borrar un "Deshacer" vigente).
-  const [pista, setPista] = useState<{ texto: string; hasta: number } | null>(null);
-  useEffect(() => {
-    if (!pista) return;
-    const t = setTimeout(() => setPista(null), Math.max(0, pista.hasta - performance.now()));
-    return () => clearTimeout(t);
-  }, [pista]);
-
   // --- Bienvenida (HU-12, T-23) ---
   const bienvenida = useBienvenida();
 
@@ -162,11 +154,6 @@ export function Ancla({
       setAviso({ tipo: "bloqueado", texto: "Desliza más allá para confirmar", hasta: performance.now() + DURACION_AVISO_MS }),
     alDeshacer: deshacer,
     alCerrarCapa: () => capas.cerrarArriba("ancla"),
-    // RF-20: soltó sobre un deslizador sin esperar: la banda muestra su pista.
-    alPista: (id) => {
-      const accion = vistaRef.current?.actions.find((a) => a.id === id);
-      setPista({ texto: accion?.slideHint ?? `Mantén sobre ${accion?.label ?? id}`, hasta: performance.now() + DURACION_AVISO_MS });
-    },
     // RF-21: soltó frenado sobre algo en la mira: la app abre su capa. RF-23: en una lista, el elemento en foco.
     alElegir: (apuntado) => {
       const lista = obtenerApuntarLista();
@@ -273,7 +260,6 @@ export function Ancla({
           alBloquear: (...a) => efectosRef.current.alBloquear?.(...a),
           alDeshacer: () => efectosRef.current.alDeshacer?.(),
           alCerrarCapa: () => efectosRef.current.alCerrarCapa?.(),
-          alPista: (id) => efectosRef.current.alPista?.(id),
           alElegir: (a) => efectosRef.current.alElegir?.(a),
         },
       }),
@@ -501,11 +487,6 @@ export function Ancla({
         <div ref={refFranja} className="ba-franja" data-testid="franja-foco" aria-hidden />
       )}
 
-      {pista && (
-        // RF-20: pista en la banda al soltar sobre un deslizador sin esperar.
-        <BandaPista geo={geo} medidas={medidas} texto={pista.texto} />
-      )}
-
       {conGuia && guiaDesplazar === "ancla" && (
         // HM-10 B: anillo sobre el borde del ancla (no por fuera: no sale de su columna) que se llena con la velocidad (--ba-llenado).
         <svg
@@ -620,32 +601,6 @@ export function Ancla({
           <IconoCentro size={26} aria-hidden />
         )}
       </button>
-    </div>
-  );
-}
-
-/** RF-20: la pista del deslizador, en el mismo lugar y con el mismo aspecto que la banda (HM-02). */
-function BandaPista({ geo, medidas, texto }: { geo: Geometry; medidas: Medidas; texto: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const radio = radioDe(geo.centro, geo.slots, geo.params);
-  const pos = posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params });
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const ancho = el.offsetWidth;
-    el.style.left = `${Math.min(Math.max(pos.x - ancho / 2, pos.izquierda), pos.derecha - ancho)}px`;
-  });
-  return (
-    <div
-      ref={ref}
-      className="ba-banda ba-banda--pista"
-      data-testid="banda"
-      data-tipo="pista-deslizador"
-      role="status"
-      aria-live="polite"
-      style={{ top: pos.yBase - geo.params.BANDA_ALTO, left: pos.x, maxWidth: pos.derecha - pos.izquierda }}
-    >
-      {texto}
     </div>
   );
 }

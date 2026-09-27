@@ -79,13 +79,40 @@ describe("zoom B: una opción deslizador (RF-20)", () => {
     expect(transition(s, ev.tick(20 + P.T_ESPERA_DESLIZADOR)).tipo).toBe("abierto_gesto");
   });
 
-  it("fila 48: soltar sobre Zoom sin esperar no ejecuta: cancela con la pista (id incluido)", () => {
-    expect(final([...llegar(), ev.up(sobreZoom(), 60)])).toEqual({ tipo: "cancelado", motivo: "deslizador_sin_espera", id: "zoom" });
+  it("fila 48 (HM-17): soltar sobre Zoom sin esperar lo EJECUTA, como cualquier opción", () => {
+    expect(final([...llegar(), ev.up(sobreZoom(), 60)])).toMatchObject({ tipo: "ejecutando", id: "zoom", modo: "gesto" });
   });
 
-  it("fila 48: tampoco en modo experto ni en el relámpago de C-05", () => {
-    expect(final([ev.down(g, g.centro, 0), ev.move(sobreZoom(40), 8), ev.up(sobreZoom(), 30)])).toMatchObject({ motivo: "deslizador_sin_espera" });
-    expect(final([ev.down(g, g.centro, 0), ev.up(sobreZoom(), 12)])).toMatchObject({ motivo: "deslizador_sin_espera" });
+  it("fila 48 (HM-17): también en modo experto y en el relámpago de C-05", () => {
+    expect(final([ev.down(g, g.centro, 0), ev.move(sobreZoom(40), 8), ev.up(sobreZoom(), 30)])).toMatchObject({ tipo: "ejecutando", id: "zoom", experto: true });
+    expect(final([ev.down(g, g.centro, 0), ev.up(sobreZoom(), 12)])).toMatchObject({ tipo: "ejecutando", id: "zoom" });
+  });
+
+  it("HM-17: moverse sobre Zoom más tiempo que la espera NO lo vuelve deslizador; soltar lo ejecuta", () => {
+    // Un deslizamiento relajado: entra al sector de Zoom enseguida y sigue avanzando 500 ms hasta la opción.
+    const eventos: AnchorEvent[] = [ev.down(g, g.centro, 0)];
+    for (let i = 1; i <= 10; i++) eventos.push(ev.move(sobreZoom(20 + i * 9), i * 50), ev.tick(i * 50 + 1));
+    eventos.push(ev.up(sobreZoom(110), 520));
+    const estados = recorrer(eventos);
+    expect(estados.some((e) => e.tipo === "ajustando")).toBe(false);
+    expect(estados.at(-1)).toMatchObject({ tipo: "ejecutando", id: "zoom" });
+  });
+
+  it("HM-17: la espera cuenta desde que el pulgar se queda quieto (menos de UMBRAL_MOV)", () => {
+    const quieto = sobreZoom();
+    const casi = puntoEnDireccion(g.centro, 100 + P.UMBRAL_MOV - 2, zoom.angulo); // tiembla sin pasar el umbral
+    // Se mueve de continuo (un evento cada 50 ms, ~8 px cada uno) hasta la opción, que alcanza a los 400 ms.
+    const eventos: AnchorEvent[] = [ev.down(g, g.centro, 0)];
+    for (let t = 50; t < 400; t += 50) eventos.push(ev.move(sobreZoom(30 + t / 6), t)); // a los 350 ms todavía le faltan ~12 px
+    eventos.push(ev.move(quieto, 400), ev.move(casi, 500));
+    const s = final(eventos);
+    expect(s).toMatchObject({ tipo: "abierto_gesto", presel: "zoom", tPresel: 400 });
+    expect(transition(s, ev.tick(400 + P.T_ESPERA_DESLIZADOR)).tipo).toBe("ajustando");
+  });
+
+  it("quedarse encima sigue siendo el deslizador: soltar después de la espera NO ejecuta onSelect", () => {
+    const t = 40 + P.T_ESPERA_DESLIZADOR;
+    expect(final([...llegar(), ev.tick(t), ev.up(sobreZoom(), t + 200)])).toEqual({ tipo: "reposo" });
   });
 
   it("filas 49–50: en 'ajustando' el pulgar se mueve libre y soltar vuelve a reposo", () => {
@@ -95,12 +122,12 @@ describe("zoom B: una opción deslizador (RF-20)", () => {
     expect(estados.at(-1)).toEqual({ tipo: "reposo" });
   });
 
-  it("métricas: slider_start y slider_end {ms}; la pista cuenta como cancel", () => {
+  it("métricas: slider_start y slider_end {ms}; soltar sin esperar cuenta como execute", () => {
     const t = 40 + P.T_ESPERA_DESLIZADOR;
     const m = metricasDe([...llegar(), ev.tick(t), ev.up(sobreZoom(), t + 700)]);
     expect(m).toContainEqual({ type: "slider_start", id: "zoom" });
     expect(m).toContainEqual({ type: "slider_end", id: "zoom", ms: 700 });
-    expect(metricasDe([...llegar(), ev.up(sobreZoom(), 60)])).toContainEqual({ type: "cancel", reason: "deslizador_sin_espera" });
+    expect(metricasDe([...llegar(), ev.up(sobreZoom(), 60)]).some((m) => m.type === "execute" && m.id === "zoom")).toBe(true);
   });
 
   it("un segundo dedo cancela también mientras se ajusta", () => {

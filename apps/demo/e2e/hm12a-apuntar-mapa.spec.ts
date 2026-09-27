@@ -62,25 +62,49 @@ const ancla = (page: Page) => page.getByTestId("ancla");
 // Zoom B (RF-20)
 // ---------------------------------------------------------------------------
 
-test("Zoom: soltar rápido sobre la opción no cambia nada y la banda explica qué hacer", async ({ page }) => {
+test("HM-17: soltar sobre Zoom abre la capa Zoom (también rápido y en relámpago); Acercar y Alejar cambian un nivel", async ({ page }) => {
   const g = await abrirMapa(page);
   const gestos = await crearGestos(page);
-  const antes = (await mapa(page)).zoom;
   for (const [pasos, ms] of [
+    [8, 150], // normal
     [3, 30], // rápido (modo experto)
     [2, 0], // relámpago (C-05)
   ] as const) {
-    // Con la máquina de pruebas muy cargada, el gesto puede tardar más que T_ESPERA_DESLIZADOR
-    // y entonces (con razón) cuenta como "quedarse": se repite hasta que salga rápido de verdad.
-    await expect(async () => {
+    const capa = page.getByRole("dialog", { name: "Zoom" });
+    // La espera del deslizador solo corre con el pulgar quieto (HM-17); el caso "lento pero sin
+    // quedarse quieto" se prueba en el núcleo (hm12a.test.ts), con el ritmo de eventos exacto.
+    // Aquí, con la máquina muy cargada, WebKit puede tardar más de 300 ms entre dos movimientos
+    // (para el ancla, un pulgar quieto: deslizador). Si la capa no aparece en 2 s, se repite.
+    for (let intento = 0; intento < 3; intento++) {
       await gestos.deslizar(g.centro, haciaOpcion(g, "zoom"), { pasos, ms });
-      const banda = page.getByTestId("banda");
-      await expect(banda).toHaveAttribute("data-tipo", "pista-deslizador", { timeout: 1000 });
-      await expect(banda).toHaveText("Mantén sobre Zoom para acercar o alejar");
-    }).toPass({ timeout: 15000 });
-    expect((await mapa(page)).zoom).toBe(antes);
-    expect(await estadoAncla(page)).toBe("reposo");
+      const abrio = await capa.waitFor({ state: "visible", timeout: 2000 }).then(
+        () => true,
+        () => false,
+      );
+      if (abrio) break;
+    }
+    await expect(capa).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(capa).toHaveCount(0);
   }
+
+  // Dentro de la capa, solo deslizando: Acercar sube un nivel (×1,5) y Alejar lo baja.
+  await gestos.deslizar(g.centro, haciaOpcion(g, "zoom"), { pasos: 8, ms: 150 });
+  await expect(page.getByRole("dialog", { name: "Zoom" })).toBeVisible();
+  const z0 = (await mapa(page)).zoom;
+  const enCapa = await leerGeometria(page);
+  expect(enCapa.slots.map((s) => s.id).sort()).toEqual(["acercar", "alejar", "cerrar"]);
+  await gestos.deslizar(enCapa.centro, haciaOpcion(enCapa, "acercar"), { pasos: 8, ms: 150 });
+  await expect.poll(async () => (await mapa(page)).zoom).toBeCloseTo(z0 * 1.5, 2);
+  await expect(page.getByTestId("nivel-zoom")).toHaveText(`${(z0 * 1.5).toFixed(2).replace(".", ",")}×`);
+  await gestos.deslizar(enCapa.centro, haciaOpcion(enCapa, "acercar"), { pasos: 8, ms: 150 });
+  await expect.poll(async () => (await mapa(page)).zoom).toBeCloseTo(z0 * 2.25, 2);
+  await gestos.deslizar(enCapa.centro, haciaOpcion(enCapa, "alejar"), { pasos: 8, ms: 150 });
+  await expect.poll(async () => (await mapa(page)).zoom).toBeCloseTo(z0 * 1.5, 2);
+  // "Cerrar" (90°) quita la capa y el mapa se queda con ese zoom.
+  await gestos.deslizar(enCapa.centro, haciaOpcion(enCapa, "cerrar"), { pasos: 8, ms: 150 });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect((await mapa(page)).zoom).toBeCloseTo(z0 * 1.5, 2);
 });
 
 test("Zoom: quedarse sobre la opción la vuelve deslizador; pulgar arriba acerca y abajo aleja", async ({ page }) => {

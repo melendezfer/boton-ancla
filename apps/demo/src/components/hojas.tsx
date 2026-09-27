@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { createRef, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { CATEGORIAS_OFERTA, NEGOCIOS, NEGOCIO_DEMO, OFERTAS, formatoPesos, rotuloCatalogo } from "@/lib/datos";
 import { useDemo, type Hoja } from "@/lib/demo-store";
+import { acercarMapa, nivelMapa, PASO_ZOOM } from "@/lib/mapa-control";
 import { ANCHOR_ICONS, SEMANTIC_ICONS } from "@/lib/icons/semantic-icons";
 
 const X = ANCHOR_ICONS.close;
@@ -210,6 +211,8 @@ function HojaSegunTipo({ hoja, cerrar }: { hoja: Hoja; cerrar: () => void }) {
       return <HojaResumenNegocio negocioId={hoja.negocioId} cerrar={cerrar} />;
     case "grupo-negocios":
       return <HojaGrupo ids={hoja.ids} cerrar={cerrar} />;
+    case "zoom":
+      return <HojaZoom cerrar={cerrar} />;
     case "plato":
       return <HojaPlato productoId={hoja.productoId} cerrar={cerrar} />;
     case "buscar":
@@ -314,6 +317,40 @@ function HojaGrupo({ ids, cerrar }: { ids: string[]; cerrar: () => void }) {
           </li>
         ))}
       </ul>
+    </HojaInferior>
+  );
+}
+
+/**
+ * HM-17: capa "Zoom" del mapa. Cada vez que se suelta sobre Acercar o Alejar (o se tocan sus
+ * botones), el mapa cambia un nivel. Quedarse sobre "Zoom" en el abanico del mapa sigue siendo
+ * el deslizador (atajo de expertos).
+ */
+function HojaZoom({ cerrar }: { cerrar: () => void }) {
+  const [nivel, setNivel] = useState(nivelMapa);
+  const cambiar = (factor: number) => {
+    acercarMapa(factor);
+    setNivel(nivelMapa());
+  };
+  const acciones: AnchorAction[] = [
+    { id: "acercar", label: "Acercar", icon: ANCHOR_ICONS.zoom, priority: 1, onSelect: () => cambiar(PASO_ZOOM) },
+    { id: "alejar", label: "Alejar", icon: ANCHOR_ICONS.zoomOut, priority: 2, onSelect: () => cambiar(1 / PASO_ZOOM) },
+  ];
+  const Mas = ANCHOR_ICONS.zoom;
+  const Menos = ANCHOR_ICONS.zoomOut;
+  return (
+    <HojaInferior titulo="Zoom" onCerrar={cerrar} icono={ANCHOR_ICONS.zoom} acciones={acciones}>
+      <p className="font-sans text-body text-text">
+        Nivel: <strong data-testid="nivel-zoom">{nivel.toFixed(2).replace(".", ",")}×</strong>
+      </p>
+      <div className="mt-3 flex gap-2">
+        <button type="button" onClick={() => cambiar(1 / PASO_ZOOM)} className="flex h-btn flex-1 items-center justify-center gap-2 rounded-input border border-border bg-surface font-sans text-button font-semibold text-text">
+          <Menos size={20} /> Alejar
+        </button>
+        <button type="button" onClick={() => cambiar(PASO_ZOOM)} className="flex h-btn flex-1 items-center justify-center gap-2 rounded-input border border-border bg-surface font-sans text-button font-semibold text-text">
+          <Mas size={20} /> Acercar
+        </button>
+      </div>
     </HojaInferior>
   );
 }

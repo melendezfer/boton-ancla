@@ -45,7 +45,7 @@ export function usePantallaMapa(): AnchorScreen {
     },
     ofertasCerca: () => abrirHoja({ tipo: "ofertas" }),
     favoritos: () => abrirHoja({ tipo: "favoritos" }),
-    zoomPaso: () => acercarMapa(1.5),
+    zoomAbrir: () => abrirHoja({ tipo: "zoom" }), // HM-17
     zoomDeslizar: (paso) => acercarMapa(factorDePaso(paso)),
   });
   useRegistrar(p);

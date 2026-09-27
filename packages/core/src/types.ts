@@ -36,11 +36,10 @@ export type AnchorAction = {
   /**
    * RF-20 (HM-12a): la opción es un deslizador (p. ej. Zoom). Quedarse sobre ella
    * T_ESPERA_DESLIZADOR la ajusta: se llama cuadro a cuadro con `paso` (px/s × s de la curva
-   * de RF-18; positivo = pulgar arriba = más). En toque y teclado se llama `onSelect`.
+   * de RF-18; positivo = pulgar arriba = más). Soltar sin esperar llama `onSelect`, como
+   * cualquier opción (HM-17).
    */
   onSlide?: (paso: number) => void;
-  /** Pista si se suelta sobre el deslizador sin esperar. Por defecto "Mantén sobre {label}". */
-  slideHint?: string;
   /**
    * RF-22 (HM-14): acción inofensiva que ocupa 90° cuando la pantalla no tiene "Atrás"
    * (90° es de la familia "volver"). Con "Atrás" o con una capa abierta no cambia nada.

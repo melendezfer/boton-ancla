@@ -20,6 +20,7 @@ import {
   Keyboard,
   ListHeart,
   MagnifyingGlass,
+  MagnifyingGlassMinus,
   MagnifyingGlassPlus,
   MapPin,
   MapPinArea,
@@ -123,8 +124,10 @@ export const ANCHOR_ICONS = {
   // Solo de la demo.
   /** Pin de un negocio en el mapa falso. */
   mapPin: MapPin,
-  /** Zoom del mapa: deslizador del abanico (HM-12a, RF-20). */
+  /** Zoom del mapa y "Acercar" (HM-12a, RF-20, HM-17). */
   zoom: MagnifyingGlassPlus,
+  /** "Alejar" el mapa, en la capa Zoom (HM-17). */
+  zoomOut: MagnifyingGlassMinus,
   /** Escribir al negocio por WhatsApp (capa de un pin elegido, HM-12a). */
   whatsapp: WhatsappLogo,
 } satisfies Record<string, Icon>;
