@@ -3,7 +3,12 @@
 ## Fuente de verdad
 - `specs/fase-1/spec.md` es la fuente de verdad. Si el código y la spec no coinciden, se corrige uno de los dos **a propósito** y se avisa; nunca en silencio.
 - Flujo guiado por especificación: `spec.md` → `design.md` → `tasks.md` → código. No se escribe código de una tarea que no esté en `tasks.md`.
-- Las decisiones que la spec no cierra se registran como puntos abiertos (`C-xx` en `design.md`) y se le preguntan al usuario; no se deciden solas.
+- Las decisiones que la spec no cierra se registran como puntos abiertos (`C-xx` en `design.md`).
+
+## Autonomía
+- Claude decide lo técnico y los detalles de producto según la spec, y **registra cada decisión** (en la spec, `design.md` o `estado.md`, con el porqué) para que el usuario pueda revisarla después.
+- Solo se detiene para: la **prueba manual** del usuario, **riesgos legales, de seguridad o de datos**, o **borrar/reescribir historial**.
+- Puede subir a `main` (`git push`) cuando **todas** las pruebas pasen (tipos, núcleo, demo, lint y E2E completas).
 
 ## Comunicación
 - Responde siempre en español. El usuario es junior y está aprendiendo: explica el porqué, no solo el qué.
@@ -12,7 +17,8 @@
 
 ## Git
 - Un commit por tarea terminada, con mensaje en español estilo Conventional Commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`.
-- Nunca hagas `git push` ni reescribas o borres historial (`reset --hard`, `rebase`, `push --force`, `commit --amend` de commits ya hechos) sin preguntar antes.
+- `git push` a `main` está permitido cuando todas las pruebas pasan (ver Autonomía).
+- Nunca reescribas o borres historial (`reset --hard`, `rebase`, `push --force`, `commit --amend` de commits ya hechos) sin preguntar antes.
 - El `.gitignore` cubre `node_modules`, `.next`, `coverage`, `.env*`, reportes de Playwright, etc. No se suben secretos.
 
 ## Pruebas
