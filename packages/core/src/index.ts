@@ -84,3 +84,13 @@ export {
   type IndicadorDesplazamiento,
   type IndicadorJoystick,
 } from "./desplazamiento";
+export {
+  colocacionPara,
+  orientacionDe,
+  prefsDesdeMano,
+  type Colocacion,
+  type Lado,
+  type Orientacion,
+  type PrefsAncla,
+  type Zona,
+} from "./espacio";

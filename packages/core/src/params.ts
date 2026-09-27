@@ -102,6 +102,10 @@ export type Params = {
   HISTERESIS_APUNTAR: number;
   /** RF-23: pulgar vertical por cada elemento al apuntar en una lista, en px. */
   PASO_APUNTAR: number;
+  /** Fase 3 (RF3-10): espacio mínimo entre lo que dibuja el ancla y una zona reservada, en px. */
+  MARGEN_ZONA: number;
+  /** Fase 3 (DF3-05): altura de inicio del ancla en horizontal (fracción del alto útil). */
+  ANCLA_ALTURA_H: number;
 };
 
 /** "horizontal" = gana la más cercana al extremo lateral; "vertical" = la más cercana a "arriba". */
@@ -156,4 +160,6 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   UMBRAL_APUNTAR: 32,
   HISTERESIS_APUNTAR: 12,
   PASO_APUNTAR: 28,
+  MARGEN_ZONA: 8,
+  ANCLA_ALTURA_H: 0.3,
 });

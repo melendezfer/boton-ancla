@@ -380,6 +380,8 @@ Entonces el ancla no se activa
 | `UMBRAL_APUNTAR` | 32 px | Pulgar hacia el centro de la pantalla para pasar de desplazar a apuntar en una lista (RF-23) |
 | `HISTERESIS_APUNTAR` | 12 px | Margen para volver a desplazar (se vuelve bajo `UMBRAL_APUNTAR − HISTERESIS_APUNTAR`), sin parpadeo (RF-23) |
 | `PASO_APUNTAR` | 28 px | Pulgar vertical por cada elemento al apuntar en una lista (RF-23) |
+| `MARGEN_ZONA` | 8 px | **Fase 3** (RF3-10): espacio mínimo entre el ancla, su abanico, la banda o los avisos y una zona reservada |
+| `ANCLA_ALTURA_H` | 0.3 | **Fase 3** (DF3-05): altura de inicio del ancla en horizontal (fracción del alto útil) |
 | `DESEMPATE` | horizontal | Si dos posiciones quedan igual de cerca de la diagonal, gana la más horizontal (`vertical` = la más cercana a "arriba") (C-10) |
 
 Distribución: las opciones se reparten en el arco ordenadas por `priority`. La prioridad 1 va en la **diagonal**, que es la posición más cómoda. Si la app habilita "Atrás", ocupa siempre el extremo **"arriba"** del arco, pegado al borde, para que sea fácil de memorizar, **incluso cuando es la única opción** (C-22). Cualquier otra opción única va en la diagonal. Las opciones se ubican en los extremos y a intervalos iguales del arco. Las posiciones libres se ordenan de la más cercana a la diagonal (135° con la mano derecha) a la más lejana, desempatando según `DESEMPATE`; la prioridad 1 toma la primera, la 2 la segunda, y así. Las acciones sin `priority` van al final, en orden de declaración (C-10). Mientras el aviso de deshacer está visible, "Deshacer" reemplaza a la acción de prioridad 1 en su misma posición y nada más se mueve (C-21).
