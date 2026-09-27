@@ -1,18 +1,26 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **26-09-2026**. **Fase 3 (adaptación al espacio) en curso**: Bloque A (núcleo, T3-01…T3-05) y Bloque B (adaptador, T3-06…T3-09) **hechos**; falta el Bloque C (conectar a las pantallas de la demo: T3-10…T3-12). Guía del Bloque B: `specs/fase-3/prueba-bloque-b.md` (se prueba en Diagnóstico → "Prueba de la Fase 3"). **Las sesiones con 3 personas de la Fase 1 (T-27) siguen pendientes, en paralelo**; la demo publicada sirve para ellas.
+Última actualización: **26-09-2026**, cierre del día. Todo subido a `origin/main` (la demo publicada se actualiza sola en cada push).
+
+**Dónde quedamos:** **Fase 3 (adaptación al espacio)** con el Bloque A (núcleo, T3-01…T3-05) y el Bloque B (adaptador, T3-06…T3-09) **hechos**. **Sigue el Bloque C** (T3-10…T3-12: conectar a las pantallas de la demo, el crédito del mapa como zona obligatoria, "Mover ancla" en Ajustes, guardar la posición, recorrido solo deslizando y guía). **La Fase 1 se cierra en paralelo** con la sesión que falta.
 
 ---
 
 ## 0. Retomar mañana
 
-**Dos frentes en paralelo:**
-- **Fase 3:** probar el Bloque B en el Nubia (`specs/fase-3/prueba-bloque-b.md`); después, el Bloque C (T3-10…T3-12).
-- **Fase 1 (cierre):** las sesiones con 3 personas y la entrevista a distancia (T-27) con https://melendezfer.github.io/boton-ancla/ y los mensajes de `compartir-demo.md`.
+**Pendientes (en este orden sugerido):**
 
-1. La demo está publicada en **https://melendezfer.github.io/boton-ancla/**. Ábrela en tu celular con datos móviles para confirmarlo.
-2. Con el enlace público, **las sesiones con 3 personas** y la entrevista a distancia (§2). Cada persona exporta su JSON desde Métricas y te lo manda.
-3. **Abre Claude** con: *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. …"* y los resultados de las sesiones.
+| # | Qué | Quién | Dónde |
+|---|---|---|---|
+| 1 | **Probar el Bloque B en el celular** (girar, mover el ancla, cambiar de mano, zonas, pregunta de la mano). | Tú | `specs/fase-3/prueba-bloque-b.md` (Diagnóstico → "Prueba de la Fase 3") |
+| 2 | **Respuestas de las 2 personas sobre HM-18**: pedirles que prueben el zoom directo (doble toque; doble toque, dejar el dedo y deslizar) y contar si ahora el zoom se siente "a la mano". | Tú | Demo publicada; Métricas → "Zoom" cuenta cada forma |
+| 3 | **Sesión 3 de 3** (T-27), con el guion y los mensajes de siempre; exportar su JSON. | Tú | `guion-sesiones.md`, `compartir-demo.md`, `pruebas-manuales.md` |
+| 4 | **Documento de integración con RUTEANDO**: cómo instalar el componente, qué pantallas registrar, qué zonas declarar (crédito de OpenStreetMap obligatorio, logo, botones), el zoom de un dedo para Leaflet y qué reemplaza (la pila de botones, D-06). Todavía no existe. | Claude, con tu visto bueno | por crear (`specs/integracion-ruteando.md`) |
+| 5 | **Bloque C de la Fase 3** (T3-10…T3-12). | Claude, con tu visto bueno | `specs/fase-3/tasks.md` |
+
+**Para retomar con Claude:** *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. Probé el Bloque B: … / Las personas dijeron del zoom: … / Sigue con …"*.
+
+- La demo está en **https://melendezfer.github.io/boton-ancla/** (para levantarla en local: §4; en el celular por la red de la casa: §5).
 
 ---
 
