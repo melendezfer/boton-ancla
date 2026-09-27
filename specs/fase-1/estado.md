@@ -2,12 +2,17 @@
 
 Última actualización: **27-09-2026**. Todo subido a `origin/main` (la demo publicada se actualiza sola en cada push).
 
-## 🏷️ Versión v0.3.0 (etiqueta para RUTEANDO)
+## 🏷️ Versiones (etiquetas para RUTEANDO)
 
-**`v0.3.0`** = commit `7185ecd` de `main` (27-09-2026): **Fases 1 y 3 terminadas**. **RUTEANDO copia el ancla desde esta etiqueta** (`packages/core` y `packages/react`), no desde `main`: así lo que se siga cambiando aquí no le llega sin querer. Para una versión nueva, se crea otra etiqueta (por ejemplo `v0.3.1` para arreglos, `v0.4.0` para una fase nueva) y RUTEANDO la copia cuando quiera.
+**RUTEANDO copia el ancla (`packages/core` y `packages/react`) desde una etiqueta, no desde `main`**: así lo que se siga cambiando aquí no le llega sin querer. Para una versión nueva se crea otra etiqueta (`v0.3.2` para arreglos, `v0.4.0` para una fase nueva) y RUTEANDO la copia cuando quiera.
 
-- Ver qué cambió desde la etiqueta: `git log --oneline v0.3.0..main`.
-- Ojo: los `package.json` de `core` y `react` todavía dicen `"version": "0.1.0"`; la versión que vale es la etiqueta. Si RUTEANDO los instala como paquetes, conviene igualarlos en la próxima etiqueta.
+| Etiqueta | Fecha | Qué |
+|---|---|---|
+| **`v0.3.1`** (la vigente) | 27-09-2026 | Igual que `v0.3.0`, con la versión de los `package.json` de `core` y `react` igualada a **0.3.1** (antes decían 0.1.0). |
+| `v0.3.0` | 27-09-2026 | Commit `7185ecd`: **Fases 1 y 3 terminadas**. Los `package.json` todavía decían 0.1.0. |
+
+- Ver qué cambió desde la vigente: `git log --oneline v0.3.1..main`.
+- Al crear una etiqueta nueva, igualar antes el `"version"` de `packages/core/package.json` y `packages/react/package.json` (y `package-lock.json` con `npm install --package-lock-only`).
 
 ## ✅ Fase 3 (adaptación al espacio) terminada
 
