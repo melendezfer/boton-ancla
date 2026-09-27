@@ -1,6 +1,8 @@
 # Botón-ancla — Especificación Fase 3: adaptación al espacio
 
-Versión 0.1 (borrador para decidir) · Primera app base: RUTEANDO · Continúa la Fase 1 (`specs/fase-1/spec.md` v0.16)
+Versión 0.2 (borrador para decidir) · Primera app base: RUTEANDO · Continúa la Fase 1 (`specs/fase-1/spec.md` v0.16)
+
+**Cambios en 0.2:** H11 y H13 agregados (§1); zonas en dos niveles, **obligatorias** y preferidas, decidido (RF3-13); la mano se deduce del costado (H13, §2, §7); la bienvenida pregunta la mano (HU3-13, RF3-14).
 
 > Esta spec es la fuente de verdad de la Fase 3. Lo que no cambia aquí sigue como en la Fase 1. Lo marcado **(a decidir)** espera una respuesta en `decisiones-pendientes.md`; no se escribe código hasta cerrarlo.
 
@@ -42,7 +44,8 @@ La Fase 3 hace que el ancla **se adapte al espacio**: la persona la puede mover 
 | D-06 | En RUTEANDO el ancla reemplaza la pila de botones de la derecha. | La pila ya no está; lo que queda en las esquinas son zonas reservadas (§8). |
 | P-03 | ¿Qué gesto rápido sirve para cambiar de mano? | Se responde en HU3-05 (a decidir). |
 | P-05 | Con el ancla alta, ¿el abanico se abre también hacia abajo? | Encaja aquí: si la persona pone el ancla arriba o en horizontal, el abanico puede no caber hacia arriba (**a decidir**). |
-| H11, H13 | Hallazgos del documento de origen. | **No están en el repositorio**: no se pudieron revisar (**a decidir**: compartir sus textos). |
+| **H11** | **Espacio disponible.** El ancla y el abanico deben descontar las áreas seguras, el teclado, las hojas inferiores abiertas y los otros botones flotantes. La app registra sus zonas reservadas. | Es la base de las zonas reservadas (RF3-10…RF3-13). Áreas seguras y teclado ya se descuentan (Fase 1); los botones flotantes se declaran como zonas. Las hojas abiertas: **a decidir** si el ancla sube por encima (H11) o sigue sobre la hoja con su columna reservada (HM-07). |
+| **H13** | **Mano.** Ninguna API detecta con qué mano se usa el teléfono: **se pregunta en la bienvenida** y luego **se deduce del lado donde el usuario deja el ancla**. Debe ser **fácil e intuitivo** cambiar de mano para quien usa las dos según el momento. | La mano se deduce del costado (RF3-05, §2); la bienvenida la pregunta (HU3-13, RF3-14); el cambio rápido está **a decidir** con ese criterio (HU3-05). |
 
 ---
 
@@ -51,7 +54,7 @@ La Fase 3 hace que el ancla **se adapte al espacio**: la persona la puede mover 
 - **Modo edición:** mientras dura, arrastrar el ancla la **mueve** en vez de abrir el abanico. Se ve distinto (§3).
 - **Posición válida:** donde el ancla puede quedar: pegada a un costado (izquierdo o derecho), entre el piso y el techo de altura, sin que el ancla, su abanico ni su banda tapen una zona reservada ni salgan de las áreas seguras.
 - **Imán:** al soltar el ancla en modo edición, se va sola a la posición válida más cercana.
-- **Lado:** izquierdo o derecho. El lado y la mano van juntos: el abanico siempre se abre hacia el centro de la pantalla (**a decidir** si se separan).
+- **Lado:** izquierdo o derecho. El lado y la mano van juntos: **la mano se deduce del lado** donde la persona deja el ancla (H13), y el abanico siempre se abre hacia el centro de la pantalla.
 - **Zona reservada:** un rectángulo de la pantalla que la app declara para que el ancla no lo tape (un botón, un logo, un aviso legal).
 - **Orientación:** vertical u horizontal. Cada una recuerda su propia posición.
 
@@ -129,7 +132,7 @@ Entonces el ancla sigue del lado que elegí, en esta orientación
 ```gherkin
 Dado que giro el celular a horizontal
 Entonces el ancla queda en la parte inferior de la pantalla horizontal, en un costado
-Y el abanico cabe completo (o se adapta, a decidir)
+Y el abanico cabe completo (o se adapta, **a decidir**)
 ```
 
 **HU3-08 — Una posición por orientación**
@@ -146,6 +149,15 @@ Entonces usa el mismo lado que en vertical y la altura de inicio
 Dado que tengo el abanico abierto o estoy desplazando
 Cuando giro el celular
 Entonces se cancela (RF-09) y el ancla aparece en su posición de la nueva orientación
+```
+
+**HU3-13 — La bienvenida pregunta la mano (H13)**
+```gherkin
+Dado que abro la app por primera vez
+Entonces la bienvenida me pregunta con qué mano uso el teléfono
+Cuando deslizo hacia la derecha (o la izquierda)
+Entonces el ancla queda de ese lado y el abanico se abre hacia el centro
+Y después la mano se deduce del lado donde yo deje el ancla
 ```
 
 **HU3-10 — La app declara una zona reservada**
@@ -181,10 +193,11 @@ Y la app ve un aviso en la consola de desarrollo
 - **RF3-07** En **horizontal**, el ancla estará en la parte inferior de la orientación actual (D-17), en un costado, respetando las áreas seguras laterales (la muesca de la cámara queda a un costado).
 - **RF3-08** La primera vez en una orientación, el ancla usará el lado de la otra orientación y la altura de inicio (`ANCLA_ALTURA`).
 - **RF3-09** Cuando cambie la orientación, se cancelará la interacción (RF-09) y el ancla se recolocará en la posición de la nueva orientación, sin animación que pase por encima del contenido.
-- **RF3-10** La app podrá declarar **zonas reservadas** (un elemento de la página o un rectángulo). El ancla, el abanico abierto, la banda y los avisos **no las taparán**, con un margen `MARGEN_ZONA`.
+- **RF3-10** (H11) El espacio disponible para el ancla descuenta las **áreas seguras**, el **teclado** y las **zonas reservadas** que declare la app (un elemento de la página o un rectángulo; por ejemplo sus otros botones flotantes). El ancla, el abanico abierto, la banda y los avisos **no las taparán**, con un margen `MARGEN_ZONA`. (Las hojas inferiores abiertas: **a decidir**.)
 - **RF3-11** Cuando una zona cambie (tamaño, posición, aparece o desaparece), el ancla se recolocará **en reposo**; nunca durante una interacción.
 - **RF3-12** Si la posición guardada tapa una zona, el ancla usará la posición válida más cercana **sin borrar la guardada**: si la zona desaparece, vuelve a la suya.
-- **RF3-13** Si no hay ninguna posición válida, el sistema respetará primero las zonas **obligatorias** y podrá tapar las **preferidas** (**a decidir**), y avisará en la consola de desarrollo.
+- **RF3-13** Las zonas tienen **dos niveles** (decidido): **obligatorias**, que nunca se tapan (por ejemplo, el crédito de OpenStreetMap, que la licencia obliga a mostrar), y **preferidas** (por defecto), que se evitan pero pueden taparse si no hay otra posición. Si ni así hay lugar, el sistema avisará en la consola de desarrollo.
+- **RF3-14** (H13) La primera vez, la **bienvenida preguntará con qué mano** se usa el teléfono (solo deslizando: hacia un costado u otro) y pondrá el ancla de ese lado. Después, la mano se deducirá del lado donde la persona deje el ancla.
 - **RNF3-01** Recalcular las posiciones válidas no redibujará React en cada cuadro (RNF-03): se calcula al cambiar las zonas, la orientación o el tamaño, no mientras se arrastra.
 
 ---
@@ -207,7 +220,7 @@ Se reutilizan: `T_ESPERA_DESLIZADOR` (entrar al modo edición), `T_CENTRADO` (im
 // Zonas reservadas (RF3-10…RF3-13)
 useAnchorReservedArea(
   objetivo: RefObject<HTMLElement | null> | { x: number; y: number; width: number; height: number },
-  opciones?: { prioridad?: "obligatoria" | "preferida" },   // por defecto "preferida" (a decidir)
+  opciones?: { prioridad?: "obligatoria" | "preferida" },   // por defecto "preferida" (RF3-13, decidido)
 ): void;
 
 // Mover el ancla (RF3-01): una acción del abanico que la app pone donde quiera
@@ -221,7 +234,7 @@ type AnchorPrefs = { portrait: AnchorPlacement; landscape?: AnchorPlacement };
 <AnchorProvider prefs={…} onPrefsChange={(prefs) => guardar(prefs)} />
 ```
 
-`hand` (Fase 1) se deriva del lado: `side === "left"` ⇒ mano izquierda (**a decidir** si se separan).
+`hand` (Fase 1) se deduce del lado: `side === "left"` ⇒ mano izquierda (H13).
 
 ---
 

@@ -4,6 +4,10 @@ Preguntas que necesito que decidas antes de escribir el diseño y el código. Ca
 
 ---
 
+**Ya decididas** (26-09-2026, pasaron a `spec.md` 0.2): las zonas tienen dos niveles, **obligatorias** (nunca se tapan, como el crédito de OpenStreetMap) y preferidas; **la mano se deduce del costado** donde se deja el ancla (H13); H11 y H13 ya están en la spec.
+
+---
+
 ## 1. ¿Por dónde se entra a "mover el ancla"?
 
 Mantener presionado ya significa "descanso" (D-12), así que no se puede usar. Mover hacia abajo es el joystick.
@@ -27,18 +31,9 @@ Mantener presionado ya significa "descanso" (D-12), así que no se puede usar. M
 - **B — "Lanzar" el ancla**: deslizar rápido y largo hasta el otro costado. *Pro:* muy rápido. *Contra:* choca con el modo experto y con "deslizar más allá" para confirmar las acciones irreversibles (por ejemplo "Eliminar" en el costado).
 - **C — Una opción "Cambiar de mano" en el abanico** (inofensiva). *Pro:* un solo gesto. *Contra:* ocupa un lugar.
 
-**Propuesta:** **A** ahora, y ver en las sesiones con personas si hace falta algo más rápido. **B** no la recomiendo por el choque con las irreversibles.
+**Propuesta:** **A** ahora, y ver en las sesiones con personas si hace falta algo más rápido. **B** no la recomiendo por el choque con las irreversibles. Ojo: H13 pide que sea **fácil e intuitivo** para quien usa las dos manos según el momento; si con A no lo es en la prueba manual, **C** es la siguiente.
 
-## 4. ¿El costado y la mano van siempre juntos?
-
-Hoy, mano derecha = ancla a la derecha y abanico hacia la izquierda.
-
-- **A — Siempre juntos**: el costado define la mano. *Pro:* una sola cosa que entender. *Contra:* no sirve para quien usa la mano derecha con el ancla a la izquierda (raro).
-- **B — Separados**: costado y mano se eligen aparte. *Pro:* flexible. *Contra:* más opciones y combinaciones que probar.
-
-**Propuesta:** **A**.
-
-## 5. Horizontal: ¿qué pasa si el abanico no cabe hacia arriba?
+## 4. Horizontal: ¿qué pasa si el abanico no cabe hacia arriba?
 
 En horizontal hay poco alto (y con teclado, casi nada).
 
@@ -48,30 +43,33 @@ En horizontal hay poco alto (y con teclado, casi nada).
 
 **Propuesta:** **B** primero y, si no alcanza, **A**. Así en vertical nada cambia.
 
-## 6. Horizontal: altura de inicio
+## 5. Horizontal: altura de inicio
 
 La de vertical (44 % del alto) en horizontal queda muy arriba con poco alto.
 
 **Propuesta:** una altura propia para horizontal, **30 %** (`ANCLA_ALTURA_H`), que se ajusta con la prueba manual.
 
-## 7. Zonas reservadas: ¿todas son igual de importantes?
-
-- **A — Dos niveles:** **obligatorias** (nunca se tapan, por ejemplo el crédito de OpenStreetMap, que la licencia obliga a mostrar) y **preferidas** (se evitan, pero si no hay otra posición se pueden tapar). *Pro:* realista. *Contra:* la app tiene que elegir el nivel.
-- **B — Un solo nivel** (nunca se tapa ninguna). *Pro:* simple. *Contra:* si no hay lugar, el ancla no tiene dónde quedar.
-
-**Propuesta:** **A**, con "preferida" por defecto.
-
-## 8. ¿Solo el ancla evita las zonas, o también el abanico abierto?
+## 6. ¿Solo el ancla evita las zonas, o también el abanico abierto?
 
 **Propuesta:** **también el abanico, la banda y los avisos**. Para lograrlo, el ancla se corre (más arriba o más abajo) hasta que todo lo que dibuja queda fuera de las zonas. Así las opciones nunca cambian de lugar por una zona.
 
-## 9. H11 y H13
+## 7. Con una hoja inferior abierta, ¿dónde va el ancla? (H11)
 
-La spec de la Fase 1 cita los hallazgos H12 y H14 del documento de origen, pero **H11 y H13 no están en el repositorio** y no los pude leer.
+H11 dice que el ancla debe descontar las hojas inferiores abiertas. Hoy (HM-07, Fase 1) el ancla queda **encima** de la hoja y la hoja le **reserva su columna** (la franja del lado del ancla), así la X de la hoja no queda tapada.
 
-**Propuesta:** que me compartas su texto (o me digas dónde está el documento) para incluirlos. Mientras tanto, la spec sigue sin ellos.
+- **A — Seguir como hoy (HM-07).** *Pro:* ya está probado en el Nubia y en las pruebas automáticas; el ancla no salta. *Contra:* la hoja pierde el ancho de esa columna.
+- **B — El ancla sube por encima de la hoja** (la hoja cuenta como zona). *Pro:* la hoja usa todo el ancho. *Contra:* el ancla cambia de altura cada vez que se abre una hoja, y puede quedar lejos del pulgar si la hoja es alta.
 
-## 10. El control deslizante de altura de la demo
+**Propuesta:** **A**: cumple H11 (la hoja se descuenta: su columna es del ancla y nada se tapa) sin que el ancla salte.
+
+## 8. ¿Cómo pregunta la bienvenida la mano? (H13)
+
+- **A — Al empezar, el ancla aparece en el centro de abajo y dice "¿Con qué mano? Desliza hacia ese lado".** Deslizar la lleva a ese costado. *Pro:* se hace deslizando (D-15) y ya enseña a mover el ancla. *Contra:* una pantalla más al inicio.
+- **B — Dos botones "Derecha / Izquierda".** *Pro:* muy claro. *Contra:* pide un toque (aunque D-15 permite el toque como alternativa si también se puede deslizar).
+
+**Propuesta:** **A**, con **B** como alternativa visible para quien prefiera tocar.
+
+## 9. El control deslizante de altura de la demo
 
 Hoy la altura del ancla se ajusta en Ajustes con un deslizador (HM-01).
 
