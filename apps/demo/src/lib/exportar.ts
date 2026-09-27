@@ -6,6 +6,13 @@ import type { MetricEvent } from "@boton-ancla/core";
 
 export const VERSION_DEMO = "boton-ancla fase-1 · spec v0.7";
 
+/** HM-18: cada forma de hacer zoom en el mapa (las dos primeras son del ancla; las demás, del mapa). */
+export type FormaZoom = "capa" | "deslizador" | "doble_toque" | "doble_toque_arrastre" | "pellizco";
+export const FORMAS_ZOOM: FormaZoom[] = ["capa", "deslizador", "doble_toque", "doble_toque_arrastre", "pellizco"];
+
+/** Eventos que se registran: los del ancla (spec §9) y los de la demo (HM-18). */
+export type EventoMetrica = MetricEvent | { type: "map_zoom"; forma: FormaZoom };
+
 /** Un evento del ancla con el contexto de la demo en ese momento. */
 export type RegistroMetrica = {
   /** Fecha y hora (ms desde 1970). */
@@ -14,7 +21,7 @@ export type RegistroMetrica = {
   pantalla: string;
   /** Opciones del abanico en esa pantalla, contando "Atrás". */
   opciones: number;
-  evento: MetricEvent;
+  evento: EventoMetrica;
 };
 
 export type DatosSesion = {
@@ -45,7 +52,15 @@ export type Exportacion = {
   mano: "derecha" | "izquierda";
   posicion: { anclaAltura: number; lado: "derecha" | "izquierda" };
   observaciones: string;
-  resumen: { ejecuciones: number; cancelaciones: number; bloqueos: number; deshacer: number; descansos: number };
+  resumen: {
+    ejecuciones: number;
+    cancelaciones: number;
+    bloqueos: number;
+    deshacer: number;
+    descansos: number;
+    /** HM-18: cuántas veces se usó cada forma de zoom. */
+    zoom: Record<FormaZoom, number>;
+  };
   /** Una fila por acción ejecutada, con los campos de spec §9. */
   acciones: FilaAccion[];
   /** Todos los eventos crudos, por si hace falta reinterpretarlos. */
@@ -74,7 +89,10 @@ export function construirExportacion(registros: RegistroMetrica[], sesion: Datos
       errores = 0;
     }
   }
-  const cuenta = (tipo: MetricEvent["type"]) => registros.filter((r) => r.evento.type === tipo).length;
+  const cuenta = (tipo: EventoMetrica["type"]) => registros.filter((r) => r.evento.type === tipo).length;
+  const zoom = Object.fromEntries(
+    FORMAS_ZOOM.map((f) => [f, registros.filter((r) => r.evento.type === "map_zoom" && r.evento.forma === f).length]),
+  ) as Record<FormaZoom, number>;
   return {
     version: VERSION_DEMO,
     exportado: new Date(ahora).toISOString(),
@@ -88,6 +106,7 @@ export function construirExportacion(registros: RegistroMetrica[], sesion: Datos
       bloqueos: cuenta("sensitive_blocked"),
       deshacer: cuenta("undo"),
       descansos: cuenta("rest_enter"),
+      zoom,
     },
     acciones,
     eventos: registros,

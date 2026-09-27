@@ -3,7 +3,7 @@
 import { useAnchorPan, type ObjetivoApuntable } from "@boton-ancla/react";
 import { useCallback, useEffect, useRef } from "react";
 import { NEGOCIOS, NEGOCIO_DEMO } from "@/lib/datos";
-import { registrarMapa } from "@/lib/mapa-control";
+import { PASO_ZOOM, registrarMapa } from "@/lib/mapa-control";
 import { useDemo, type Fondo } from "@/lib/demo-store";
 import { ANCHOR_ICONS } from "@/lib/icons/semantic-icons";
 import { FONDO_FOTO } from "@/lib/ruta";
@@ -21,6 +21,14 @@ const UMBRAL_ARRASTRE = 6;
 /** HM-12a: zoom del mapa (Zoom del abanico y zoom automático sobre un grupo). */
 const ZOOM_MIN = 0.6;
 const ZOOM_MAX = 4;
+/** HM-18: zoom directo como Google Maps. Un toque corto (sin arrastre) arma el doble toque. */
+const TOQUE_CORTO_MS = 250;
+const DOBLE_TOQUE_MS = 300;
+const DOBLE_TOQUE_PX = 40;
+/** Doble toque y deslizar: 150 px de pulgar = ×e (arriba acerca, abajo aleja). */
+const PX_POR_ZOOM = 150;
+
+type Punto = { x: number; y: number };
 
 type Colores = { suelo: string; manzana: string; calle: string; avenida: string; parque: string; rio: string };
 
@@ -30,12 +38,17 @@ const COLORES: Record<Exclude<Fondo, "foto">, Colores> = {
 };
 
 export function MapaFalso() {
-  const { prefs, abrirHoja, recentrarMapa } = useDemo();
+  const { prefs, abrirHoja, recentrarMapa, registrarMetrica } = useDemo();
   const capa = useRef<HTMLDivElement>(null);
   const offset = useRef({ x: 0, y: 0 });
   const zoom = useRef(1);
-  const arrastre = useRef<{ id: number; x0: number; y0: number; ox: number; oy: number; moviendo: boolean } | null>(null);
+  const arrastre = useRef<{ id: number; x0: number; y0: number; ox: number; oy: number; moviendo: boolean; t0: number; enPin: boolean } | null>(null);
   const arrastroHaceNada = useRef(false);
+  // HM-18: dedos apoyados, pellizco, último toque corto y doble toque en curso.
+  const dedos = useRef(new Map<number, Punto>());
+  const pellizco = useRef<{ d0: number; z0: number; mundo: Punto; cambio: boolean } | null>(null);
+  const ultimoToque = useRef<{ t: number; p: Punto } | null>(null);
+  const dobleToque = useRef<{ id: number; y0: number; z0: number; p: Punto; mundo: Punto; movio: boolean } | null>(null);
 
   const aplicar = useCallback((x: number, y: number) => {
     const el = capa.current;
@@ -72,6 +85,19 @@ export function MapaFalso() {
     },
     [aplicar],
   );
+  /** HM-18: pone el zoom en `z` dejando el punto del mapa `mundo` bajo el punto de pantalla `c`. */
+  const fijarZoom = useCallback(
+    (z: number, c: Punto, mundo: Punto) => {
+      const cont = capa.current?.parentElement;
+      if (!cont) return;
+      const minimo = Math.max(ZOOM_MIN, cont.clientWidth / LADO, cont.clientHeight / LADO);
+      zoom.current = Math.min(ZOOM_MAX, Math.max(minimo, z));
+      aplicar(c.x - mundo.x * zoom.current, c.y - mundo.y * zoom.current);
+    },
+    [aplicar],
+  );
+  const aMundo = (c: Punto): Punto => ({ x: (c.x - offset.current.x) / zoom.current, y: (c.y - offset.current.y) / zoom.current });
+
   useEffect(() => {
     registrarMapa({ acercar, nivel: () => zoom.current });
     return () => registrarMapa(null);
@@ -110,13 +136,69 @@ export function MapaFalso() {
   // Centrar al montar y cada vez que se pide "Mi ubicación".
   useEffect(() => centrar(), [centrar, recentrarMapa]);
 
+  const capturar = (e: React.PointerEvent<HTMLDivElement>) => {
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Con eventos sintéticos (Playwright en WebKit) puede fallar; el gesto funciona igual.
+    }
+  };
+
   const alBajar = (e: React.PointerEvent<HTMLDivElement>) => {
+    const p = { x: e.clientX, y: e.clientY };
+    dedos.current.set(e.pointerId, p);
+
+    // HM-18: dos dedos = pellizco (reemplaza al arrastre y al doble toque).
+    if (dedos.current.size === 2) {
+      const [a, b] = [...dedos.current.values()];
+      const medio = { x: (a!.x + b!.x) / 2, y: (a!.y + b!.y) / 2 };
+      pellizco.current = { d0: Math.hypot(a!.x - b!.x, a!.y - b!.y), z0: zoom.current, mundo: aMundo(medio), cambio: false };
+      arrastre.current = null;
+      dobleToque.current = null;
+      ultimoToque.current = null;
+      capturar(e);
+      return;
+    }
+    if (dedos.current.size > 2) return;
+
+    // HM-18: segundo toque cerca y enseguida de un toque corto = doble toque.
+    const enPin = e.target instanceof Element && e.target.closest("[data-pin]") !== null;
+    const previo = ultimoToque.current;
+    if (!enPin && previo && performance.now() - previo.t < DOBLE_TOQUE_MS && Math.hypot(p.x - previo.p.x, p.y - previo.p.y) < DOBLE_TOQUE_PX) {
+      dobleToque.current = { id: e.pointerId, y0: p.y, z0: zoom.current, p, mundo: aMundo(p), movio: false };
+      ultimoToque.current = null;
+      arrastroHaceNada.current = true;
+      capturar(e);
+      return;
+    }
+
     if (arrastre.current) return; // un segundo dedo no inicia otro arrastre
-    arrastre.current = { id: e.pointerId, x0: e.clientX, y0: e.clientY, ox: offset.current.x, oy: offset.current.y, moviendo: false };
+    arrastre.current = { id: e.pointerId, x0: p.x, y0: p.y, ox: offset.current.x, oy: offset.current.y, moviendo: false, t0: performance.now(), enPin };
     arrastroHaceNada.current = false;
   };
 
   const alMover = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dedos.current.has(e.pointerId)) return;
+    dedos.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    const pz = pellizco.current;
+    if (pz && dedos.current.size >= 2) {
+      const [a, b] = [...dedos.current.values()];
+      const d = Math.hypot(a!.x - b!.x, a!.y - b!.y);
+      const medio = { x: (a!.x + b!.x) / 2, y: (a!.y + b!.y) / 2 };
+      fijarZoom((pz.z0 * d) / Math.max(1, pz.d0), medio, pz.mundo);
+      if (Math.abs(d - pz.d0) > UMBRAL_ARRASTRE) pz.cambio = true;
+      return;
+    }
+
+    const dt = dobleToque.current;
+    if (dt && dt.id === e.pointerId) {
+      const dy = e.clientY - dt.y0;
+      if (Math.abs(dy) > UMBRAL_ARRASTRE) dt.movio = true;
+      if (dt.movio) fijarZoom(dt.z0 * Math.exp(-dy / PX_POR_ZOOM), dt.p, dt.mundo); // arriba (dy < 0) acerca
+      return;
+    }
+
     const a = arrastre.current;
     if (!a || a.id !== e.pointerId) return;
     const dx = e.clientX - a.x0;
@@ -134,10 +216,38 @@ export function MapaFalso() {
   };
 
   const alSoltar = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dedos.current.delete(e.pointerId)) return;
+    const cancelado = e.type === "pointercancel";
+
+    const pz = pellizco.current;
+    if (pz) {
+      if (dedos.current.size < 2) {
+        if (pz.cambio && !cancelado) registrarMetrica({ type: "map_zoom", forma: "pellizco" });
+        pellizco.current = null;
+        arrastroHaceNada.current = true; // el dedo que queda no toca un pin
+      }
+      return;
+    }
+
+    const dt = dobleToque.current;
+    if (dt && dt.id === e.pointerId) {
+      dobleToque.current = null;
+      if (cancelado) return;
+      if (dt.movio) registrarMetrica({ type: "map_zoom", forma: "doble_toque_arrastre" });
+      else {
+        acercar(PASO_ZOOM, dt.p); // doble toque sin moverse: acerca un nivel, como Google Maps
+        registrarMetrica({ type: "map_zoom", forma: "doble_toque" });
+      }
+      return;
+    }
+
     const a = arrastre.current;
     if (!a || a.id !== e.pointerId) return;
     arrastroHaceNada.current = a.moviendo;
     arrastre.current = null;
+    // Un toque corto fuera de un pin puede ser el primero de un doble toque.
+    const corto = !a.moviendo && !a.enPin && !cancelado && performance.now() - a.t0 < TOQUE_CORTO_MS;
+    ultimoToque.current = corto ? { t: performance.now(), p: { x: a.x0, y: a.y0 } } : null;
   };
 
   const esFoto = prefs.fondo === "foto";
@@ -169,6 +279,7 @@ export function MapaFalso() {
           <button
             key={n.id}
             type="button"
+            data-pin
             aria-label={n.nombre}
             onClick={() => {
               if (arrastroHaceNada.current) return; // fue un arrastre, no un toque

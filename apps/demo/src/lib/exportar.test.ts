@@ -44,7 +44,20 @@ describe("construirExportacion", () => {
   });
 
   it("resumen por tipo de evento", () => {
-    expect(x.resumen).toEqual({ ejecuciones: 2, cancelaciones: 2, bloqueos: 1, deshacer: 1, descansos: 1 });
+    expect(x.resumen).toEqual({
+      ejecuciones: 2,
+      cancelaciones: 2,
+      bloqueos: 1,
+      deshacer: 1,
+      descansos: 1,
+      zoom: { capa: 0, deslizador: 0, doble_toque: 0, doble_toque_arrastre: 0, pellizco: 0 },
+    });
+  });
+
+  it("HM-18: cuenta cada forma de zoom", () => {
+    const r = (forma: "capa" | "doble_toque" | "pellizco") => ({ t: 1, pantalla: "mapa", opciones: 5, evento: { type: "map_zoom" as const, forma } });
+    const z = construirExportacion([r("capa"), r("doble_toque"), r("doble_toque"), r("pellizco")], SESION);
+    expect(z.resumen.zoom).toEqual({ capa: 1, deslizador: 0, doble_toque: 2, doble_toque_arrastre: 0, pellizco: 1 });
   });
 
   it("incluye todos los eventos crudos", () => {

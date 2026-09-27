@@ -1,9 +1,9 @@
 "use client";
 
-import { DEFAULT_PARAMS, type AnchorScreen, type Hand, type MetricEvent } from "@boton-ancla/core";
+import { DEFAULT_PARAMS, type AnchorScreen, type Hand } from "@boton-ancla/core";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FAVORITOS_INICIALES, PRODUCTOS_INICIALES, type Producto } from "./datos";
-import type { RegistroMetrica } from "./exportar";
+import type { EventoMetrica, RegistroMetrica } from "./exportar";
 
 // Estado simulado de la demo (design.md §8).
 // - Preferencias: se guardan en localStorage (sobreviven a recargar).
@@ -109,7 +109,7 @@ type Demo = {
 
   /** Métricas locales (spec §9, RNF-08): solo en este dispositivo. */
   metricas: RegistroMetrica[];
-  registrarMetrica: (evento: MetricEvent) => void;
+  registrarMetrica: (evento: EventoMetrica) => void;
   borrarMetricas: () => void;
 };
 
@@ -220,16 +220,18 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     temporizadorAviso.current = setTimeout(() => setAviso(null), 2500);
   }, []);
 
-  const registrarMetrica = useCallback((evento: MetricEvent) => {
+  const registrarMetrica = useCallback((evento: EventoMetrica) => {
     const p = pantallaRef.current;
-    const registro: RegistroMetrica = {
+    const registro = (e: EventoMetrica): RegistroMetrica => ({
       t: Date.now(),
       pantalla: p?.id ?? "(ninguna)",
       opciones: p ? p.actions.length + (p.back ? 1 : 0) : 0,
-      evento,
-    };
+      evento: e,
+    });
+    // HM-18: el deslizador de Zoom del ancla también es una forma de zoom.
+    const extra = evento.type === "slider_start" && evento.id === "zoom" ? [registro({ type: "map_zoom", forma: "deslizador" })] : [];
     setMetricas((m) => {
-      const nuevas = [...m, registro].slice(-MAX_METRICAS);
+      const nuevas = [...m, registro(evento), ...extra].slice(-MAX_METRICAS);
       guardarMetricas(nuevas);
       return nuevas;
     });

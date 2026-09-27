@@ -327,10 +327,12 @@ function HojaGrupo({ ids, cerrar }: { ids: string[]; cerrar: () => void }) {
  * el deslizador (atajo de expertos).
  */
 function HojaZoom({ cerrar }: { cerrar: () => void }) {
+  const { registrarMetrica } = useDemo();
   const [nivel, setNivel] = useState(nivelMapa);
   const cambiar = (factor: number) => {
     acercarMapa(factor);
     setNivel(nivelMapa());
+    registrarMetrica({ type: "map_zoom", forma: "capa" }); // HM-18
   };
   const acciones: AnchorAction[] = [
     { id: "acercar", label: "Acercar", icon: ANCHOR_ICONS.zoom, priority: 1, onSelect: () => cambiar(PASO_ZOOM) },

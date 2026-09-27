@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { EspacioBarra } from "@/components/barra-demo";
 import { usePantallaDemo } from "@/components/pantallas-conectadas";
 import { useDemo } from "@/lib/demo-store";
-import { construirExportacion, describirDispositivo, nombreArchivo, type RegistroMetrica } from "@/lib/exportar";
+import { FORMAS_ZOOM, type FormaZoom, construirExportacion, describirDispositivo, nombreArchivo, type RegistroMetrica } from "@/lib/exportar";
 
 // T-25: métricas locales (spec §9, RNF-08). Nada sale a la red: se guardan en este
 // dispositivo y se exportan como archivo. Por HTTP en la red local no hay portapapeles
@@ -59,6 +59,15 @@ export default function PaginaMetricas() {
         <Cifra etiqueta="Deshacer" valor={r.deshacer} />
         <Cifra etiqueta="Descansos" valor={r.descansos} />
         <Cifra etiqueta="Eventos" valor={metricas.length} />
+      </section>
+
+      <section className="flex flex-col gap-2" aria-label="Zoom" data-testid="resumen-zoom">
+        <h2 className="font-heading text-title-2 font-semibold text-text">Zoom (HM-18)</h2>
+        <div className="grid grid-cols-3 gap-2">
+          {FORMAS_ZOOM.map((f) => (
+            <Cifra key={f} etiqueta={NOMBRE_FORMA[f]} valor={r.zoom[f]} />
+          ))}
+        </div>
       </section>
 
       <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4">
@@ -126,6 +135,15 @@ export default function PaginaMetricas() {
   );
 }
 
+/** HM-18: nombre de cada forma de zoom en la pantalla. */
+const NOMBRE_FORMA: Record<FormaZoom, string> = {
+  capa: "Acercar / Alejar",
+  deslizador: "Deslizador",
+  doble_toque: "Doble toque",
+  doble_toque_arrastre: "Doble toque y deslizar",
+  pellizco: "Pellizco",
+};
+
 function detalle(m: RegistroMetrica): string {
   const e = m.evento;
   switch (e.type) {
@@ -157,6 +175,8 @@ function detalle(m: RegistroMetrica): string {
       return `elegido ${e.id}`;
     case "group_open":
       return `grupo de ${e.n}`;
+    case "map_zoom":
+      return `zoom · ${NOMBRE_FORMA[e.forma]}`;
     case "auto_zoom":
       return `zoom automático · grupo de ${e.n}`;
   }
