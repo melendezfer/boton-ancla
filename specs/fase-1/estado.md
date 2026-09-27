@@ -28,10 +28,10 @@ Probada en el celular el 27-09-2026 ("está bien"). 12 tareas (`specs/fase-3/tas
 
 | # | Qué | Quién | Dónde |
 |---|---|---|---|
-| 2 | **Respuestas de las 2 personas sobre HM-18**: pedirles que prueben el zoom directo (doble toque; doble toque, dejar el dedo y deslizar) y contar si ahora el zoom se siente "a la mano". | Tú | Demo publicada; Métricas → "Zoom" cuenta cada forma |
-| 3 | **Sesión 3 de 3** (T-27), con el guion y los mensajes de siempre; exportar su JSON. | Tú | `guion-sesiones.md`, `compartir-demo.md`, `pruebas-manuales.md` |
-| 4 | **Documento de integración con RUTEANDO**: cómo instalar el componente, qué pantallas registrar, qué zonas declarar (crédito de OpenStreetMap obligatorio, logo, botones), el zoom de un dedo para Leaflet y qué reemplaza (la pila de botones, D-06). Todavía no existe. | Claude, con tu visto bueno | por crear (`specs/integracion-ruteando.md`) |
-| 5 | Con los resultados de las sesiones: decidir si hace falta "Cambiar de mano" en el abanico (DF3-03) y los otros pendientes de la Fase 3 (arriba). | Juntos | `specs/fase-3/` |
+| 1 | **Respuestas de las 2 personas sobre HM-18**: pedirles que prueben el zoom directo (doble toque; doble toque, dejar el dedo y deslizar) y contar si ahora el zoom se siente "a la mano". | Tú | Demo publicada; Métricas → "Zoom" cuenta cada forma |
+| 2 | **Sesión 3 de 3** (T-27), con el guion y los mensajes de siempre; exportar su JSON. | Tú | `guion-sesiones.md`, `compartir-demo.md`, `pruebas-manuales.md` |
+| 3 | **Documento de integración con RUTEANDO**: cómo instalar el componente, qué pantallas registrar, qué zonas declarar (crédito de OpenStreetMap obligatorio, logo, botones), el zoom de un dedo para Leaflet y qué reemplaza (la pila de botones, D-06). Todavía no existe. | Claude, con tu visto bueno | por crear (`specs/integracion-ruteando.md`) |
+| 4 | Con los resultados de las sesiones: decidir si hace falta "Cambiar de mano" en el abanico (DF3-03) y los otros pendientes de la Fase 3 (arriba). | Juntos | `specs/fase-3/` |
 
 **Para retomar con Claude:** *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. Las personas dijeron del zoom: … / Sesión 3: … / Sigue con …"*.
 
