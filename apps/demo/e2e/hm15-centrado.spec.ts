@@ -11,7 +11,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 function conPreferencias(page: Page, prefs: Record<string, unknown>) {
-  return page.addInitScript((p) => window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify(p)), prefs);
+  // HM-16: la espera es del imán normal (el fuerte engancha sin esperar).
+  return page.addInitScript((p) => window.localStorage.setItem("boton-ancla-demo:v1:prefs", JSON.stringify(p)), { imanFuerte: false, ...prefs });
 }
 
 /** Mapa con Arepas Doña Rosa corrida ~16 px de la mira (dentro del imán). Devuelve cuánto le falta al pin. */
