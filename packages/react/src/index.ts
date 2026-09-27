@@ -4,6 +4,7 @@ export {
   useAnchorLayer,
   useAnchorReserva,
   useAnchorScreen,
+  useAnchorMove,
   useAnchorPan,
   useAnchorReservedArea,
   useAnchorScroll,

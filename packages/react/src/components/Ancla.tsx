@@ -11,6 +11,11 @@ import {
   ID_OCULTAR_TECLADO,
   mismoApuntado,
   colocacionPara,
+  imanColocacion,
+  posicionesValidas,
+  xDelLado,
+  yDeAltura,
+  type Point,
   pantallaDeCapa,
   resolverColocacion,
   type Entorno,
@@ -54,6 +59,9 @@ export type PropsAncla = {
   cambiarColocacion: (nueva: PrefsAncla) => void;
   /** Fase 3 (RF3-10): zonas reservadas que declaró la app. */
   zonas: RegistroZonas;
+  /** Fase 3 (DF3-01): el ancla deja aquí cómo entrar al modo edición (para useAnchorMove). */
+  entrarAEditar: RefObject<() => void>;
+  alEditando: (editando: boolean) => void;
   theme: AnchorTheme;
   icons: AnchorIcons;
   params: Params;
@@ -91,6 +99,8 @@ export function Ancla({
   orientacion,
   cambiarColocacion,
   zonas,
+  entrarAEditar,
+  alEditando,
   theme,
   icons,
   params,
@@ -169,6 +179,19 @@ export function Ancla({
       setAviso({ tipo: "bloqueado", texto: "Desliza más allá para confirmar", hasta: performance.now() + DURACION_AVISO_MS }),
     alDeshacer: deshacer,
     alCerrarCapa: () => capas.cerrarArriba("ancla"),
+    // Fase 3 (RF3-03, RF3-05): soltó el ancla en modo edición: imán, guardar y métricas.
+    alSoltar: (punto) => {
+      if (!entorno) return;
+      const zs = leerZonas();
+      const c =
+        imanColocacion(punto, entorno, posicionesValidas(entorno, zs, params)) ??
+        imanColocacion(punto, entorno, posicionesValidas(entorno, zs, params, { soloObligatorias: true }));
+      if (!c) return;
+      desdeIman.current = punto;
+      cambiarColocacion({ ...colocacion, [orientacion]: c });
+      onEventRef.current?.({ type: "anchor_move", lado: c.lado, altura: c.altura, orientacion });
+      if (c.lado !== colocacionActual.lado) onEventRef.current?.({ type: "hand_change", lado: c.lado });
+    },
     // RF-21: soltó frenado sobre algo en la mira: la app abre su capa. RF-23: en una lista, el elemento en foco.
     alElegir: (apuntado) => {
       const lista = obtenerApuntarLista();
@@ -322,12 +345,100 @@ export function Ancla({
           alDeshacer: () => efectosRef.current.alDeshacer?.(),
           alCerrarCapa: () => efectosRef.current.alCerrarCapa?.(),
           alElegir: (a) => efectosRef.current.alElegir?.(a),
+          alSoltar: (p) => efectosRef.current.alSoltar?.(p),
         },
       }),
   );
   useEffect(() => () => controlador.destruir(), [controlador]);
 
   const velo = useVelo(estado);
+
+  // --- Fase 3 (T3-08): modo edición -------------------------------------------------------------
+  const editando = estado.tipo === "editando";
+  const refSilueta = useRef<HTMLDivElement>(null);
+  const desdeIman = useRef<Point | null>(null);
+  const alturaInicio = orientacion === "vertical" ? params.ANCLA_ALTURA : params.ANCLA_ALTURA_H;
+  // Los tramos válidos de los dos costados (RF3-02), calculados una vez al entrar (RNF3-01).
+  const validasEdicion = useMemo(
+    () => (editando && entorno ? posicionesValidas(entorno, leerZonas(), params) : null),
+    // versionZonas: una zona cambió.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [editando, entorno, leerZonas, versionZonas, params],
+  );
+  useEffect(() => alEditando(editando), [editando, alEditando]);
+  // useAnchorMove: el botón de la app entra al modo edición (fila 55).
+  useLayoutEffect(() => {
+    entrarAEditar.current = () => {
+      const intentar = () => {
+        const g = geoRef.current;
+        if (g && machine.getState().tipo === "reposo") controlador.enviar({ tipo: "EDITAR", t: performance.now(), geo: g });
+      };
+      // Si lo llama la opción "Mover ancla" (soltar sin esperar), el ancla todavía está
+      // "ejecutando": se espera a que termine (vuelve a reposo en el mismo turno).
+      if (machine.getState().tipo === "reposo") intentar();
+      else queueMicrotask(intentar);
+    };
+  });
+  // Mientras se arrastra, el ancla y la silueta siguen al dedo sin redibujar React (RNF-03); al
+  // cruzar la altura de inicio, un clic suave (RF3-16).
+  useEffect(() => {
+    if (!editando || !entorno) return;
+    const yInicio = yDeAltura(alturaInicio, entorno);
+    const mitad = (entorno.viewport.x + entorno.viewport.width) / 2;
+    let yAntes: number | null = null;
+    let clics = 0;
+    return machine.subscribe(() => {
+      const s = machine.getState();
+      if (s.tipo !== "editando" || !s.ultimo) return;
+      const b = refBoton.current;
+      if (b) {
+        b.style.left = `${s.ultimo.x}px`;
+        b.style.top = `${s.ultimo.y}px`;
+      }
+      const sil = refSilueta.current;
+      if (sil) {
+        sil.style.left = `${s.ultimo.x}px`;
+        sil.style.top = `${s.ultimo.y}px`;
+        sil.dataset.lado = s.ultimo.x < mitad ? "left" : "right";
+      }
+      if (yAntes !== null && Math.sign(yAntes - yInicio) !== Math.sign(s.ultimo.y - yInicio)) {
+        try {
+          navigator.vibrate?.(params.VIB_MS);
+        } catch {}
+        if (refRaiz.current) refRaiz.current.dataset.clicInicio = String(++clics);
+      }
+      yAntes = s.ultimo.y;
+    });
+  }, [editando, entorno, alturaInicio, machine, params.VIB_MS]);
+  // Al salir del modo edición, el ancla va a su lugar: con imán animado (T_CENTRADO) si se soltó,
+  // o directo si se canceló. React no reescribe left/top si no cambiaron: se ponen a mano.
+  const eraEditando = useRef(false);
+  useLayoutEffect(() => {
+    const b = refBoton.current;
+    if (estado.tipo === "editando") {
+      eraEditando.current = true;
+      return;
+    }
+    if (!eraEditando.current || !b || !geo) return;
+    eraEditando.current = false;
+    const hasta = geo.centro;
+    const desde = desdeIman.current;
+    desdeIman.current = null;
+    const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const t = reducido ? 0 : params.T_CENTRADO;
+    if (desde && t > 0) {
+      b.style.transition = "none";
+      b.style.left = `${desde.x}px`;
+      b.style.top = `${desde.y}px`;
+      void b.offsetWidth; // aplica la posición de partida antes de animar
+      b.style.transition = `left ${t}ms ease-out, top ${t}ms ease-out`;
+      window.setTimeout(() => {
+        b.style.transition = "";
+      }, t + 50);
+    }
+    b.style.left = `${hasta.x}px`;
+    b.style.top = `${hasta.y}px`;
+  });
 
   // HM-09: bucle de desplazamiento y punto de la guía (sin redibujar React en cada cuadro).
   const puntoGuia = useRef<HTMLDivElement>(null);
@@ -452,6 +563,7 @@ export function Ancla({
     <div
       ref={refRaiz}
       className="ba-raiz"
+      data-editando={editando || undefined}
       style={variablesCss(theme, params)}
       data-estado={estado.tipo}
       data-mano={geoDibujo.hand}
@@ -473,6 +585,46 @@ export function Ancla({
           }}
         />
       )}
+      {editando && validasEdicion && entorno && (
+        // RF3-02: dónde puede quedar el ancla (los dos costados), la altura de inicio y la silueta del abanico.
+        <>
+          {(["right", "left"] as const).flatMap((lado) =>
+            validasEdicion[lado].map((t, i) => (
+              <div
+                key={`${lado}-${i}`}
+                className="ba-tramo-valido"
+                data-testid={`tramo-valido-${lado}`}
+                aria-hidden
+                style={{ left: xDelLado(lado, entorno, params), top: t.desde, height: Math.max(2, t.hasta - t.desde) }}
+              />
+            )),
+          )}
+          {(["right", "left"] as const).map((lado) => (
+            <div
+              key={`inicio-${lado}`}
+              className="ba-linea-inicio"
+              data-testid={`linea-inicio-${lado}`}
+              aria-hidden
+              style={{ left: xDelLado(lado, entorno, params), top: yDeAltura(alturaInicio, entorno) }}
+            />
+          ))}
+          <div
+            ref={refSilueta}
+            className="ba-silueta"
+            data-testid="silueta"
+            data-lado={geoDibujo.hand}
+            aria-hidden
+            style={
+              {
+                left: estado.ultimo?.x ?? geoDibujo.centro.x,
+                top: estado.ultimo?.y ?? geoDibujo.centro.y,
+                "--ba-radio-silueta": `${radioDe(geoDibujo.centro, geoDibujo.slots, params) + (params.D_OPCION * params.ESCALA_PRESEL) / 2}px`,
+              } as CSSProperties
+            }
+          />
+        </>
+      )}
+
       {abierto && (
         <Abanico
           estado={estado}
@@ -804,7 +956,8 @@ function Banda({
   );
 }
 
-const ESTADOS_CON_VELO: readonly AnchorState["tipo"][] = ["abierto_toque", "confirmacion_toque", "abierto_teclado"];
+// Fase 3 (RF3-02): en modo edición el contenido tampoco recibe los toques.
+const ESTADOS_CON_VELO: readonly AnchorState["tipo"][] = ["abierto_toque", "confirmacion_toque", "abierto_teclado", "editando"];
 /** Cuánto sigue el velo después de cerrar: cubre el click que llega tras el pointerup (L-06). */
 const VELO_EXTRA_MS = 400;
 
@@ -836,6 +989,8 @@ function useVelo(estado: AnchorState) {
 function claseAncla(estado: AnchorState): string {
   if (estado.tipo === "reposo") return "";
   if (estado.tipo === "descanso") return " ba-ancla--descanso";
+  // Fase 3: en modo edición, activa y "levantada" (sin dedo, invita a arrastrarla).
+  if (estado.tipo === "editando") return estado.pointerId === undefined ? " ba-ancla--activa ba-ancla--editando" : " ba-ancla--activa";
   return " ba-ancla--activa";
 }
 

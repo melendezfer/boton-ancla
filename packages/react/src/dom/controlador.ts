@@ -36,6 +36,8 @@ export type EfectosAncla = {
   alCerrarCapa?: () => void;
   /** RF-21: soltó frenado sobre algo en la mira: abrir su capa. */
   alElegir?: (apuntado: Apuntado) => void;
+  /** Fase 3 (RF3-03): soltó el ancla en modo edición: imán y guardar. */
+  alSoltar?: (punto: Point) => void;
 };
 
 type Opciones = {
@@ -218,6 +220,10 @@ export class Controlador {
         this.enviar({ tipo: "COMPLETADO" });
         break;
       case "cancelado":
+        this.enviar({ tipo: "COMPLETADO" });
+        break;
+      case "soltado":
+        this.o.efectos.alSoltar?.(next.punto);
         this.enviar({ tipo: "COMPLETADO" });
         break;
       case "elegido":

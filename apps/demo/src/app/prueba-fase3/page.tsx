@@ -1,7 +1,7 @@
 "use client";
 
 import type { AnchorScreen } from "@boton-ancla/core";
-import { useAnchorReservedArea, useAnchorScreen } from "@boton-ancla/react";
+import { useAnchorMove, useAnchorReservedArea, useAnchorScreen } from "@boton-ancla/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { EspacioBarra } from "@/components/barra-demo";
@@ -51,6 +51,7 @@ function Zona({ z, i }: { z: ZonaPrueba; i: number }) {
 export default function PruebaFase3() {
   const router = useRouter();
   const { avisar } = useDemo();
+  const { mover, editando } = useAnchorMove();
   const [zonas, setZonas] = useState<ZonaPrueba[]>([]);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- la dirección solo existe en el navegador
@@ -62,7 +63,11 @@ export default function PruebaFase3() {
     sectionIcon: ANCHOR_ICONS.sectionDiagnostics,
     sectionLabel: "Prueba Fase 3",
     back: { onSelect: () => router.back() },
-    actions: [{ id: "aviso", label: "Aviso", icon: ANCHOR_ICONS.share, priority: 1, onSelect: () => avisar("Aviso de prueba") }],
+    actions: [
+      { id: "aviso", label: "Aviso", icon: ANCHOR_ICONS.share, priority: 1, onSelect: () => avisar("Aviso de prueba") },
+      // Fase 3 (DF3-01): quedarse quieto encima la engancha al dedo; soltar sin esperar = el botón.
+      { id: "mover-ancla", label: "Mover ancla", icon: ANCHOR_ICONS.moveAnchor, priority: 2, moveAnchor: true, onSelect: mover },
+    ],
   };
   useAnchorScreen(pantalla);
   useRegistrarPantalla(pantalla);
@@ -75,6 +80,14 @@ export default function PruebaFase3() {
         Zonas reservadas (recuadros punteados): el ancla, su abanico, la banda y los avisos no deben taparlas. Las obligatorias nunca; las
         preferidas, solo si no hay otro lugar.
       </p>
+      <button
+        type="button"
+        data-testid="boton-mover-ancla"
+        onClick={mover}
+        className="flex h-btn items-center justify-center rounded-input bg-terracota font-sans text-button font-semibold text-white"
+      >
+        {editando ? "Toca el ancla y arrástrala" : "Mover el ancla"}
+      </button>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"

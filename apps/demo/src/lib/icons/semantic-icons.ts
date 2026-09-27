@@ -4,6 +4,7 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  ArrowsOutCardinal,
   BookOpen,
   CaretDoubleDown,
   Broadcast,
@@ -126,6 +127,8 @@ export const ANCHOR_ICONS = {
   mapPin: MapPin,
   /** Zoom del mapa y "Acercar" (HM-12a, RF-20, HM-17). */
   zoom: MagnifyingGlassPlus,
+  /** Mover el ancla (Fase 3, DF3-01). */
+  moveAnchor: ArrowsOutCardinal,
   /** "Alejar" el mapa, en la capa Zoom (HM-17). */
   zoomOut: MagnifyingGlassMinus,
   /** Escribir al negocio por WhatsApp (capa de un pin elegido, HM-12a). */

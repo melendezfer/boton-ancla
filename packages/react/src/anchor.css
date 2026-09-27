@@ -559,3 +559,56 @@
   pointer-events: none;
   /* Sin transición: la ubica el bucle cada cuadro (una transición la haría llegar tarde, HM-15). */
 }
+
+/* --- Fase 3 (T3-08): modo edición. --- */
+
+/* Dónde puede quedar el ancla: una línea en cada tramo válido de cada costado. */
+.ba-tramo-valido {
+  position: absolute;
+  width: 6px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--ba-accent) 45%, transparent);
+  pointer-events: none;
+}
+
+/* La altura de inicio de esta orientación (al cruzarla hay un "clic", RF3-16). */
+.ba-linea-inicio {
+  position: absolute;
+  width: 28px;
+  height: 2px;
+  transform: translate(-50%, -50%);
+  background: var(--ba-accent);
+  pointer-events: none;
+}
+
+/* Silueta del abanico: un cuarto de círculo punteado hacia el centro de la pantalla. */
+.ba-silueta {
+  position: absolute;
+  width: calc(2 * var(--ba-radio-silueta));
+  height: calc(2 * var(--ba-radio-silueta));
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  border: 2px dashed color-mix(in srgb, var(--ba-text-muted) 60%, transparent);
+  clip-path: polygon(0 0, 50% 0, 50% 50%, 0 50%); /* arriba a la izquierda (mano derecha) */
+  pointer-events: none;
+}
+.ba-silueta[data-lado="left"] {
+  clip-path: polygon(50% 0, 100% 0, 100% 50%, 50% 50%);
+}
+
+/* Sin dedo: el ancla "late" para invitar a arrastrarla (sin animación con movimiento reducido). */
+@media (prefers-reduced-motion: no-preference) {
+  .ba-ancla--editando {
+    animation: ba-latir 900ms ease-in-out infinite;
+  }
+}
+.ba-ancla--editando {
+  outline: 2px dashed var(--ba-accent);
+  outline-offset: 4px;
+}
+@keyframes ba-latir {
+  50% {
+    transform: translate(-50%, -50%) scale(calc(var(--ba-escala-activo) * 1.08));
+  }
+}

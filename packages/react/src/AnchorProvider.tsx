@@ -37,6 +37,9 @@ type Registro = {
 const ContextoRegistro = createContext<Registro | null>(null);
 const ContextoCapas = createContext<ControlCapas | null>(null);
 const ContextoZonas = createContext<RegistroZonas | null>(null);
+/** Fase 3 (DF3-01): entrar al modo edición desde un botón de la app. */
+type Mover = { mover: () => void; editando: boolean };
+const ContextoMover = createContext<Mover | null>(null);
 
 /**
  * Contenido principal que desplaza el ancla: un elemento o la ventana (vertical, HM-09), o
@@ -147,6 +150,10 @@ export function AnchorProvider({
   );
   const ladoActual = colocacionPara(colocacion, orientacion, params).lado;
   const zonas = useZonas();
+  // Fase 3 (DF3-01): el ancla registra cómo entrar al modo edición; la app lo llama con useAnchorMove.
+  const entrarAEditar = useRef<() => void>(() => {});
+  const [editando, setEditando] = useState(false);
+  const mover = useMemo<Mover>(() => ({ mover: () => entrarAEditar.current(), editando }), [editando]);
   const reserva = useMemo<ReservaAncla>(
     () => ({ lado: ladoActual, ancho: params.MARGEN_LATERAL + params.D_ACTIVO }),
     [ladoActual, params.MARGEN_LATERAL, params.D_ACTIVO],
@@ -158,6 +165,7 @@ export function AnchorProvider({
       <ContextoDesplazar.Provider value={registroDesplazar}>
       <ContextoCapas.Provider value={capas}>
       <ContextoZonas.Provider value={zonas}>
+      <ContextoMover.Provider value={mover}>
         {children}
         {montado &&
           createPortal(
@@ -168,6 +176,8 @@ export function AnchorProvider({
               orientacion={orientacion}
               cambiarColocacion={cambiarColocacion}
               zonas={zonas}
+              entrarAEditar={entrarAEditar}
+              alEditando={setEditando}
               theme={theme}
               icons={icons}
               params={params}
@@ -183,6 +193,7 @@ export function AnchorProvider({
             />,
             document.body,
           )}
+      </ContextoMover.Provider>
       </ContextoZonas.Provider>
       </ContextoCapas.Provider>
       </ContextoDesplazar.Provider>
@@ -280,6 +291,17 @@ export function useAnchorReservedArea(objetivo: FuenteZona, opciones: { priorida
     registrar(clave, fuente.current, prioridad);
     return () => quitar(clave);
   }, [registrar, quitar, prioridad, claveRect, referencia]);
+}
+
+/**
+ * Fase 3 (DF3-01): para un botón "Mover el ancla" de la app (por ejemplo en Ajustes). `mover()`
+ * entra al modo edición; el siguiente toque sobre el ancla la engancha al dedo. Solo deslizando
+ * se entra con una opción `moveAnchor` del abanico (quedándose quieto sobre ella).
+ */
+export function useAnchorMove(): Mover {
+  const m = useContext(ContextoMover);
+  if (!m) throw new Error("useAnchorMove debe usarse dentro de <AnchorProvider>.");
+  return m;
 }
 
 /**
