@@ -1,10 +1,12 @@
 # Botón-ancla — Especificación Fase 3: adaptación al espacio
 
-Versión 0.2 (borrador para decidir) · Primera app base: RUTEANDO · Continúa la Fase 1 (`specs/fase-1/spec.md` v0.16)
+Versión 0.3 · Primera app base: RUTEANDO · Continúa la Fase 1 (`specs/fase-1/spec.md` v0.17)
+
+**Cambios en 0.3:** las 9 decisiones pendientes quedaron cerradas (26-09-2026) y están en §1b (DF3-01…DF3-09). Se quita `ANCLA_ALTURA_MIN` (el piso ya se calcula de los márgenes). Nuevos: RF3-15 (horizontal sin lugar: el ancla baja y, si no alcanza, el abanico se abre hacia abajo), RF3-16 (clic suave en la altura de inicio), RF3-17 (control deslizante de altura en la demo).
 
 **Cambios en 0.2:** H11 y H13 agregados (§1); zonas en dos niveles, **obligatorias** y preferidas, decidido (RF3-13); la mano se deduce del costado (H13, §2, §7); la bienvenida pregunta la mano (HU3-13, RF3-14).
 
-> Esta spec es la fuente de verdad de la Fase 3. Lo que no cambia aquí sigue como en la Fase 1. Lo marcado **(a decidir)** espera una respuesta en `decisiones-pendientes.md`; no se escribe código hasta cerrarlo.
+> Esta spec es la fuente de verdad de la Fase 3. Lo que no cambia aquí sigue como en la Fase 1. No quedan puntos abiertos: las decisiones de la Fase 3 están en §1b.
 
 La Fase 3 hace que el ancla **se adapte al espacio**: la persona la puede mover a donde le quede cómoda, cambiar de mano rápido, usarla en horizontal, y la app puede declarar partes de la pantalla que el ancla no debe tapar.
 
@@ -42,12 +44,29 @@ La Fase 3 hace que el ancla **se adapte al espacio**: la persona la puede mover 
 | HM-01 | `ANCLA_ALTURA` con piso y techo: si el abanico no cabe arriba, el ancla deja de subir. En la demo, un control deslizante. | El piso y el techo pasan a ser el rango de posiciones válidas (RF3-03). |
 | RF-13, RF-16 | Con teclado, el ancla sube sobre él; las hojas reservan su espacio (`useAnchorReserva`, HM-07). | Siguen igual. `useAnchorReserva` es lo inverso de las zonas reservadas: la app deja espacio **al ancla**; con las zonas, el ancla deja espacio **a la app**. |
 | D-06 | En RUTEANDO el ancla reemplaza la pila de botones de la derecha. | La pila ya no está; lo que queda en las esquinas son zonas reservadas (§8). |
-| P-03 | ¿Qué gesto rápido sirve para cambiar de mano? | Se responde en HU3-05 (a decidir). |
-| P-05 | Con el ancla alta, ¿el abanico se abre también hacia abajo? | Encaja aquí: si la persona pone el ancla arriba o en horizontal, el abanico puede no caber hacia arriba (**a decidir**). |
-| **H11** | **Espacio disponible.** El ancla y el abanico deben descontar las áreas seguras, el teclado, las hojas inferiores abiertas y los otros botones flotantes. La app registra sus zonas reservadas. | Es la base de las zonas reservadas (RF3-10…RF3-13). Áreas seguras y teclado ya se descuentan (Fase 1); los botones flotantes se declaran como zonas. Las hojas abiertas: **a decidir** si el ancla sube por encima (H11) o sigue sobre la hoja con su columna reservada (HM-07). |
-| **H13** | **Mano.** Ninguna API detecta con qué mano se usa el teléfono: **se pregunta en la bienvenida** y luego **se deduce del lado donde el usuario deja el ancla**. Debe ser **fácil e intuitivo** cambiar de mano para quien usa las dos según el momento. | La mano se deduce del costado (RF3-05, §2); la bienvenida la pregunta (HU3-13, RF3-14); el cambio rápido está **a decidir** con ese criterio (HU3-05). |
+| P-03 | ¿Qué gesto rápido sirve para cambiar de mano? | **Cerrada** por DF3-03: arrastrando el ancla al otro costado (HU3-05). |
+| P-05 | Con el ancla alta, ¿el abanico se abre también hacia abajo? | **Cerrada** por DF3-04: solo como último recurso, cuando ni bajando el ancla cabe hacia arriba (RF3-15). |
+| **H11** | **Espacio disponible.** El ancla y el abanico deben descontar las áreas seguras, el teclado, las hojas inferiores abiertas y los otros botones flotantes. La app registra sus zonas reservadas. | Es la base de las zonas reservadas (RF3-10…RF3-13). Áreas seguras y teclado ya se descuentan (Fase 1); los botones flotantes se declaran como zonas. Las hojas abiertas se descuentan como en HM-07: el ancla sigue encima de la hoja y la hoja le reserva su columna (DF3-07). |
+| **H13** | **Mano.** Ninguna API detecta con qué mano se usa el teléfono: **se pregunta en la bienvenida** y luego **se deduce del lado donde el usuario deja el ancla**. Debe ser **fácil e intuitivo** cambiar de mano para quien usa las dos según el momento. | La mano se deduce del costado (RF3-05, §2); la bienvenida la pregunta (HU3-13, RF3-14); el cambio rápido es arrastrar al otro costado, con "Cambiar de mano" en el abanico si no resulta fácil (DF3-03, HU3-05). |
 
 ---
+
+## 1b. Decisiones de la Fase 3
+
+Decididas el 26-09-2026 (todas las propuestas aceptadas).
+
+| ID | Decisión |
+|---|---|
+| DF3-01 | Se entra a **mover el ancla** desde una opción "Mover ancla" en el **abanico de Ajustes** (quedándose encima, como Zoom) y también con un **botón "Mover el ancla"** en esa pantalla. |
+| DF3-02 | El ancla puede quedar a **cualquier altura** de los **dos costados**; al soltar se pega al costado más cercano. **Clic suave** al pasar por la altura de inicio (RF3-16). |
+| DF3-03 | **Cambio rápido de mano**: arrastrando el ancla al otro costado (cierra P-03). Si en la prueba manual no resulta fácil, se agrega una opción **"Cambiar de mano"** en el abanico. |
+| DF3-04 | Si el abanico no cabe hacia arriba: primero **baja el ancla**; si ni así, el abanico se abre **hacia abajo** (RF3-15; cierra P-05). |
+| DF3-05 | Altura de inicio en horizontal: **30 %** (`ANCLA_ALTURA_H`). |
+| DF3-06 | Las zonas las evitan **el ancla, el abanico, la banda y los avisos**; para eso el ancla se corre, y las opciones nunca cambian de lugar por una zona. |
+| DF3-07 | Con una hoja inferior abierta, **como hoy (HM-07)**: el ancla queda encima y la hoja le reserva su columna. |
+| DF3-08 | La **bienvenida pregunta la mano** deslizando ("¿Con qué mano? Desliza hacia ese lado"), con dos botones **Derecha / Izquierda** visibles para quien prefiera tocar. |
+| DF3-09 | El control deslizante de altura de la demo **se mantiene** hasta aprobar el arrastre (RF3-17). |
+| (0.2) | Zonas en **dos niveles**: obligatorias (nunca se tapan) y preferidas (por defecto). **La mano se deduce del costado** (H13). |
 
 ## 2. Glosario
 
@@ -70,7 +89,7 @@ editando ──suelta──▶ reposo, con el ancla en la posición válida más
 editando ──segundo dedo | orientación | cambio de sección──▶ cancelado, el ancla vuelve a donde estaba
 ```
 
-- Se entra desde una **opción del abanico** ("Mover ancla"), quedándose sobre ella, como con Zoom. Así no choca con el **descanso** (quieto sobre el ancla, D-11/D-12), ni con el **joystick** (primer movimiento hacia abajo, RF-18), ni con el **modo experto** (soltar rápido, D-08/C-05). Dónde aparece esa opción: **a decidir**.
+- Se entra desde una **opción del abanico** ("Mover ancla"), quedándose sobre ella, como con Zoom. Así no choca con el **descanso** (quieto sobre el ancla, D-11/D-12), ni con el **joystick** (primer movimiento hacia abajo, RF-18), ni con el **modo experto** (soltar rápido, D-08/C-05). La opción está en el abanico de **Ajustes**, y además hay un botón "Mover el ancla" en esa pantalla (DF3-01).
 - Todo en **un solo gesto**: llegar a la opción, esperar, arrastrar y soltar. Sin toques (D-15).
 - La máquina sigue siendo pura (D-18): el adaptador calcula las posiciones válidas y el imán con funciones del núcleo.
 
@@ -119,7 +138,7 @@ Dado que estoy en modo edición con el ancla en el costado derecho
 Cuando la arrastro y la suelto más cerca del costado izquierdo
 Entonces el ancla queda a la izquierda y el abanico se abre hacia la derecha (mano izquierda)
 ```
-(La forma rápida exacta está **a decidir**: esta es la mínima; hay otras en `decisiones-pendientes.md`.)
+(DF3-03: es la forma elegida. Si en la prueba manual no resulta fácil para quien usa las dos manos (H13), se agrega una opción "Cambiar de mano" en el abanico.)
 
 **HU3-06 — La mano se recuerda**
 ```gherkin
@@ -132,7 +151,7 @@ Entonces el ancla sigue del lado que elegí, en esta orientación
 ```gherkin
 Dado que giro el celular a horizontal
 Entonces el ancla queda en la parte inferior de la pantalla horizontal, en un costado
-Y el abanico cabe completo (o se adapta, **a decidir**)
+Y el abanico cabe completo: si no, el ancla baja hasta que quepa y, como último recurso, el abanico se abre hacia abajo (RF3-15)
 ```
 
 **HU3-08 — Una posición por orientación**
@@ -176,7 +195,7 @@ Entonces el ancla se recoloca (sin moverse mientras la estoy usando)
 **HU3-12 — No hay lugar**
 ```gherkin
 Dado que las zonas reservadas no dejan ninguna posición válida
-Entonces el ancla respeta primero las zonas obligatorias y puede tapar las preferidas (a decidir)
+Entonces el ancla respeta las zonas obligatorias y puede tapar las preferidas (RF3-13)
 Y la app ve un aviso en la consola de desarrollo
 ```
 
@@ -186,18 +205,21 @@ Y la app ve un aviso en la consola de desarrollo
 
 - **RF3-01** Cuando la persona se quede `T_ESPERA_DESLIZADOR` sobre la opción "Mover ancla", el ancla entrará en **modo edición** y seguirá al pulgar hasta soltar. Soltar sobre la opción sin esperar mostrará una pista y no hará nada. Nunca se entrará con una pulsación larga sobre el ancla (D-12).
 - **RF3-02** Mientras esté en modo edición, el sistema mostrará las **posiciones válidas** de ambos costados y una silueta tenue del abanico en la posición actual. El contenido no recibirá los toques.
-- **RF3-03** Cuando la persona suelte el ancla en modo edición, el sistema la llevará a la **posición válida más cercana** (imán, en `T_CENTRADO`, instantáneo con movimiento reducido) y la guardará para la orientación actual. El rango de alturas va de `ANCLA_ALTURA_MIN` (piso) al techo en el que el abanico todavía cabe (HM-01).
+- **RF3-03** Cuando la persona suelte el ancla en modo edición, el sistema la llevará a la **posición válida más cercana** (imán, en `T_CENTRADO`, instantáneo con movimiento reducido) y la guardará para la orientación actual. El rango de alturas va del piso (márgenes, como en la Fase 1) al techo en el que el abanico todavía cabe (HM-01). La altura es **continua** en los dos costados; al soltar, el ancla se pega al costado más cercano (DF3-02).
 - **RF3-04** Si durante el modo edición hay un segundo dedo, un cambio de orientación o de sección, el ancla volverá a su posición anterior y no se guardará nada.
-- **RF3-05** Cuando el ancla quede del **otro costado**, el sistema cambiará la **mano** (el abanico se refleja hacia el centro) y la guardará (**a decidir**: si hay además un gesto más rápido).
+- **RF3-05** Cuando el ancla quede del **otro costado**, el sistema cambiará la **mano** (el abanico se refleja hacia el centro) y la guardará. Es el cambio rápido de mano (DF3-03; P-03).
 - **RF3-06** Las preferencias de posición (lado y altura) se guardarán **por orientación** (C-18) y sobrevivirán a recargar.
 - **RF3-07** En **horizontal**, el ancla estará en la parte inferior de la orientación actual (D-17), en un costado, respetando las áreas seguras laterales (la muesca de la cámara queda a un costado).
 - **RF3-08** La primera vez en una orientación, el ancla usará el lado de la otra orientación y la altura de inicio (`ANCLA_ALTURA`).
 - **RF3-09** Cuando cambie la orientación, se cancelará la interacción (RF-09) y el ancla se recolocará en la posición de la nueva orientación, sin animación que pase por encima del contenido.
-- **RF3-10** (H11) El espacio disponible para el ancla descuenta las **áreas seguras**, el **teclado** y las **zonas reservadas** que declare la app (un elemento de la página o un rectángulo; por ejemplo sus otros botones flotantes). El ancla, el abanico abierto, la banda y los avisos **no las taparán**, con un margen `MARGEN_ZONA`. (Las hojas inferiores abiertas: **a decidir**.)
+- **RF3-10** (H11) El espacio disponible para el ancla descuenta las **áreas seguras**, el **teclado** y las **zonas reservadas** que declare la app (un elemento de la página o un rectángulo; por ejemplo sus otros botones flotantes). El ancla, el abanico abierto, la banda y los avisos **no las taparán**, con un margen `MARGEN_ZONA`. Las hojas inferiores abiertas se descuentan como en HM-07: el ancla queda encima y la hoja le reserva su columna (DF3-07). Para no tapar zonas, el ancla se corre arriba o abajo: las opciones del abanico **nunca cambian de lugar** por una zona (DF3-06).
 - **RF3-11** Cuando una zona cambie (tamaño, posición, aparece o desaparece), el ancla se recolocará **en reposo**; nunca durante una interacción.
 - **RF3-12** Si la posición guardada tapa una zona, el ancla usará la posición válida más cercana **sin borrar la guardada**: si la zona desaparece, vuelve a la suya.
 - **RF3-13** Las zonas tienen **dos niveles** (decidido): **obligatorias**, que nunca se tapan (por ejemplo, el crédito de OpenStreetMap, que la licencia obliga a mostrar), y **preferidas** (por defecto), que se evitan pero pueden taparse si no hay otra posición. Si ni así hay lugar, el sistema avisará en la consola de desarrollo.
-- **RF3-14** (H13) La primera vez, la **bienvenida preguntará con qué mano** se usa el teléfono (solo deslizando: hacia un costado u otro) y pondrá el ancla de ese lado. Después, la mano se deducirá del lado donde la persona deje el ancla.
+- **RF3-14** (H13, DF3-08) La primera vez, la **bienvenida preguntará con qué mano** se usa el teléfono: "¿Con qué mano? Desliza hacia ese lado" (solo deslizando), con dos botones Derecha / Izquierda visibles para quien prefiera tocar. Pondrá el ancla de ese lado. Después, la mano se deducirá del lado donde la persona deje el ancla.
+- **RF3-15** (DF3-04, P-05) Cuando el abanico no quepa hacia arriba (por ejemplo, en horizontal con poco alto o con teclado), el ancla **bajará** hasta que quepa; si ni así cabe, el abanico se abrirá **hacia abajo** (espejo vertical del arco). Mientras el abanico abra hacia abajo, la entrada del **joystick** será **hacia arriba** (espejo de `ARCO_DESPLAZAR`), para que nunca compartan dirección.
+- **RF3-16** (DF3-02) Al arrastrar el ancla en modo edición, cuando pase por la **altura de inicio** de esa orientación, habrá un **clic suave** (vibración corta en Android; en todos, una marca visible), para poder volver a ella.
+- **RF3-17** (DF3-09) En la demo, el control deslizante de altura de Ajustes (HM-01) se mantiene mientras se prueba el arrastre, para comparar; se quita cuando el arrastre se apruebe.
 - **RNF3-01** Recalcular las posiciones válidas no redibujará React en cada cuadro (RNF-03): se calcula al cambiar las zonas, la orientación o el tamaño, no mientras se arrastra.
 
 ---
@@ -207,8 +229,7 @@ Y la app ve un aviso en la consola de desarrollo
 | Parámetro | Valor inicial | Qué controla |
 |---|---|---|
 | `MARGEN_ZONA` | 8 px | Espacio mínimo entre el ancla (o su abanico) y una zona reservada |
-| `ANCLA_ALTURA_MIN` | el piso actual | Altura mínima del ancla (hoy es interno; pasa a ser parámetro) |
-| `ANCLA_ALTURA_H` | 0,30 | Altura de inicio en horizontal (**a decidir**: la misma de vertical no cabe con poco alto) |
+| `ANCLA_ALTURA_H` | 0,30 | Altura de inicio en horizontal (DF3-05; la de vertical, 0,44, queda muy arriba con poco alto) |
 
 Se reutilizan: `T_ESPERA_DESLIZADOR` (entrar al modo edición), `T_CENTRADO` (imán al soltar), `MARGEN_LATERAL`, `MARGEN_INFERIOR`.
 
