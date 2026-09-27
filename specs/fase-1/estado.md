@@ -1,13 +1,13 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **26-09-2026**. **La Fase 3 (adaptación al espacio) está en marcha**: spec en borrador en `specs/fase-3/spec.md`, con 10 preguntas en `specs/fase-3/decisiones-pendientes.md` (todavía sin código). **Las sesiones con 3 personas de la Fase 1 (T-27) siguen pendientes, en paralelo**; la demo publicada sirve para ellas.
+Última actualización: **26-09-2026**. **La Fase 3 (adaptación al espacio) está en marcha**: spec en borrador en `specs/fase-3/spec.md`, con 9 preguntas en `specs/fase-3/decisiones-pendientes.md` (todavía sin código). **Las sesiones con 3 personas de la Fase 1 (T-27) siguen pendientes, en paralelo**; la demo publicada sirve para ellas.
 
 ---
 
 ## 0. Retomar mañana
 
 **Dos frentes en paralelo:**
-- **Fase 3:** decidir las 10 preguntas de `specs/fase-3/decisiones-pendientes.md`. Con eso sigue el diseño (`specs/fase-3/design.md`) y las tareas; después, el código.
+- **Fase 3:** decidir las 9 preguntas de `specs/fase-3/decisiones-pendientes.md`. Con eso sigue el diseño (`specs/fase-3/design.md`) y las tareas; después, el código.
 - **Fase 1 (cierre):** las sesiones con 3 personas y la entrevista a distancia (T-27) con https://melendezfer.github.io/boton-ancla/ y los mensajes de `compartir-demo.md`.
 
 1. La demo está publicada en **https://melendezfer.github.io/boton-ancla/**. Ábrela en tu celular con datos móviles para confirmarlo.
@@ -70,7 +70,7 @@ La Fase 1 se cierra con el **criterio de salida** (spec §10): pruebas en verde 
 |---|---|---|
 | **Publicar** | ✅ **Publicada** (26-09-2026) en **https://melendezfer.github.io/boton-ancla/**: `noindex`, aviso "Demo de prueba", métricas solo en el celular. Se vuelve a publicar sola en cada push a `main` si pasan las pruebas (`.github/workflows/pages.yml`, pestaña *Actions*). Probada contra el sitio real en Pixel 7 e iPhone 14. **Falta:** abrirla en tu celular con datos móviles. | Tú |
 | **HM-10** | Elegir una variante de la guía al desplazar (en el ancla / arriba). Se puede decidir con lo que digan las sesiones. | Usuario |
-| **T-27** | Sesiones con **3 personas** (una solo deslizando): procedimiento y tabla en `pruebas-manuales.md` §1 y §3. Cada sesión termina exportando el JSON desde Métricas. | Usuario (Claude puede preparar un guion) |
+| **T-27** | Sesiones con **3 personas** (una solo deslizando): procedimiento y tabla en `pruebas-manuales.md` §1 y §3. Cada sesión termina exportando el JSON desde Métricas. **Sesión 1 de 3 hecha** (26-09-2026, demo publicada, una persona, con un solo dedo): le pareció bien y la manejó con un dedo; solo echó de menos **acercar y alejar el mapa "a la mano como todo lo demás"**: Zoom existía pero no lo encontró (soltar sobre Zoom no hacía nada visible) → **HM-17**. Faltan 2. | Usuario |
 | **T-27** | Una **entrevista a distancia** (otra ciudad) con el enlace público; mismo guion (`guion-sesiones.md`) y exportar el JSON. | Usuario |
 | **T-27** | Medir rendimiento en un **Android de gama baja real** (`pruebas-manuales.md` §5). Hay cuadros sueltos largos con la CPU frenada ×6. | Usuario |
 | — | Cuando estén: completar `pruebas-manuales.md`, marcar T-27 `[x]`, registrar hallazgos como HM-xx y decidir si hay Fase 1.1 o se pasa a la Fase 2 (P-01…P-05). | Juntos |
