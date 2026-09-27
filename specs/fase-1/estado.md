@@ -40,6 +40,7 @@ Probada en el celular el 27-09-2026 ("está bien"). 12 tareas (`specs/fase-3/tas
 
 | # | Qué | Quién | Dónde |
 |---|---|---|---|
+| 0 | **Probar HM-16 (imán fuerte)** en el Nubia y comparar con el normal (interruptor en Ajustes). | Tú | `prueba-hm16.md` |
 | 1 | **Respuestas de las 2 personas sobre HM-18**: pedirles que prueben el zoom directo (doble toque; doble toque, dejar el dedo y deslizar) y contar si ahora el zoom se siente "a la mano". | Tú | Demo publicada; Métricas → "Zoom" cuenta cada forma |
 | 2 | **Sesión 3 de 3** (T-27), con el guion y los mensajes de siempre; exportar su JSON. | Tú | `guion-sesiones.md`, `compartir-demo.md`, `pruebas-manuales.md` |
 | 3 | **Documento de integración con RUTEANDO**: cómo instalar el componente, qué pantallas registrar, qué zonas declarar (crédito de OpenStreetMap obligatorio, logo, botones), el zoom de un dedo para Leaflet y qué reemplaza (la pila de botones, D-06). Todavía no existe. | Claude, con tu visto bueno | por crear (`specs/integracion-ruteando.md`) |
@@ -115,7 +116,7 @@ Tareas T-01…T-26 y T-28: hechas (ver `tasks.md`).
 ## 3. Pendientes y cabos sueltos
 
 **Pendiente para después de la Fase 1** (no bloquea el cierre):
-- **HM-16 — el imán más fuerte, no más rápido** (spec §12): con HM-15 no se sintió diferencia. Ideas a evaluar: radio de captura mayor, frenado del joystick más marcado cerca del pin, enganche inmediato del pin a la mira al entrar al radio, vibración corta al enganchar (Android).
+- **HM-16 — imán fuerte** ✅ implementado (spec 0.19, RF-24; 27-09-2026): radio de captura 44 px, freno que crece hasta 0,1 sobre el pin, enganche inmediato al entrar al radio (80 ms, aunque el pulgar se mueva; una vez por pin) y vibración de 25 ms. Interruptor en Ajustes (demo: fuerte por defecto; componente: `iman="normal"` por defecto). Falta la prueba en el celular: `prueba-hm16.md`. Aprendizaje: el enganche se medía por reloj y un cuadro lento (≥ 80 ms, visto en WebKit) lo saltaba; ahora termina al dar su último paso.
 - **Zoom fino:** el Zoom (RF-20) va con la curva de velocidad del joystick; falta un ajuste más preciso para acercar poco a poco (por ejemplo, una zona lenta más ancha o pasos).
 - **HM-15:** los deslizadores de espera y duración quedan en Ajustes; si las sesiones no los usan, se pueden quitar.
 - HM-09, HM-11 y HM-12 siguen **experimentales**: decidir cuáles quedan activados por defecto en el componente.
@@ -193,6 +194,7 @@ Si Playwright dice que faltan librerías (pasa en un equipo nuevo): `cd apps/dem
 
 ## 6. Reglas del proyecto (resumen de `CLAUDE.md`)
 - Todo en español; explicar cada comando antes de ejecutarlo; resumir al final de cada tarea.
-- Un commit por tarea (Conventional Commits en español). **Nunca `git push` sin autorización explícita.**
+- Un commit por tarea (Conventional Commits en español). `git push` a `main` solo con **todas** las pruebas en verde; nunca reescribir ni borrar historial sin preguntar.
+- **Autonomía:** Claude decide lo técnico y los detalles de producto según la spec y registra cada decisión; se detiene solo para la prueba manual, riesgos legales/seguridad/datos o historial.
 - Toda decisión se registra a la vez en `spec.md` y `design.md`; lo que no está decidido va a `decisiones-pendientes.md`.
 - La prueba manual en PC y celular es obligatoria además de las automáticas.
