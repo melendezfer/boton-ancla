@@ -50,6 +50,7 @@ export function ProveedorAncla({ children }: { children: React.ReactNode }) {
       desplazar={prefs.desplazar}
       desplazarLibre={prefs.moverMapa}
       apuntar={prefs.apuntar}
+      iman={prefs.imanFuerte ? "fuerte" : "normal"}
       guiaDesplazar={prefs.guiaDesplazar}
     >
       {children}

@@ -39,7 +39,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, use
 import { Controlador, menuAbierto, type EfectosAncla } from "../dom/controlador";
 import { esLibre, type ObjetivoDesplazar } from "../AnchorProvider";
 import { useBienvenida } from "../dom/bienvenida";
-import { miraPorDefecto, opcionesApuntar, useBucleDesplazamiento, type InfoApuntado } from "../dom/desplazar";
+import { miraPorDefecto, opcionesApuntar, useBucleDesplazamiento, type Iman, type InfoApuntado } from "../dom/desplazar";
 import type { ControlCapas } from "../dom/capas";
 import { useCambioOrientacion, useTeclado } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
@@ -75,6 +75,8 @@ export type PropsAncla = {
   desplazarLibre: boolean;
   /** HM-12a (experimental): apuntar y elegir en el mapa (RF-21). */
   apuntar: boolean;
+  /** HM-16 (RF-24): el imán del mapa. */
+  iman: Iman;
   /** Contenido principal registrado con useAnchorScroll. */
   objetivoDesplazar: RefObject<ObjetivoDesplazar | null>;
   /** Cambia cuando se registra o quita el contenido principal. */
@@ -110,6 +112,7 @@ export function Ancla({
   desplazar,
   desplazarLibre,
   apuntar,
+  iman,
   objetivoDesplazar,
   versionObjetivo,
   guiaDesplazar,
@@ -457,6 +460,7 @@ export function Ancla({
     indicador,
     obtenerDeslizador: (id) => vistaRef.current?.actions.find((a) => a.id === id)?.onSlide,
     apuntar,
+    iman,
     mira: refMira,
     obtenerApuntarLista,
     franja: refFranja,
