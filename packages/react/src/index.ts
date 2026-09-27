@@ -5,6 +5,7 @@ export {
   useAnchorReserva,
   useAnchorScreen,
   useAnchorPan,
+  useAnchorReservedArea,
   useAnchorScroll,
   type ObjetivoDesplazar,
   type ObjetivoLibre,

@@ -18,6 +18,7 @@ import { createPortal } from "react-dom";
 import { Ancla } from "./components/Ancla";
 import { useCapas, type CapaReact, type ControlCapas } from "./dom/capas";
 import { useOrientacion } from "./dom/entorno";
+import { useZonas, type FuenteZona, type RegistroZonas } from "./dom/zonas";
 import type { AnchorProviderProps, OpcionesApuntarLista, ReactAnchorIcon } from "./types";
 
 // Proveedor del botón-ancla (spec §7). Guarda la pantalla actual y dibuja el
@@ -35,6 +36,7 @@ type Registro = {
 
 const ContextoRegistro = createContext<Registro | null>(null);
 const ContextoCapas = createContext<ControlCapas | null>(null);
+const ContextoZonas = createContext<RegistroZonas | null>(null);
 
 /**
  * Contenido principal que desplaza el ancla: un elemento o la ventana (vertical, HM-09), o
@@ -144,6 +146,7 @@ export function AnchorProvider({
     [placement],
   );
   const ladoActual = colocacionPara(colocacion, orientacion, params).lado;
+  const zonas = useZonas();
   const reserva = useMemo<ReservaAncla>(
     () => ({ lado: ladoActual, ancho: params.MARGEN_LATERAL + params.D_ACTIVO }),
     [ladoActual, params.MARGEN_LATERAL, params.D_ACTIVO],
@@ -154,6 +157,7 @@ export function AnchorProvider({
       <ContextoReserva.Provider value={reserva}>
       <ContextoDesplazar.Provider value={registroDesplazar}>
       <ContextoCapas.Provider value={capas}>
+      <ContextoZonas.Provider value={zonas}>
         {children}
         {montado &&
           createPortal(
@@ -163,6 +167,7 @@ export function AnchorProvider({
               colocacion={colocacion}
               orientacion={orientacion}
               cambiarColocacion={cambiarColocacion}
+              zonas={zonas}
               theme={theme}
               icons={icons}
               params={params}
@@ -178,6 +183,7 @@ export function AnchorProvider({
             />,
             document.body,
           )}
+      </ContextoZonas.Provider>
       </ContextoCapas.Provider>
       </ContextoDesplazar.Provider>
       </ContextoReserva.Provider>
@@ -248,6 +254,32 @@ export function useAnchorPan(mover: (dx: number, dy: number) => boolean | void, 
       }
     };
   }, [ref, avisar]);
+}
+
+/**
+ * Fase 3 (RF3-10…RF3-13): declara una zona que el ancla, su abanico, la banda y los avisos no
+ * deben tapar: un elemento fijo en pantalla (por referencia; se sigue su tamaño) o un
+ * rectángulo en coordenadas de la vista. "obligatoria" nunca se tapa (por ejemplo, el crédito
+ * del mapa); "preferida" (por defecto) solo si no hay otro lugar.
+ */
+export function useAnchorReservedArea(objetivo: FuenteZona, opciones: { prioridad?: "obligatoria" | "preferida" } = {}): void {
+  const zonas = useContext(ContextoZonas);
+  if (!zonas) throw new Error("useAnchorReservedArea debe usarse dentro de <AnchorProvider>.");
+  const { registrar, quitar } = zonas;
+  const prioridad = opciones.prioridad ?? "preferida";
+  // Una referencia se compara por identidad; un rectángulo, por valor (un objeto nuevo en cada
+  // render no lo cambia). Se registra la fuente más reciente.
+  const referencia = "current" in objetivo ? objetivo : null;
+  const claveRect = referencia ? null : JSON.stringify(objetivo);
+  const fuente = useRef(objetivo);
+  useLayoutEffect(() => {
+    fuente.current = objetivo;
+  });
+  useLayoutEffect(() => {
+    const clave = Symbol("zona");
+    registrar(clave, fuente.current, prioridad);
+    return () => quitar(clave);
+  }, [registrar, quitar, prioridad, claveRect, referencia]);
 }
 
 /**

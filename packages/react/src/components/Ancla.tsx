@@ -37,6 +37,7 @@ import { miraPorDefecto, opcionesApuntar, useBucleDesplazamiento, type InfoApunt
 import type { ControlCapas } from "../dom/capas";
 import { useCambioOrientacion, useTeclado } from "../dom/entorno";
 import { useMedidas, type Medidas } from "../dom/medidas";
+import type { RegistroZonas } from "../dom/zonas";
 import type { AnchorIcons, AnchorTheme, GuiaDesplazar, OpcionesApuntarLista, ReactAnchorIcon } from "../types";
 
 // El ancla y todo lo que dibuja (design.md §6).
@@ -51,6 +52,8 @@ export type PropsAncla = {
   orientacion: Orientacion;
   /** Fase 3: la persona movió el ancla o cambió de mano. */
   cambiarColocacion: (nueva: PrefsAncla) => void;
+  /** Fase 3 (RF3-10): zonas reservadas que declaró la app. */
+  zonas: RegistroZonas;
   theme: AnchorTheme;
   icons: AnchorIcons;
   params: Params;
@@ -87,6 +90,7 @@ export function Ancla({
   colocacion,
   orientacion,
   cambiarColocacion,
+  zonas,
   theme,
   icons,
   params,
@@ -237,12 +241,30 @@ export function Ancla({
     [medidas, teclado.abierto, teclado.alto],
   );
   const colocacionActual = colocacionPara(colocacion, orientacion, params);
+  const { leer: leerZonas, version: versionZonas } = zonas;
   const resuelta = useMemo(
-    () => (entorno ? resolverColocacion(colocacionActual, entorno, [], params) : null),
-    // colocacionActual se compara por valor.
+    () => (entorno ? resolverColocacion(colocacionActual, entorno, leerZonas(), params) : null),
+    // colocacionActual se compara por valor; versionZonas: una zona cambió.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [entorno, colocacionActual.lado, colocacionActual.altura, params],
+    [entorno, colocacionActual.lado, colocacionActual.altura, params, leerZonas, versionZonas],
   );
+
+  // RF3-13: si no hay lugar sin tapar zonas, se avisa (una vez por cambio) en la consola y en las métricas.
+  const conflicto = resuelta?.conflicto ?? null;
+  const conflictoAntes = useRef<typeof conflicto>(null);
+  useEffect(() => {
+    if (conflicto === conflictoAntes.current) return;
+    conflictoAntes.current = conflicto;
+    if (!conflicto) return;
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        conflicto === "preferidas"
+          ? "[boton-ancla] No hay lugar para el ancla sin tapar una zona preferida: se tapa una (RF3-13)."
+          : "[boton-ancla] No hay lugar para el ancla sin tapar zonas: revisa las zonas reservadas (RF3-13).",
+      );
+    }
+    onEventRef.current?.({ type: "zone_conflict", conflicto });
+  }, [conflicto, onEventRef]);
 
   const geo = useMemo<Geometry | null>(() => {
     if (!vista || !entorno || !resuelta) return null;
