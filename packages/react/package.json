@@ -1,6 +1,6 @@
 {
   "name": "@boton-ancla/react",
-  "version": "0.1.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Adaptador React del botón-ancla: DOM, eventos, temporizadores y estilos.",
   "type": "module",
