@@ -3,6 +3,8 @@
 import {
   indicadorDesplazamiento,
   indicadorJoystick,
+  distancia,
+  frenoApuntado,
   mismoApuntado,
   pasoCentrado,
   pasosApuntar,
@@ -27,6 +29,9 @@ import type { OpcionesApuntarLista } from "../types";
 // HM-11: con un mapa, el joystick es libre. HM-12a: con apuntar, además mira, freno, imán
 // y zoom automático (RF-21); y en "ajustando" mueve un deslizador como Zoom (RF-20).
 
+/** RF-24 (HM-16): el imán normal (RF-21) o el fuerte. */
+export type Iman = "normal" | "fuerte";
+
 /** Lo apuntado, con lo que hace falta para dibujarlo (RF-21). */
 export type InfoApuntado = { apuntado: Apuntado; label: string; icon?: ObjetivoApuntable["icon"] };
 
@@ -44,6 +49,8 @@ type Opciones = {
   obtenerDeslizador: (id: string) => ((paso: number) => void) | undefined;
   /** RF-21: ¿apuntar y elegir está activado? */
   apuntar: boolean;
+  /** RF-24 (HM-16): el imán del mapa, normal o fuerte. */
+  iman: Iman;
   /** La mira (se ubica y se marca desde aquí, sin redibujar React). */
   mira: RefObject<HTMLElement | null>;
   /** Envía un evento a la máquina (APUNTAR) por el controlador, para que salgan las métricas. */
@@ -141,7 +148,10 @@ export function useBucleDesplazamiento(o: Opciones) {
     let listaFoco: HTMLElement | null = null;
     // HM-15: centrado por tiempo. Se guarda cuándo empezó y cuánto faltaba al empezar.
     let centradoLista: { desde: number; inicial: number } | null = null;
-    let centradoMapa: { clave: string; desde: number; inicial: { x: number; y: number } } | null = null;
+    let centradoMapa: { clave: string; desde: number; inicial: { x: number; y: number }; enganche: boolean; hecho?: boolean } | null = null;
+    // RF-24: el último objetivo enganchado (el enganche es una vez por objetivo, para no atrapar el pulgar).
+    let ultimoEnganche: string | null = null;
+    let enganches = 0;
     const { puntoGuia, indicador, mira, franja } = ref.current;
 
     const soltarFoco = () => {
@@ -227,13 +237,16 @@ export function useBucleDesplazamiento(o: Opciones) {
       if (!opciones) return 1;
       const puntoMira = opciones.mira?.() ?? miraPorDefecto();
       const objetivos = opciones.objetivos();
-      const { apuntado, destino } = resolverApuntado(puntoMira, objetivos, params);
+      const fuerte = ref.current.iman === "fuerte";
+      const { apuntado, destino, radio } = resolverApuntado(puntoMira, objetivos, params, { fuerte });
+      const clave = apuntado ? (apuntado.tipo === "uno" ? apuntado.id : apuntado.ids.join("|")) : null;
 
       const el = mira.current;
       if (el) {
         el.style.left = `${puntoMira.x}px`;
         el.style.top = `${puntoMira.y}px`;
         el.style.visibility = "visible";
+        el.dataset.iman = ref.current.iman;
         if (apuntado) el.dataset.apuntado = apuntado.tipo;
         else delete el.dataset.apuntado;
       }
@@ -249,18 +262,29 @@ export function useBucleDesplazamiento(o: Opciones) {
           const n = apuntado.ids.length;
           ref.current.alApuntar({ apuntado, label: opciones.etiquetaGrupo?.(n) ?? `${n} lugares` });
         }
-        if (apuntado) vibrar(params.VIB_MS);
+        // RF-24: enganche inmediato al entrar al radio de un objetivo nuevo, aunque el pulgar se mueva.
+        const engancha = fuerte && destino !== null && clave !== null && clave !== ultimoEnganche;
+        if (engancha) {
+          ultimoEnganche = clave;
+          centradoMapa = { clave, desde: ahora, inicial: { x: destino.x - puntoMira.x, y: destino.y - puntoMira.y }, enganche: true };
+          if (el) el.dataset.enganches = String(++enganches);
+          vibrar(params.VIB_ENGANCHE_MS);
+        } else if (apuntado) vibrar(params.VIB_MS);
       }
 
       // Imán: con el pulgar quieto, lo apuntado se centra en la mira (HM-15: espera y duración por tiempo).
-      if (apuntado && destino && quieto) {
-        const clave = apuntado.tipo === "uno" ? apuntado.id : apuntado.ids.join("|");
+      // RF-24: durante el enganche (T_ENGANCHE, sin espera) se centra aunque el pulgar se mueva.
+      // Termina cuando da su último paso (no por reloj): con un cuadro lento (≥ T_ENGANCHE) no se salta.
+      const enganchando = centradoMapa?.enganche === true && centradoMapa.clave === clave && !centradoMapa.hecho;
+      if (apuntado && destino && clave && (quieto || enganchando)) {
         const falta = { x: destino.x - puntoMira.x, y: destino.y - puntoMira.y };
-        if (centradoMapa?.clave !== clave) centradoMapa = { clave, desde: ahora, inicial: falta };
+        if (centradoMapa?.clave !== clave || (centradoMapa.enganche && !enganchando)) centradoMapa = { clave, desde: ahora, inicial: falta, enganche: false };
         const t = ahora - centradoMapa.desde;
-        const mx = pasoCentrado({ restante: falta.x, inicial: centradoMapa.inicial.x, transcurrido: t, params, reducido });
-        const my = pasoCentrado({ restante: falta.y, inicial: centradoMapa.inicial.y, transcurrido: t, params, reducido });
+        const p = centradoMapa.enganche ? { ...params, T_ESPERA_CENTRADO: 0, T_CENTRADO: params.T_ENGANCHE } : params;
+        const mx = pasoCentrado({ restante: falta.x, inicial: centradoMapa.inicial.x, transcurrido: t, params: p, reducido });
+        const my = pasoCentrado({ restante: falta.y, inicial: centradoMapa.inicial.y, transcurrido: t, params: p, reducido });
         if (Math.abs(mx) >= 0.01 || Math.abs(my) >= 0.01) libre.mover(mx, my);
+        if (centradoMapa.enganche && (reducido || t >= params.T_ENGANCHE)) centradoMapa.hecho = true;
       } else centradoMapa = null;
 
       // Nivel 3: zoom automático solo con la mira QUIETA sobre el mismo grupo T_ZOOM_GRUPO.
@@ -275,7 +299,8 @@ export function useBucleDesplazamiento(o: Opciones) {
         }
       } else grupoQuieto = null;
 
-      return apuntado ? params.FRENO_APUNTAR : 1;
+      // RF-24: con el imán fuerte, el freno crece al acercarse al pin.
+      return apuntado && destino && radio !== null ? frenoApuntado({ distancia: distancia(puntoMira, destino), radio, params, fuerte }) : 1;
     };
 
     const paso = (ahora: number) => {

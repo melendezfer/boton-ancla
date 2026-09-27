@@ -98,6 +98,7 @@ export function AnchorProvider({
   desplazar = false,
   desplazarLibre = false,
   apuntar = false,
+  iman = "normal",
   guiaDesplazar = "ancla",
   children,
 }: AnchorProviderProps) {
@@ -186,6 +187,7 @@ export function AnchorProvider({
               desplazar={desplazar}
               desplazarLibre={desplazarLibre}
               apuntar={apuntar}
+              iman={iman}
               guiaDesplazar={guiaDesplazar}
               objetivoDesplazar={objetivoDesplazar}
               apuntarPrincipal={apuntarPrincipal}

@@ -76,6 +76,8 @@ export type AnchorProviderProps = {
   desplazarLibre?: boolean;
   /** HM-12a (experimental): apuntar y elegir en el mapa (RF-21). Por defecto false. */
   apuntar?: boolean;
+  /** HM-16 (RF-24, experimental): imán del mapa. "fuerte" = radio mayor, freno que crece, enganche inmediato y vibración. Por defecto "normal". */
+  iman?: "normal" | "fuerte";
   /** HM-10: variante de la guía al desplazar. Por defecto "ancla". */
   guiaDesplazar?: GuiaDesplazar;
   children: ReactNode;
