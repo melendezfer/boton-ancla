@@ -10,31 +10,31 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 
 ## Bloque A — Núcleo (`packages/core`, solo Vitest)
 
-### [ ] T3-01 · Tipos, parámetros y compatibilidad
+### [x] T3-01 · Tipos, parámetros y compatibilidad
 - **Cubre:** RF3-06, RF3-08, DF3-05, H13 · `design.md` §2
 - **Hacer:** `Orientacion`, `Lado`, `Colocacion`, `PrefsAncla`, `Zona`; `MARGEN_ZONA` y `ANCLA_ALTURA_H` en `DEFAULT_PARAMS` y en la tabla de parámetros de la spec de la Fase 1; `colocacionDesdePrefs({ hand })` para la compatibilidad.
 - **Prueba:** los parámetros coinciden con la spec; `{ hand: "left" }` equivale a `{ vertical: { lado: "left", altura: 0.44 } }`; sin horizontal se usa el lado de vertical y 0,30.
 - **Commit:** `feat(core): tipos de colocación, orientación y zonas (Fase 3)`
 
-### [ ] T3-02 · Huella del ancla y posiciones válidas
+### [x] T3-02 · Huella del ancla y posiciones válidas
 - **Cubre:** RF3-02, RF3-03, RF3-10, RF3-13, H11, DF3-02, DF3-06 · `design.md` §4.1–§4.3
 - **Hacer:** `huellaAncla(colocacion, entorno)` (ancla + abanico más grande + banda + avisos); `posicionesValidas(entorno, zonas, prioridades)` → intervalos por lado.
 - **Prueba:** sin zonas, un intervalo por lado igual al rango piso–techo de la Fase 1; una zona recorta el intervalo por arriba, por abajo o lo parte en dos; `MARGEN_ZONA` se respeta; las preferidas se ignoran al pedir solo obligatorias; mano izquierda = espejo; con áreas seguras y teclado.
 - **Commit:** `feat(core): huella del ancla y posiciones válidas con zonas`
 
-### [ ] T3-03 · Imán y resolver la colocación
+### [x] T3-03 · Imán y resolver la colocación
 - **Cubre:** RF3-03, RF3-05, RF3-12, RF3-13, RF3-15, DF3-03, DF3-04 · `design.md` §4.3–§4.4
 - **Hacer:** `imanColocacion(punto, validas)`; `resolverColocacion(guardada, entorno, zonas)` con sus 5 pasos.
 - **Prueba:** soltar cerca de cada costado elige ese lado (y cambia la mano); altura llevada al intervalo más cercano; la guardada inválida se ajusta sin borrarse y vuelve cuando la zona desaparece; conflicto con preferidas; horizontal con teclado sin lugar arriba → `abreHacia: "abajo"`; sin lugar en ninguna → `sin_lugar`.
 - **Commit:** `feat(core): imán y resolución de la colocación del ancla`
 
-### [ ] T3-04 · Abanico hacia abajo y joystick espejado
+### [x] T3-04 · Abanico hacia abajo y joystick espejado
 - **Cubre:** RF3-15, P-05 · `design.md` §3 (`abreHacia`)
 - **Hacer:** `computeFanLayout` con `direccion`; selección con el arco espejado; `haciaDesplazamiento` usa 30°–150° cuando el abanico abre hacia abajo.
 - **Prueba:** con `abajo`, las opciones quedan bajo el ancla con el mismo orden de prioridades (espejo vertical); la selección y el anillo exterior funcionan; el joystick entra hacia arriba y ya no hacia abajo; con `arriba` nada cambia (todas las pruebas de la Fase 1 siguen verdes).
 - **Commit:** `feat(core): abanico hacia abajo cuando no cabe arriba (P-05)`
 
-### [ ] T3-05 · Estado `editando` y métricas
+### [x] T3-05 · Estado `editando` y métricas
 - **Cubre:** RF3-01, RF3-04, D-12, HU3-01, HU3-04, §9 · `design.md` §3 filas 54–58
 - **Hacer:** `AnchorAction.moveAnchor`; filas 54–58; evento `EDITAR`; transitorio `soltado`; métricas `anchor_move`, `anchor_move_cancel`, `hand_change`, `orientation`, `zone_conflict`.
 - **Prueba:** quedarse quieto sobre "Mover ancla" entra a `editando`; soltar sin esperar ejecuta `onSelect`; descanso, joystick, experto y relámpago **no** entran; segundo dedo, orientación, sección y Escape cancelan; `EDITAR` desde reposo; métricas de cada caso.

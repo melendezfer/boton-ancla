@@ -79,7 +79,7 @@ Filas nuevas (siguen la numeración de `fase-1/design.md` §3.3):
 `areaUtil = vista − áreas seguras − teclado` (igual que la Fase 1). Las **hojas abiertas no se restan** (DF3-07: como HM-07).
 
 ### 4.2 Zonas y huella del ancla (RF3-10, DF3-06)
-La **huella** de una colocación es la unión de: el círculo del ancla activa (`D_ACTIVO`), el rectángulo que contiene el abanico **más grande** que puede abrir (`MAX_OPCIONES`, radio adaptativo, opciones escaladas), la **banda** y la **zona de avisos** (`posicionBanda`). Se usa el abanico más grande para que la posición no dependa de la pantalla: las opciones no se mueven al cambiar de sección.
+La **huella** de una colocación es la unión de: el círculo del ancla activa (`D_ACTIVO`), el rectángulo que contiene el abanico **más grande** que puede abrir (`MAX_OPCIONES`, radio adaptativo, opciones escaladas), la **banda** y la **zona de avisos** (`posicionBanda`). Se usa el abanico más grande para que la posición no dependa de la pantalla: las opciones no se mueven al cambiar de sección. El ancho de la banda y de los avisos depende del texto, que el núcleo no conoce: se estima en **2 × radio**, centrado donde va la banda (T3-02); si en la prueba manual un texto largo tapa una zona, se ajusta.
 
 Una colocación es **válida** si su huella, agrandada `MARGEN_ZONA`, no toca ninguna zona que se esté respetando.
 
