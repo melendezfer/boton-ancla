@@ -1,5 +1,6 @@
+import { radioAdaptativo } from "./layout";
 import type { Params } from "./params";
-import type { Hand, Rect } from "./types";
+import type { Hand, Insets, Point, Rect } from "./types";
 
 // Fase 3 (adaptación al espacio): dónde queda el ancla. Funciones puras, sin DOM (D-18);
 // el adaptador mide la vista, las áreas seguras, el teclado y las zonas, y dibuja.
@@ -39,4 +40,150 @@ export function colocacionPara(prefs: PrefsAncla, orientacion: Orientacion, para
 /** La orientación de una vista: horizontal si es más ancha que alta. */
 export function orientacionDe(ancho: number, alto: number): Orientacion {
   return ancho > alto ? "horizontal" : "vertical";
+}
+
+// ---------------------------------------------------------------------------
+// T3-02: huella del ancla y posiciones válidas (RF3-02, RF3-03, RF3-10, RF3-13, DF3-06)
+// ---------------------------------------------------------------------------
+
+/** La vista útil: el adaptador ya descuenta el teclado del alto (como en la Fase 1). */
+export type Entorno = { viewport: Rect; safeArea: Insets };
+
+/** Hacia dónde se abre el abanico (RF3-15). */
+export type Direccion = "arriba" | "abajo";
+
+/** Un tramo de alturas válidas, en px de pantalla (y del centro del ancla; desde ≤ hasta). */
+export type Intervalo = { desde: number; hasta: number };
+
+/** Paso del muestreo de alturas, en px (design.md §4.3). */
+const PASO_MUESTREO = 2;
+
+function bordes(entorno: Entorno) {
+  const { viewport: v, safeArea: s } = entorno;
+  return { arriba: v.y + s.top, abajo: v.y + v.height - s.bottom, izquierda: v.x + s.left, derecha: v.x + v.width - s.right };
+}
+
+/** x del centro del ancla en un costado (como computeAnchorPosition de la Fase 1). */
+export function xDelLado(lado: Lado, entorno: Entorno, params: Params): number {
+  const b = bordes(entorno);
+  const d = params.MARGEN_LATERAL + params.D_ACTIVO / 2;
+  return lado === "right" ? b.derecha - d : b.izquierda + d;
+}
+
+/** y del centro del ancla para una altura (fracción del alto útil, como ANCLA_ALTURA), sin límites. */
+export function yDeAltura(altura: number, entorno: Entorno): number {
+  const b = bordes(entorno);
+  return b.abajo - altura * (b.abajo - b.arriba);
+}
+
+/** La altura (fracción) que corresponde a una y de pantalla. */
+export function alturaDeY(y: number, entorno: Entorno): number {
+  const b = bordes(entorno);
+  return (b.abajo - y) / (b.abajo - b.arriba);
+}
+
+/** Lo que ocupa el abanico más grande por encima (o por debajo) del ancla, más la banda. */
+function alcance(params: Params) {
+  const radio = radioAdaptativo(params.MAX_OPCIONES, params);
+  const mitadOpcion = (params.D_OPCION * params.ESCALA_PRESEL) / 2;
+  return { radio, mitadOpcion, total: radio + mitadOpcion + params.BANDA_MARGEN + params.BANDA_ALTO };
+}
+
+/**
+ * Rango de alturas (y del centro) en el que el abanico cabe (HM-01): hacia arriba, del techo al
+ * piso de la Fase 1; hacia abajo, lo mismo pero en espejo. null si no cabe en ninguna altura.
+ */
+export function rangoAlturas(entorno: Entorno, params: Params, direccion: Direccion): Intervalo | null {
+  const b = bordes(entorno);
+  const piso = b.abajo - params.MARGEN_INFERIOR - params.D_ACTIVO / 2;
+  const techoAncla = b.arriba + params.D_ACTIVO / 2;
+  const { total } = alcance(params);
+  const r = direccion === "arriba" ? { desde: b.arriba + total, hasta: piso } : { desde: techoAncla, hasta: b.abajo - params.MARGEN_INFERIOR - total };
+  return r.desde <= r.hasta ? r : null;
+}
+
+/**
+ * Huella (DF3-06): los rectángulos que el ancla puede ocupar en esa posición: el ancla activa,
+ * el abanico más grande (MAX_OPCIONES, opciones escaladas), la banda y la zona de avisos
+ * encima de la banda. El ancho de la banda y los avisos depende del texto: se estima en
+ * 2 × radio, centrado donde va la banda (posicionBanda).
+ */
+export function huellaAncla(punto: Point, lado: Lado, params: Params, direccion: Direccion = "arriba"): Rect[] {
+  const { radio, mitadOpcion } = alcance(params);
+  const hacia = lado === "right" ? -1 : 1; // el abanico se abre hacia el centro de la pantalla
+  const signo = direccion === "arriba" ? -1 : 1;
+  const mitadAncla = params.D_ACTIVO / 2;
+
+  const ancla: Rect = { x: punto.x - mitadAncla, y: punto.y - mitadAncla, width: params.D_ACTIVO, height: params.D_ACTIVO };
+
+  // Opciones entre 90° (sobre el ancla) y 180° (al costado): la caja va del ancla hacia el centro.
+  const xLejos = punto.x + hacia * (radio + mitadOpcion);
+  const xCerca = punto.x - hacia * mitadOpcion;
+  const yLejos = punto.y + signo * (radio + mitadOpcion);
+  const yCerca = punto.y - signo * mitadOpcion;
+  const abanico: Rect = caja(xLejos, yLejos, xCerca, yCerca);
+
+  // Banda y avisos: a partir del borde del abanico, hacia afuera.
+  const xBanda = punto.x + (hacia * radio) / 2;
+  const anchoBanda = 2 * radio;
+  const yBandaCerca = yLejos + signo * params.BANDA_MARGEN;
+  const yBandaLejos = yBandaCerca + signo * params.BANDA_ALTO;
+  const banda = caja(xBanda - anchoBanda / 2, yBandaCerca, xBanda + anchoBanda / 2, yBandaLejos);
+  const yAvisoCerca = yBandaLejos + signo * params.BANDA_MARGEN;
+  const avisos = caja(xBanda - anchoBanda / 2, yAvisoCerca, xBanda + anchoBanda / 2, yAvisoCerca + signo * ALTO_AVISO);
+
+  return [ancla, abanico, banda, avisos];
+}
+
+/** Alto de la zona de avisos (el aviso de deshacer o de bloqueo), en px. */
+const ALTO_AVISO = 44;
+
+function caja(x1: number, y1: number, x2: number, y2: number): Rect {
+  return { x: Math.min(x1, x2), y: Math.min(y1, y2), width: Math.abs(x2 - x1), height: Math.abs(y2 - y1) };
+}
+
+function seTocan(a: Rect, b: Rect, margen: number): boolean {
+  return a.x < b.x + b.width + margen && b.x - margen < a.x + a.width && a.y < b.y + b.height + margen && b.y - margen < a.y + a.height;
+}
+
+/** ¿La huella en esa posición deja libres las zonas (más MARGEN_ZONA)? */
+export function colocacionLibre(punto: Point, lado: Lado, zonas: Zona[], params: Params, direccion: Direccion = "arriba"): boolean {
+  const huella = huellaAncla(punto, lado, params, direccion);
+  return zonas.every((z) => huella.every((r) => !seTocan(r, z.rect, params.MARGEN_ZONA)));
+}
+
+/**
+ * Posiciones válidas (RF3-02, RF3-03): por costado, los tramos de alturas (y del centro) donde
+ * la huella no toca ninguna zona respetada. Con `soloObligatorias`, las preferidas se ignoran
+ * (RF3-13). Se calcula en reposo, no por cuadro (RNF3-01).
+ */
+export function posicionesValidas(
+  entorno: Entorno,
+  zonas: Zona[],
+  params: Params,
+  opciones: { soloObligatorias?: boolean; direccion?: Direccion } = {},
+): Record<Lado, Intervalo[]> {
+  const direccion = opciones.direccion ?? "arriba";
+  const respetadas = opciones.soloObligatorias ? zonas.filter((z) => z.prioridad === "obligatoria") : zonas;
+  const rango = rangoAlturas(entorno, params, direccion);
+  const resultado: Record<Lado, Intervalo[]> = { right: [], left: [] };
+  if (!rango) return resultado;
+  for (const lado of ["right", "left"] as const) {
+    const x = xDelLado(lado, entorno, params);
+    let abierto: Intervalo | null = null;
+    const muestras: number[] = [];
+    for (let y = rango.desde; y < rango.hasta; y += PASO_MUESTREO) muestras.push(y);
+    muestras.push(rango.hasta);
+    for (const y of muestras) {
+      if (colocacionLibre({ x, y }, lado, respetadas, params, direccion)) {
+        if (abierto) abierto.hasta = y;
+        else abierto = { desde: y, hasta: y };
+      } else if (abierto) {
+        resultado[lado].push(abierto);
+        abierto = null;
+      }
+    }
+    if (abierto) resultado[lado].push(abierto);
+  }
+  return resultado;
 }
