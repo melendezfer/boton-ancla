@@ -187,3 +187,83 @@ export function posicionesValidas(
   }
   return resultado;
 }
+
+// ---------------------------------------------------------------------------
+// T3-03: imán y resolver la colocación (RF3-03, RF3-05, RF3-12, RF3-13, RF3-15)
+// ---------------------------------------------------------------------------
+
+/** La y más cercana a `y` dentro de los tramos (null si no hay tramos). */
+function masCercana(y: number, tramos: Intervalo[]): number | null {
+  let mejor: number | null = null;
+  for (const t of tramos) {
+    const c = Math.min(t.hasta, Math.max(t.desde, y));
+    if (mejor === null || Math.abs(c - y) < Math.abs(mejor - y)) mejor = c;
+  }
+  return mejor;
+}
+
+/**
+ * Imán al soltar en modo edición (RF3-03, DF3-02, DF3-03): el costado más cercano al punto y,
+ * en ese costado, la altura válida más cercana. Si ese costado no tiene ninguna, el otro.
+ * Cambiar de costado cambia la mano (H13). null si no hay ninguna posición válida.
+ */
+export function imanColocacion(punto: Point, entorno: Entorno, validas: Record<Lado, Intervalo[]>): Colocacion | null {
+  const b = bordes(entorno);
+  const cerca: Lado = punto.x < (b.izquierda + b.derecha) / 2 ? "left" : "right";
+  for (const lado of [cerca, cerca === "right" ? "left" : "right"] as const) {
+    const y = masCercana(punto.y, validas[lado]);
+    if (y !== null) return { lado, altura: alturaDeY(y, entorno) };
+  }
+  return null;
+}
+
+/** Resultado de resolver dónde va el ancla ahora. */
+export type ColocacionResuelta = {
+  punto: Point;
+  lado: Lado;
+  abreHacia: Direccion;
+  /** La guardada no se pudo usar tal cual: se usa otra altura (la guardada no se borra, RF3-12). */
+  ajustada: boolean;
+  /** null; "preferidas" = tapa alguna zona preferida; "sin_lugar" = no hay posición válida (RF3-13). */
+  conflicto: null | "preferidas" | "sin_lugar";
+};
+
+/**
+ * Dónde va el ancla ahora, a partir de la colocación guardada (design.md §4.4):
+ * 1–2) la guardada, o la altura válida más cercana del mismo costado, respetando todas las zonas;
+ * 3) lo mismo respetando solo las obligatorias (conflicto "preferidas");
+ * 4) si el abanico no cabe hacia arriba en ninguna altura, hacia abajo (RF3-15; "bajar el ancla"
+ *    ya está en 1–3: el techo del rango es la altura más alta en la que cabe hacia arriba);
+ * 5) si no cabe en ninguna dirección: la dirección con más espacio (conflicto "sin_lugar").
+ * Nunca cambia de costado: eso lo decide la persona (H13).
+ */
+export function resolverColocacion(guardada: Colocacion, entorno: Entorno, zonas: Zona[], params: Params): ColocacionResuelta {
+  const x = xDelLado(guardada.lado, entorno, params);
+  const deseada = yDeAltura(guardada.altura, entorno);
+  for (const abreHacia of ["arriba", "abajo"] as const) {
+    for (const soloObligatorias of [false, true]) {
+      const tramos = posicionesValidas(entorno, zonas, params, { soloObligatorias, direccion: abreHacia })[guardada.lado];
+      const y = masCercana(deseada, tramos);
+      if (y === null) continue;
+      return {
+        punto: { x, y },
+        lado: guardada.lado,
+        abreHacia,
+        ajustada: Math.abs(y - deseada) > 0.5,
+        conflicto: soloObligatorias ? "preferidas" : null,
+      };
+    }
+  }
+  // 5) Sin lugar: el ancla dentro de la pantalla, y el abanico hacia donde haya más espacio.
+  const b = bordes(entorno);
+  const minimo = b.arriba + params.D_ACTIVO / 2;
+  const maximo = b.abajo - params.MARGEN_INFERIOR - params.D_ACTIVO / 2;
+  const y = Math.min(maximo, Math.max(minimo, deseada));
+  return {
+    punto: { x, y },
+    lado: guardada.lado,
+    abreHacia: y - b.arriba >= b.abajo - y ? "arriba" : "abajo",
+    ajustada: Math.abs(y - deseada) > 0.5,
+    conflicto: "sin_lugar",
+  };
+}
