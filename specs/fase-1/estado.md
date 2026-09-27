@@ -1,8 +1,8 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **26-09-2026**, cierre del día. Todo subido a `origin/main` (la demo publicada se actualiza sola en cada push).
+Última actualización: **27-09-2026**, Bloque C de la Fase 3 terminado (en local hasta que autorices el push; la demo publicada se actualiza sola en cada push).
 
-**Dónde quedamos:** **Fase 3 (adaptación al espacio)** con el Bloque A (núcleo, T3-01…T3-05) y el Bloque B (adaptador, T3-06…T3-09) **hechos**. **Sigue el Bloque C** (T3-10…T3-12: conectar a las pantallas de la demo, el crédito del mapa como zona obligatoria, "Mover ancla" en Ajustes, guardar la posición, recorrido solo deslizando y guía). **La Fase 1 se cierra en paralelo** con la sesión que falta.
+**Dónde quedamos:** **Fase 3 (adaptación al espacio) completa en código**: Bloques A (núcleo), B (adaptador) y C (demo: crédito de OpenStreetMap como zona obligatoria, "Mover ancla" en Ajustes, posición guardada por orientación, recorrido solo deslizando). Falta **probarla en el celular** (`specs/fase-3/prueba-bloque-b.md` y `specs/fase-3/prueba-fase3.md`). **La Fase 1 se cierra en paralelo** con la sesión que falta.
 
 ---
 
@@ -12,11 +12,11 @@
 
 | # | Qué | Quién | Dónde |
 |---|---|---|---|
-| 1 | **Probar el Bloque B en el celular** (girar, mover el ancla, cambiar de mano, zonas, pregunta de la mano). | Tú | `specs/fase-3/prueba-bloque-b.md` (Diagnóstico → "Prueba de la Fase 3") |
+| 1 | **Probar la Fase 3 en el celular**: el Bloque B (página de prueba) y el Bloque C (mapa, Ajustes, girar). | Tú | `specs/fase-3/prueba-bloque-b.md` y `specs/fase-3/prueba-fase3.md` |
 | 2 | **Respuestas de las 2 personas sobre HM-18**: pedirles que prueben el zoom directo (doble toque; doble toque, dejar el dedo y deslizar) y contar si ahora el zoom se siente "a la mano". | Tú | Demo publicada; Métricas → "Zoom" cuenta cada forma |
 | 3 | **Sesión 3 de 3** (T-27), con el guion y los mensajes de siempre; exportar su JSON. | Tú | `guion-sesiones.md`, `compartir-demo.md`, `pruebas-manuales.md` |
 | 4 | **Documento de integración con RUTEANDO**: cómo instalar el componente, qué pantallas registrar, qué zonas declarar (crédito de OpenStreetMap obligatorio, logo, botones), el zoom de un dedo para Leaflet y qué reemplaza (la pila de botones, D-06). Todavía no existe. | Claude, con tu visto bueno | por crear (`specs/integracion-ruteando.md`) |
-| 5 | **Bloque C de la Fase 3** (T3-10…T3-12). | Claude, con tu visto bueno | `specs/fase-3/tasks.md` |
+| 5 | Con lo que salga de la prueba: ajustar la Fase 3 (hallazgos en `specs/fase-3/spec.md` §12) y decidir si hace falta "Cambiar de mano" en el abanico (DF3-03). | Juntos | `specs/fase-3/` |
 
 **Para retomar con Claude:** *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. Probé el Bloque B: … / Las personas dijeron del zoom: … / Sigue con …"*.
 

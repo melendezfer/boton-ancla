@@ -69,18 +69,18 @@ Estados: `[ ]` pendiente · `[~]` en curso · `[x]` hecha.
 
 ## Bloque C — Demo e integración
 
-### [ ] T3-10 · Zonas de RUTEANDO y Ajustes en la demo
+### [x] T3-10 · Zonas de RUTEANDO y Ajustes en la demo
 - **Cubre:** `spec.md` §8, DF3-01, DF3-09 · `design.md` §6
 - **Hacer:** crédito OSM (obligatoria), logo y botones de zoom (preferidas) en el mapa; opción y botón "Mover ancla" en Ajustes; preferencias por orientación con migración; el control deslizante ajusta la orientación actual.
 - **Prueba (E2E):** con la mano derecha y la izquierda, en vertical y horizontal, el crédito nunca queda tapado (ni con el abanico abierto); migrar `mano` + `anclaAltura` guardados de antes.
 - **Commit:** `feat(demo): zonas reales de RUTEANDO y mover el ancla desde Ajustes`
 
-### [ ] T3-11 · Recorrido completo solo deslizando y regresión
+### [x] T3-11 · Recorrido completo solo deslizando y regresión
 - **Cubre:** D-15, HU3-01…HU3-13
 - **Hacer:** agregar al recorrido de `t26-solo-deslizando` mover el ancla y cambiar de mano; revisar que todas las E2E de la Fase 1 siguen verdes en vertical.
 - **Commit:** `test: recorrido solo deslizando de la Fase 3`
 
-### [ ] T3-12 · Guía de prueba manual y estado
+### [x] T3-12 · Guía de prueba manual y estado
 - **Cubre:** `spec.md` §10.3
 - **Hacer:** `prueba-fase3.md` (qué hacer con el pulgar en el Nubia, vertical y horizontal, y qué contar); actualizar `estado.md`.
 - **Commit:** `docs: guía de prueba de la Fase 3`
