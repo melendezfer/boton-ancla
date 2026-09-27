@@ -4,6 +4,7 @@ import {
   BIENVENIDA_INICIAL,
   leerBienvenida,
   marcarDemostracion,
+  marcarMano,
   registrarUso,
   serializarBienvenida,
   type EstadoBienvenida,
@@ -67,5 +68,14 @@ export function useBienvenida() {
     });
   }, []);
 
-  return { estado, usar, terminarDemostracion };
+  // Fase 3 (H13): ya se respondió con qué mano.
+  const responderMano = useCallback(() => {
+    setEstado((e) => {
+      const nuevo = marcarMano(e ?? leer());
+      guardar(nuevo);
+      return nuevo;
+    });
+  }, []);
+
+  return { estado, usar, terminarDemostracion, responderMano };
 }

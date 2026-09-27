@@ -24,6 +24,7 @@ import {
   posicionGuiaArriba,
   mostrarEtiqueta,
   necesitaDemostracion,
+  necesitaPreguntarMano,
   posicionBanda,
   radioDe,
   textoBanda,
@@ -519,6 +520,23 @@ export function Ancla({
 
   if (!pantalla || !vista || !geo || !medidas) return null;
 
+  // Fase 3 (H13, RF3-14, DF3-08): la primera vez, antes que nada, la bienvenida pregunta la mano.
+  if (bienvenida.estado && necesitaPreguntarMano(bienvenida.estado) && entorno) {
+    const elegir = (lado: "right" | "left") => {
+      cambiarColocacion({
+        vertical: { ...colocacion.vertical, lado },
+        ...(colocacion.horizontal ? { horizontal: { ...colocacion.horizontal, lado } } : {}),
+      });
+      onEventRef.current?.({ type: "hand_change", lado });
+      bienvenida.responderMano();
+    };
+    return (
+      <div className="ba-raiz" style={variablesCss(theme, params)} data-estado="pregunta-mano">
+        <PreguntaMano entorno={entorno} params={params} y={yDeAltura(alturaInicio, entorno)} onElegir={elegir} />
+      </div>
+    );
+  }
+
   const geoDibujo = "geo" in estado ? estado.geo : geo;
   const abierto = menuAbierto(estado);
   const idActivo = opcionActiva(estado);
@@ -816,6 +834,61 @@ export function Ancla({
           <IconoCentro size={26} aria-hidden />
         )}
       </button>
+    </div>
+  );
+}
+
+/**
+ * Fase 3 (H13, DF3-08): "¿Con qué mano? Desliza hacia ese lado". Un asa redonda abajo al centro
+ * que se desliza hacia un costado (solo deslizando, D-15), y dos botones para quien prefiera tocar.
+ */
+function PreguntaMano({ entorno, params, y, onElegir }: { entorno: Entorno; params: Params; y: number; onElegir: (lado: "right" | "left") => void }) {
+  const asa = useRef<HTMLDivElement>(null);
+  const inicio = useRef<number | null>(null);
+  const centro = entorno.viewport.x + entorno.viewport.width / 2;
+  const UMBRAL = 40; // px hacia un costado para decidir
+  const soltar = (x: number) => {
+    const dx = inicio.current === null ? 0 : x - inicio.current;
+    inicio.current = null;
+    if (Math.abs(dx) >= UMBRAL) onElegir(dx < 0 ? "left" : "right");
+    else if (asa.current) asa.current.style.left = `${centro}px`; // vuelve al centro
+  };
+  return (
+    <div className="ba-pregunta-mano" data-testid="pregunta-mano">
+      <div className="ba-banda ba-banda--pista" role="status" style={{ top: y - params.D_ACTIVO / 2 - params.BANDA_MARGEN - params.BANDA_ALTO * 2, left: centro, transform: "translateX(-50%)" }}>
+        ¿Con qué mano? Desliza hacia ese lado
+      </div>
+      <div
+        ref={asa}
+        className="ba-ancla ba-ancla--activa ba-asa-mano"
+        data-testid="asa-mano"
+        role="slider"
+        aria-label="Con qué mano: desliza a la izquierda o a la derecha"
+        aria-valuetext="en el centro"
+        style={{ left: centro, top: y }}
+        onPointerDown={(e) => {
+          inicio.current = e.clientX;
+          try {
+            e.currentTarget.setPointerCapture(e.pointerId);
+          } catch {}
+        }}
+        onPointerMove={(e) => {
+          if (inicio.current === null) return;
+          e.currentTarget.style.left = `${centro + (e.clientX - inicio.current)}px`;
+        }}
+        onPointerUp={(e) => soltar(e.clientX)}
+        onPointerCancel={() => soltar(inicio.current ?? 0)}
+      >
+        <span aria-hidden>↔</span>
+      </div>
+      <div className="ba-botones-mano" style={{ top: y + params.D_ACTIVO / 2 + 16 }}>
+        <button type="button" className="ba-aviso" data-testid="mano-izquierda" onClick={() => onElegir("left")}>
+          Izquierda
+        </button>
+        <button type="button" className="ba-aviso" data-testid="mano-derecha" onClick={() => onElegir("right")}>
+          Derecha
+        </button>
+      </div>
     </div>
   );
 }

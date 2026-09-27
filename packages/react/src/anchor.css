@@ -612,3 +612,18 @@
     transform: translate(-50%, -50%) scale(calc(var(--ba-escala-activo) * 1.08));
   }
 }
+
+/* --- Fase 3 (H13, DF3-08): la bienvenida pregunta la mano. --- */
+.ba-asa-mano {
+  font-size: 22px;
+  color: var(--ba-accent);
+  touch-action: none;
+}
+.ba-botones-mano {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  pointer-events: auto;
+}

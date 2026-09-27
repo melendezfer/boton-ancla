@@ -9,6 +9,8 @@ export type EstadoBienvenida = {
   demostracionHecha: boolean;
   /** Veces que se EJECUTÓ cada opción, por id de acción (C-17: uso = ejecución). */
   usos: Record<string, number>;
+  /** Fase 3 (H13, RF3-14): ya se preguntó con qué mano se usa el teléfono. Solo aparece en true. */
+  manoPreguntada?: true;
 };
 
 export const BIENVENIDA_INICIAL: EstadoBienvenida = Object.freeze({
@@ -19,6 +21,18 @@ export const BIENVENIDA_INICIAL: EstadoBienvenida = Object.freeze({
 
 export function necesitaDemostracion(estado: EstadoBienvenida): boolean {
   return !estado.demostracionHecha;
+}
+
+/**
+ * Fase 3 (H13, RF3-14): la bienvenida pregunta la mano solo la primera vez (antes de la
+ * demostración). Quien ya hizo la bienvenida no vuelve a verla (no se interrumpe a nadie).
+ */
+export function necesitaPreguntarMano(estado: EstadoBienvenida): boolean {
+  return !estado.demostracionHecha && !estado.manoPreguntada;
+}
+
+export function marcarMano(estado: EstadoBienvenida): EstadoBienvenida {
+  return { ...estado, manoPreguntada: true };
 }
 
 export function marcarDemostracion(estado: EstadoBienvenida): EstadoBienvenida {
@@ -64,5 +78,5 @@ export function leerBienvenida(texto: string | null | undefined): EstadoBienveni
       if (typeof n === "number" && Number.isInteger(n) && n >= 0) usos[id] = n;
     }
   }
-  return { version: 1, demostracionHecha: d.demostracionHecha === true, usos };
+  return { version: 1, demostracionHecha: d.demostracionHecha === true, usos, ...(d.manoPreguntada === true ? { manoPreguntada: true as const } : {}) };
 }

@@ -57,6 +57,8 @@ export { agrupar, pasoCentrado, pasosApuntar, resolverApuntado, zoomParaSeparar,
 export { createAnchorMachine, type Listener, type Machine } from "./machine/machine";
 export { derivarMetricas, type MetricEvent } from "./metrics";
 export {
+  marcarMano,
+  necesitaPreguntarMano,
   BIENVENIDA_INICIAL,
   leerBienvenida,
   marcarDemostracion,

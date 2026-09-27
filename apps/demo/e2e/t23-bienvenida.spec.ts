@@ -34,6 +34,7 @@ async function banderaEnZonaMuerta(page: Page) {
 
 test("HU-12: la primera vez, una opción sale del ancla y vuelve, y no se repite", async ({ page }) => {
   await page.goto("/mapa");
+  await page.getByTestId("mano-derecha").click(); // Fase 3 (H13): primero pregunta la mano
   await expect(page.getByTestId("demostracion")).toBeAttached();
   await expect(page.getByTestId("demostracion")).toHaveCount(0, { timeout: 5000 }); // termina sola
   expect((await bienvenidaGuardada(page)).demostracionHecha).toBe(true);
@@ -87,5 +88,6 @@ test("Ajustes: 'Repetir la bienvenida' vuelve a mostrar la demostración", async
   await expect(page.getByTestId("ancla")).toBeVisible();
   await expect(page.getByTestId("demostracion")).toHaveCount(0);
   await page.getByRole("button", { name: "Repetir la bienvenida" }).click();
+  await page.getByTestId("mano-derecha").click(); // Fase 3 (H13): la bienvenida repetida vuelve a preguntar la mano
   await expect(page.getByTestId("demostracion")).toBeAttached();
 });
