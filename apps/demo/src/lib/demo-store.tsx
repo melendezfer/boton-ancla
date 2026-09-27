@@ -49,6 +49,8 @@ export type Preferencias = {
   moverMapa: boolean;
   /** HM-12a/12b (experimental): apuntar y elegir en el mapa y en las listas. Activado por defecto en la demo. */
   apuntar: boolean;
+  /** HM-16 (RF-24): imán fuerte en el mapa (apagado = el imán de HM-12a, para comparar). Activado por defecto en la demo. */
+  imanFuerte: boolean;
   /** HM-10: dónde se ve la guía al desplazar. "ancla" por defecto. */
   guiaDesplazar: "ancla" | "arriba";
 };
@@ -64,6 +66,7 @@ export const PREFERENCIAS_INICIALES: Preferencias = {
   desplazar: true,
   moverMapa: true,
   apuntar: true,
+  imanFuerte: true,
   guiaDesplazar: "ancla",
 };
 
@@ -165,6 +168,7 @@ function leerPrefs(): Preferencias {
       desplazar: d.desplazar !== false,
       moverMapa: d.moverMapa !== false,
       apuntar: d.apuntar !== false,
+      imanFuerte: d.imanFuerte !== false,
       guiaDesplazar: d.guiaDesplazar === "arriba" ? "arriba" : "ancla",
     };
   } catch {

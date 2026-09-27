@@ -164,6 +164,25 @@ export default function PaginaAjustes() {
         </span>
       </label>
 
+      {prefs.apuntar && (
+        <label className="flex cursor-pointer items-start gap-3 rounded-card border border-terracota/40 bg-surface p-4">
+          <input
+            type="checkbox"
+            checked={prefs.imanFuerte}
+            onChange={(e) => setPref("imanFuerte", e.target.checked)}
+            className="mt-1 size-5 accent-terracota"
+            data-testid="interruptor-iman-fuerte"
+          />
+          <span className="flex flex-col">
+            <span className="font-sans text-body font-semibold text-text">Imán fuerte en el mapa</span>
+            <span className="font-sans text-body-sm text-text-muted">
+              Hallazgo HM-16. Atrapa los pines desde más lejos, frena más cerca del pin y lo engancha a la mira apenas entra, aunque sigas
+              moviendo el pulgar (con una vibración corta en Android). Apágalo para comparar con el imán de antes.
+            </span>
+          </span>
+        </label>
+      )}
+
       {(prefs.desplazar || prefs.moverMapa) && (
         <Opciones<Preferencias["guiaDesplazar"]>
           titulo="Guía al desplazar"
