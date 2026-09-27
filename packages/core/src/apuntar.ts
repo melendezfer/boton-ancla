@@ -12,7 +12,12 @@ export type Resultado = {
   apuntado: Apuntado | null;
   /** Dónde está lo apuntado (el pin, o el centro del grupo): el imán lo lleva a la mira. */
   destino: Point | null;
+  /** RF-24: el radio del imán de lo apuntado (para el freno que crece al acercarse). */
+  radio: number | null;
 };
+
+/** RF-24 (HM-16): cómo apuntar. `fuerte` = imán fuerte (radio mayor). */
+export type OpcionesIman = { fuerte?: boolean };
 
 /** Grupos: pines a menos de GRUPO_DISTANCIA entre sí (y en cadena) van juntos. */
 export function agrupar(objetivos: ObjetivoEnPantalla[], params: Params): ObjetivoEnPantalla[][] {
@@ -33,17 +38,19 @@ export function agrupar(objetivos: ObjetivoEnPantalla[], params: Params): Objeti
  * achica a la mitad de la distancia a su vecino más cercano (nunca bajo IMAN_RADIO_MIN),
  * así no se imanta el equivocado. Nivel 2 (grupos): los pines que no se pueden separar se
  * apuntan juntos, con el imán completo en su centro. Gana el más cercano a la mira.
+ * RF-24: con el imán fuerte, IMAN_FUERTE_RADIO reemplaza a IMAN_RADIO.
  */
-export function resolverApuntado(mira: Point, objetivos: ObjetivoEnPantalla[], params: Params): Resultado {
+export function resolverApuntado(mira: Point, objetivos: ObjetivoEnPantalla[], params: Params, opciones: OpcionesIman = {}): Resultado {
+  const radioMax = opciones.fuerte ? params.IMAN_FUERTE_RADIO : params.IMAN_RADIO;
   const candidatos = agrupar(objetivos, params).map((grupo) => {
     if (grupo.length > 1) {
       const centro = { x: promedio(grupo.map((o) => o.x)), y: promedio(grupo.map((o) => o.y)) };
       const ids = grupo.map((o) => o.id).sort();
-      return { apuntado: { tipo: "grupo", ids } as Apuntado, punto: centro, radio: params.IMAN_RADIO };
+      return { apuntado: { tipo: "grupo", ids } as Apuntado, punto: centro, radio: radioMax };
     }
     const [o] = grupo;
     const vecino = Math.min(...objetivos.filter((x) => x !== o).map((x) => distancia(o, x)));
-    const radio = Math.max(params.IMAN_RADIO_MIN, Math.min(params.IMAN_RADIO, vecino / 2));
+    const radio = Math.max(params.IMAN_RADIO_MIN, Math.min(radioMax, vecino / 2));
     return { apuntado: { tipo: "uno", id: o.id } as Apuntado, punto: { x: o.x, y: o.y }, radio };
   });
 
@@ -52,7 +59,19 @@ export function resolverApuntado(mira: Point, objetivos: ObjetivoEnPantalla[], p
     const d = distancia(mira, c.punto);
     if (d <= c.radio && (!mejor || d < distancia(mira, mejor.punto))) mejor = c;
   }
-  return mejor ? { apuntado: mejor.apuntado, destino: mejor.punto } : { apuntado: null, destino: null };
+  return mejor ? { apuntado: mejor.apuntado, destino: mejor.punto, radio: mejor.radio } : { apuntado: null, destino: null, radio: null };
+}
+
+/**
+ * Factor de velocidad del joystick con algo en la mira. Imán normal (RF-21): FRENO_APUNTAR.
+ * Imán fuerte (RF-24): crece al acercarse, en línea recta de FRENO_APUNTAR en el borde del
+ * radio a FRENO_FUERTE_MIN sobre el pin.
+ */
+export function frenoApuntado(o: { distancia: number; radio: number; params: Params; fuerte?: boolean }): number {
+  const { distancia: d, radio, params, fuerte = false } = o;
+  if (!fuerte || radio <= 0) return params.FRENO_APUNTAR;
+  const t = Math.max(0, Math.min(1, d / radio));
+  return params.FRENO_FUERTE_MIN + (params.FRENO_APUNTAR - params.FRENO_FUERTE_MIN) * t;
 }
 
 /**

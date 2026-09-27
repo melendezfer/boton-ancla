@@ -197,7 +197,7 @@ describe("qué hay en la mira: imán, grupos y zoom para separar", () => {
 
   it("un pin dentro de IMAN_RADIO queda apuntado, con su posición como destino del imán", () => {
     const r = resolverApuntado(mira, [{ id: "a", x: 220, y: 410 }], P);
-    expect(r).toEqual({ apuntado: { tipo: "uno", id: "a" }, destino: { x: 220, y: 410 } });
+    expect(r).toEqual({ apuntado: { tipo: "uno", id: "a" }, destino: { x: 220, y: 410 }, radio: P.IMAN_RADIO });
   });
 
   it("fuera del imán, nada", () => {

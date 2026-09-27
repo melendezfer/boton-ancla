@@ -92,6 +92,14 @@ export type Params = {
   T_CENTRADO: number;
   /** RF-21: factor de velocidad del joystick con algo en la mira. */
   FRENO_APUNTAR: number;
+  /** RF-24 (HM-16): radio del imán con el imán fuerte, en px. */
+  IMAN_FUERTE_RADIO: number;
+  /** RF-24: freno sobre el pin con el imán fuerte (en el borde del radio vale FRENO_APUNTAR). */
+  FRENO_FUERTE_MIN: number;
+  /** RF-24: duración del enganche del pin a la mira al entrar al radio, en ms. */
+  T_ENGANCHE: number;
+  /** RF-24: vibración al enganchar con el imán fuerte, en ms (solo Android). */
+  VIB_ENGANCHE_MS: number;
   /** RF-21: pines más cerca que esto (px en pantalla) forman un grupo. */
   GRUPO_DISTANCIA: number;
   /** RF-21: mira quieta sobre un grupo antes del zoom automático, en ms. */
@@ -155,6 +163,10 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   T_ESPERA_CENTRADO: 0,
   T_CENTRADO: 100,
   FRENO_APUNTAR: 0.35,
+  IMAN_FUERTE_RADIO: 44,
+  FRENO_FUERTE_MIN: 0.1,
+  T_ENGANCHE: 80,
+  VIB_ENGANCHE_MS: 25,
   GRUPO_DISTANCIA: 24,
   T_ZOOM_GRUPO: 500,
   UMBRAL_APUNTAR: 32,
