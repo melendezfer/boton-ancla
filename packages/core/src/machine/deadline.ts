@@ -16,10 +16,13 @@ export function proximoPlazo(estado: AnchorState): number | undefined {
     case "confirmacion_toque":
       return estado.sinCierrePorTiempo ? undefined : estado.ultimaActividad + estado.geo.params.T_INACTIVO;
     case "abierto_gesto": {
-      // RF-20: esperar sobre un deslizador.
+      // RF-20 y RF3-01: esperar sobre un deslizador o sobre "Mover ancla".
       const slot = estado.geo.slots.find((s) => s.id === estado.presel);
-      return slot?.deslizador && estado.tPresel !== undefined ? estado.tPresel + estado.geo.params.T_ESPERA_DESLIZADOR : undefined;
+      return (slot?.deslizador || slot?.mover) && estado.tPresel !== undefined ? estado.tPresel + estado.geo.params.T_ESPERA_DESLIZADOR : undefined;
     }
+    case "editando":
+      // DF3-01: sin dedo, el modo edición espera T_INACTIVO a que se toque el ancla.
+      return estado.pointerId === undefined ? estado.ultimaActividad + estado.geo.params.T_INACTIVO : undefined;
     default:
       return undefined;
   }

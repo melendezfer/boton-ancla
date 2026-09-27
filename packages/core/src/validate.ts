@@ -63,6 +63,9 @@ export function validateScreen(screen: AnchorScreen, params: Params): string[] {
     if (accion.onSlide && accion.kind === "irreversible") {
       errores.push(`La acción ${etiqueta} es un deslizador (onSlide) y no puede ser irreversible (RF-20).`);
     }
+    if (accion.moveAnchor && ((accion.kind ?? "normal") !== "normal" || accion.onSlide)) {
+      errores.push(`La acción ${etiqueta} mueve el ancla (moveAnchor) y debe ser normal y sin onSlide (RF3-01).`);
+    }
     if (accion.atTop && ((accion.kind ?? "normal") !== "normal" || accion.onSlide)) {
       errores.push(`La acción ${etiqueta} va en 90° (atTop) y debe ser inofensiva: normal y sin onSlide (RF-22).`);
     }

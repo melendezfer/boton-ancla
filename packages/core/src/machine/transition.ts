@@ -29,6 +29,8 @@ export function transition(estado: AnchorState, evento: AnchorEvent): AnchorStat
       return desdeDesplazando(estado, evento);
     case "ajustando":
       return desdeAjustando(estado, evento);
+    case "editando":
+      return desdeEditando(estado, evento);
     case "abierto_toque":
       return desdeToque(estado, evento);
     case "confirmacion_toque":
@@ -39,6 +41,7 @@ export function transition(estado: AnchorState, evento: AnchorEvent): AnchorStat
     case "cancelado":
     case "bloqueado_sensible":
     case "elegido":
+    case "soltado":
       // Fila 34: el adaptador ya hizo el efecto.
       return evento.tipo === "COMPLETADO" ? REPOSO : estado;
     default:
@@ -51,6 +54,8 @@ export function transition(estado: AnchorState, evento: AnchorEvent): AnchorStat
 // ---------------------------------------------------------------------------
 
 function desdeReposo(estado: Estado<"reposo">, evento: AnchorEvent): AnchorState {
+  // Fila 55 (Fase 3, DF3-01): el botón "Mover el ancla" entra al modo edición sin dedo.
+  if (evento.tipo === "EDITAR") return { tipo: "editando", geo: evento.geo, t0: evento.t, ultimaActividad: evento.t };
   // Fila 2 (C-12): click sin secuencia de puntero (lector de pantalla) → modo toque sin cierre por tiempo.
   if (evento.tipo === "ACTIVAR") {
     return {
@@ -217,11 +222,20 @@ function moverGesto(estado: EstadoGesto, punto: Point, t: number): EstadoGesto {
   return { ...estado, tipo: "abierto_gesto", presel: sel.id, tPresel, puntoPresel };
 }
 
-/** RF-20: ¿ya esperó lo suficiente, quieto, sobre un deslizador? */
+/** RF-20 / RF3-01: ¿ya esperó lo suficiente, quieto, sobre un deslizador o sobre "Mover ancla"? */
 function esperoDeslizador(estado: EstadoGesto, t: number): boolean {
   if (estado.tipo !== "abierto_gesto" || estado.tPresel === undefined) return false;
   const slot = estado.geo.slots.find((s) => s.id === estado.presel);
-  return Boolean(slot?.deslizador && !slot.disabled) && t - estado.tPresel >= estado.geo.params.T_ESPERA_DESLIZADOR;
+  return Boolean((slot?.deslizador || slot?.mover) && !slot.disabled) && t - estado.tPresel >= estado.geo.params.T_ESPERA_DESLIZADOR;
+}
+
+/** Completó la espera: Zoom pasa a ajustarse (fila 47); "Mover ancla", al modo edición (fila 54). */
+function trasEspera(estado: EstadoGesto, t: number): AnchorState {
+  const slot = estado.geo.slots.find((s) => s.id === estado.presel);
+  if (slot?.mover) {
+    return { tipo: "editando", geo: estado.geo, t0: t, ultimaActividad: t, pointerId: estado.pointerId, inicio: estado.ultimo, ultimo: estado.ultimo };
+  }
+  return aAjustando(estado, t);
 }
 
 function aAjustando(estado: EstadoGesto, t: number): Estado<"ajustando"> {
@@ -241,9 +255,9 @@ function aAjustando(estado: EstadoGesto, t: number): Estado<"ajustando"> {
 
 function desdeGesto(estado: EstadoGesto, evento: AnchorEvent): AnchorState {
   // Fila 47 (RF-20): se quedó sobre un deslizador; un MOVE tardío primero completa la espera.
-  if (evento.tipo === "TICK") return esperoDeslizador(estado, evento.t) ? aAjustando(estado, evento.t) : estado;
+  if (evento.tipo === "TICK") return esperoDeslizador(estado, evento.t) ? trasEspera(estado, evento.t) : estado;
   if (evento.tipo === "POINTER_MOVE" && evento.pointerId === estado.pointerId) {
-    if (esperoDeslizador(estado, evento.t)) return desdeAjustando(aAjustando(estado, evento.t), evento);
+    if (esperoDeslizador(estado, evento.t)) return transition(trasEspera(estado, evento.t), evento);
     return moverGesto(avanzar(estado, evento.punto), evento.punto, evento.t);
   }
   if (evento.tipo === "POINTER_UP" && evento.pointerId === estado.pointerId) {
@@ -399,6 +413,8 @@ function punteroActivo(estado: AnchorState): number | undefined {
       return estado.pointerId;
     case "desplazando":
     case "ajustando":
+      return estado.pointerId;
+    case "editando":
       return estado.pointerId;
     case "abierto_toque":
       return estado.presion?.pointerId;
@@ -566,6 +582,33 @@ export function mismoApuntado(a: Apuntado | null, b: Apuntado | null): boolean {
 // ---------------------------------------------------------------------------
 // ajustando (filas 49 y 50; RF-20)
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// editando (filas 54–58; Fase 3, RF3-01…RF3-04)
+// ---------------------------------------------------------------------------
+
+function desdeEditando(estado: Estado<"editando">, evento: AnchorEvent): AnchorState {
+  // Fila 58: Escape cancela (el ancla se queda donde estaba).
+  if (evento.tipo === "TECLA" && evento.tecla === "Escape") return { tipo: "cancelado", motivo: "escape" };
+  if (estado.pointerId === undefined) {
+    // Fila 55 (sin dedo): el próximo toque sobre el ancla la toma; tocar fuera o esperar cancela.
+    if (evento.tipo === "POINTER_DOWN") {
+      if (evento.sobre !== "ancla") return { tipo: "cancelado", motivo: "toque_fuera" };
+      return { ...estado, pointerId: evento.pointerId, inicio: evento.punto, ultimo: evento.punto, ultimaActividad: evento.t };
+    }
+    if (evento.tipo === "TICK" && evento.t - estado.ultimaActividad >= estado.geo.params.T_INACTIVO) {
+      return { tipo: "cancelado", motivo: "inactividad" };
+    }
+    return estado;
+  }
+  if (evento.tipo === "POINTER_MOVE" && evento.pointerId === estado.pointerId) {
+    return { ...estado, ultimo: evento.punto, ultimaActividad: evento.t }; // fila 56
+  }
+  if (evento.tipo === "POINTER_UP" && evento.pointerId === estado.pointerId) {
+    return { tipo: "soltado", punto: evento.punto, ms: evento.t - estado.t0 }; // fila 57
+  }
+  return estado;
+}
 
 function desdeAjustando(estado: Estado<"ajustando">, evento: AnchorEvent): AnchorState {
   if (evento.tipo === "POINTER_MOVE" && evento.pointerId === estado.pointerId) return avanzar(estado, evento.punto);

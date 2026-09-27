@@ -186,7 +186,7 @@ function cabeEnZonaUtil(centro: Point, viewport: Rect, safeArea: Insets, params:
  * `deslizador` solo aparece (en true) en las acciones con `onSlide` (RF-20); `arriba`, en la
  * acción `atTop` de una pantalla sin "Atrás" (RF-22).
  */
-export type OrderedAction = { id: string; kind: ActionKind; disabled: boolean; deslizador?: true; arriba?: true };
+export type OrderedAction = { id: string; kind: ActionKind; disabled: boolean; deslizador?: true; arriba?: true; mover?: true };
 
 /** Una posición del abanico con su acción asignada. */
 export type Slot = FanSlot & OrderedAction;
@@ -219,6 +219,8 @@ export function orderActions(screen: AnchorScreen, opciones: { deshacer?: boolea
       ...(accion.onSlide ? { deslizador: true as const } : {}),
       // RF-22: sin "Atrás", la acción inofensiva marcada va a 90°.
       ...(accion.atTop && !screen.back ? { arriba: true as const } : {}),
+      // Fase 3 (RF3-01): "Mover ancla" se ajusta quedándose quieto, como un deslizador.
+      ...(accion.moveAnchor ? { mover: true as const } : {}),
     }));
 
   if (opciones.deshacer) {

@@ -122,6 +122,19 @@ export type AnchorState =
       /** Dónde empezó "apuntar": los pasos se cuentan desde aquí. */
       origenApuntar?: Point;
     } & ConPuntero)
+  /**
+   * Fase 3 (RF3-01…RF3-04): modo edición. Con dedo, el ancla lo sigue hasta soltar; sin dedo
+   * (entró con EDITAR, el botón de Ajustes), espera el próximo toque sobre el ancla.
+   */
+  | {
+      tipo: "editando";
+      geo: Geometry;
+      t0: number;
+      ultimaActividad: number;
+      pointerId?: number;
+      inicio?: Point;
+      ultimo?: Point;
+    }
   /** RF-20: ajustando una opción deslizador (Zoom) con el pulgar, hasta soltar. */
   | ({ tipo: "ajustando"; id: string; origen: Point; tInicio: number } & ConPuntero)
   | ({ tipo: "confirmacion_armada"; presel: string } & Gesto)
@@ -148,6 +161,8 @@ export type AnchorState =
   // Transitorios: el adaptador hace el efecto y envía COMPLETADO.
   | { tipo: "ejecutando"; id: string; modo: ModoEjecucion; experto: boolean; ms: number; recorridoPx: number }
   | { tipo: "cancelado"; motivo: CancelReason }
+  /** Fase 3 (RF3-03): soltó el ancla en modo edición; el adaptador aplica el imán y la guarda. */
+  | { tipo: "soltado"; punto: Point; ms: number }
   /** RF-21: soltó frenado sobre algo en la mira; el adaptador abre su capa. */
   | { tipo: "elegido"; apuntado: Apuntado; ms: number }
   | { tipo: "bloqueado_sensible"; id: string };
@@ -185,9 +200,11 @@ export type AnchorEvent =
   | { tipo: "ORIENTACION" }
   | { tipo: "CAMBIO_SECCION" }
   | { tipo: "COMPLETADO" }
+  /** Fase 3 (DF3-01): entrar al modo edición sin dedo (el botón "Mover el ancla" de Ajustes). */
+  | { tipo: "EDITAR"; t: number; geo: Geometry }
   /** RF-21: el adaptador avisa qué hay en la mira (hit-test en pantalla). */
   | { tipo: "APUNTAR"; apuntado: Apuntado | null };
 
-export const ESTADOS_TRANSITORIOS: readonly TipoEstado[] = ["ejecutando", "cancelado", "bloqueado_sensible", "elegido"];
+export const ESTADOS_TRANSITORIOS: readonly TipoEstado[] = ["ejecutando", "cancelado", "bloqueado_sensible", "elegido", "soltado"];
 
 export const REPOSO: AnchorState = Object.freeze({ tipo: "reposo" });

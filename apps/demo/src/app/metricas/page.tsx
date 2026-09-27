@@ -175,6 +175,16 @@ function detalle(m: RegistroMetrica): string {
       return `elegido ${e.id}`;
     case "group_open":
       return `grupo de ${e.n}`;
+    case "anchor_move":
+      return `ancla movida · ${e.lado === "left" ? "izquierda" : "derecha"} · ${Math.round(e.altura * 100)} % · ${e.orientacion}`;
+    case "anchor_move_cancel":
+      return `mover el ancla cancelado · ${e.reason}`;
+    case "hand_change":
+      return `mano ${e.lado === "left" ? "izquierda" : "derecha"}`;
+    case "orientation":
+      return e.orientacion;
+    case "zone_conflict":
+      return e.conflicto === "preferidas" ? "tapa una zona preferida" : "sin lugar para el ancla";
     case "map_zoom":
       return `zoom · ${NOMBRE_FORMA[e.forma]}`;
     case "auto_zoom":

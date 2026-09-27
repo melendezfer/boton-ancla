@@ -24,7 +24,14 @@ export type MetricEvent =
   | { type: "aim"; tipo: "uno" | "grupo" }
   | { type: "pick"; id: string }
   | { type: "group_open"; n: number }
-  | { type: "auto_zoom"; n: number };
+  | { type: "auto_zoom"; n: number }
+  /** Fase 3 (§9): moviste el ancla (lo registra el adaptador, que aplica el imán); lo cancelaste; */
+  | { type: "anchor_move"; lado: "right" | "left"; altura: number; orientacion: "vertical" | "horizontal" }
+  | { type: "anchor_move_cancel"; reason: CancelReason }
+  /** cambiaste de mano; giraste el celular; no había lugar sin tapar zonas (lo registra el adaptador). */
+  | { type: "hand_change"; lado: "right" | "left" }
+  | { type: "orientation"; orientacion: "vertical" | "horizontal" }
+  | { type: "zone_conflict"; conflicto: "preferidas" | "sin_lugar" };
 
 type Tipo = AnchorState["tipo"];
 
@@ -96,6 +103,7 @@ export function derivarMetricas(prev: AnchorState, next: AnchorState, evento: An
       break;
     case "cancelado":
       metricas.push({ type: "cancel", reason: next.motivo });
+      if (prev.tipo === "editando") metricas.push({ type: "anchor_move_cancel", reason: next.motivo });
       break;
     case "bloqueado_sensible":
       metricas.push({ type: "sensitive_blocked", id: next.id });

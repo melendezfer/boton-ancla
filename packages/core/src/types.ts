@@ -41,6 +41,12 @@ export type AnchorAction = {
    */
   onSlide?: (paso: number) => void;
   /**
+   * Fase 3 (RF3-01, DF3-01): la opción "Mover ancla". Quedarse quieto sobre ella
+   * T_ESPERA_DESLIZADOR entra al modo edición (el ancla se engancha al pulgar); soltar sin
+   * esperar llama `onSelect` (la app entra al modo edición con su botón, useAnchorMove).
+   */
+  moveAnchor?: boolean;
+  /**
    * RF-22 (HM-14): acción inofensiva que ocupa 90° cuando la pantalla no tiene "Atrás"
    * (90° es de la familia "volver"). Con "Atrás" o con una capa abierta no cambia nada.
    */
