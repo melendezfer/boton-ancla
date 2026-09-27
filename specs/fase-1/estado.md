@@ -1,8 +1,24 @@
 # Estado del proyecto — para retomar sin contexto
 
-Última actualización: **27-09-2026**, Bloque C de la Fase 3 terminado (en local hasta que autorices el push; la demo publicada se actualiza sola en cada push).
+Última actualización: **27-09-2026**. Todo subido a `origin/main` (la demo publicada se actualiza sola en cada push).
 
-**Dónde quedamos:** **Fase 3 (adaptación al espacio) completa en código**: Bloques A (núcleo), B (adaptador) y C (demo: crédito de OpenStreetMap como zona obligatoria, "Mover ancla" en Ajustes, posición guardada por orientación, recorrido solo deslizando). Falta **probarla en el celular** (`specs/fase-3/prueba-bloque-b.md` y `specs/fase-3/prueba-fase3.md`). **La Fase 1 se cierra en paralelo** con la sesión que falta.
+## ✅ Fase 3 (adaptación al espacio) terminada
+
+Probada en el celular el 27-09-2026 ("está bien"). 12 tareas (`specs/fase-3/tasks.md`); pruebas: 616 del núcleo, 58 de la demo y 403 E2E, en verde.
+
+**Qué se logró:**
+- **Mover el ancla arrastrándola**, solo deslizando ("Mover ancla" en Ajustes, quedándose quieto) o con un botón; con tramos válidos, silueta del abanico, "clic" en la altura de inicio e imán al soltar. No choca con el descanso, el joystick ni el modo experto.
+- **Cambio de mano** soltando el ancla en el otro costado (la mano se deduce del costado, H13); la **bienvenida pregunta la mano** la primera vez.
+- **Horizontal:** el ancla abajo en cada orientación, con una posición guardada para cada una; si el abanico no cabe arriba, el ancla baja y, como último recurso, el abanico se abre hacia abajo (el joystick pasa a entrar hacia arriba).
+- **Zonas reservadas** (`useAnchorReservedArea`): obligatorias (nunca se tapan: el crédito de OpenStreetMap) y preferidas. En la demo, las esquinas reales de RUTEANDO.
+
+**Quedó pendiente (no bloquea):**
+- Decidir si hace falta **"Cambiar de mano" en el abanico** (DF3-03), según las sesiones.
+- El ancho de la banda y los avisos se **estima** (2 × radio) para evitar zonas; ajustarlo si un texto largo tapa algo.
+- Quitar el **control deslizante de altura** de Ajustes cuando se confirme que el arrastre basta (DF3-09).
+- **Teclado en horizontal** y el giro real solo se probaron en el Nubia; el caso "sin lugar" se registra en las métricas (`zone_conflict`).
+
+**Dónde quedamos:** la Fase 3 está cerrada. **La Fase 1 se cierra en paralelo** con la sesión que falta. Siguiente paso posible: el documento de integración con RUTEANDO.
 
 ---
 
@@ -12,13 +28,12 @@
 
 | # | Qué | Quién | Dónde |
 |---|---|---|---|
-| 1 | **Probar la Fase 3 en el celular**: el Bloque B (página de prueba) y el Bloque C (mapa, Ajustes, girar). | Tú | `specs/fase-3/prueba-bloque-b.md` y `specs/fase-3/prueba-fase3.md` |
 | 2 | **Respuestas de las 2 personas sobre HM-18**: pedirles que prueben el zoom directo (doble toque; doble toque, dejar el dedo y deslizar) y contar si ahora el zoom se siente "a la mano". | Tú | Demo publicada; Métricas → "Zoom" cuenta cada forma |
 | 3 | **Sesión 3 de 3** (T-27), con el guion y los mensajes de siempre; exportar su JSON. | Tú | `guion-sesiones.md`, `compartir-demo.md`, `pruebas-manuales.md` |
 | 4 | **Documento de integración con RUTEANDO**: cómo instalar el componente, qué pantallas registrar, qué zonas declarar (crédito de OpenStreetMap obligatorio, logo, botones), el zoom de un dedo para Leaflet y qué reemplaza (la pila de botones, D-06). Todavía no existe. | Claude, con tu visto bueno | por crear (`specs/integracion-ruteando.md`) |
-| 5 | Con lo que salga de la prueba: ajustar la Fase 3 (hallazgos en `specs/fase-3/spec.md` §12) y decidir si hace falta "Cambiar de mano" en el abanico (DF3-03). | Juntos | `specs/fase-3/` |
+| 5 | Con los resultados de las sesiones: decidir si hace falta "Cambiar de mano" en el abanico (DF3-03) y los otros pendientes de la Fase 3 (arriba). | Juntos | `specs/fase-3/` |
 
-**Para retomar con Claude:** *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. Probé el Bloque B: … / Las personas dijeron del zoom: … / Sigue con …"*.
+**Para retomar con Claude:** *"Lee `CLAUDE.md` y `specs/fase-1/estado.md`. Las personas dijeron del zoom: … / Sesión 3: … / Sigue con …"*.
 
 - La demo está en **https://melendezfer.github.io/boton-ancla/** (para levantarla en local: §4; en el celular por la red de la casa: §5).
 
