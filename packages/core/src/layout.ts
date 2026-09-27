@@ -1,4 +1,4 @@
-import { anguloParaMano, puntoEnDireccion, radioParaCuerda } from "./geometry";
+import { normalizarAngulo, anguloParaMano, puntoEnDireccion, radioParaCuerda } from "./geometry";
 import type { Params } from "./params";
 import type { ActionKind, AnchorAction, AnchorIcon, AnchorScreen, Hand, Insets, Point, Rect } from "./types";
 import { ID_ATRAS, ID_CERRAR, ID_DESHACER, ID_OCULTAR_TECLADO } from "./validate";
@@ -102,7 +102,20 @@ type EntradaAbanico = {
   unicaArriba?: boolean;
   /** La opción única es "Ocultar teclado": va al extremo lateral (RF-17). Sin efecto si count ≠ 1. */
   unicaLateral?: boolean;
+  /** Fase 3 (RF3-15): hacia dónde se abre. "abajo" es el espejo vertical del arco. */
+  abreHacia?: "arriba" | "abajo";
 };
+
+/** Ángulo real en pantalla de un ángulo base: espejo horizontal con la mano izquierda y vertical si abre hacia abajo. */
+export function anguloEnPantalla(anguloBase: number, hand: Hand, abreHacia: "arriba" | "abajo" = "arriba"): number {
+  const a = anguloParaMano(anguloBase, hand);
+  return abreHacia === "abajo" ? normalizarAngulo(-a) : a;
+}
+
+/** Lo inverso: el ángulo base (espacio de mano derecha, abanico hacia arriba) de un ángulo de pantalla. */
+export function anguloBaseDe(anguloPantalla: number, hand: Hand, abreHacia: "arriba" | "abajo" = "arriba"): number {
+  return anguloParaMano(abreHacia === "abajo" ? normalizarAngulo(-anguloPantalla) : anguloPantalla, hand);
+}
 
 export function computeFanLayout({
   anchor,
@@ -113,6 +126,7 @@ export function computeFanLayout({
   params,
   unicaArriba = false,
   unicaLateral = false,
+  abreHacia = "arriba",
 }: EntradaAbanico): FanLayout {
   const radio = radioAdaptativo(count, params);
   const angulos = angulosBase(count, params, unicaArriba, unicaLateral);
@@ -122,7 +136,7 @@ export function computeFanLayout({
   const slots = angulos.map((anguloBase, index): FanSlot => {
     const anterior = angulos[index - 1];
     const siguiente = angulos[index + 1];
-    const angulo = anguloParaMano(anguloBase, hand);
+    const angulo = anguloEnPantalla(anguloBase, hand, abreHacia);
     return {
       index,
       anguloBase,
@@ -278,6 +292,10 @@ type EntradaPantalla = {
   capa?: boolean;
   /** Hay un teclado virtual abierto (RF-17): "Ocultar teclado" va a 180°. */
   teclado?: boolean;
+  /** Fase 3: el centro del ancla ya resuelto (resolverColocacion). Sin él, el de la Fase 1. */
+  ancla?: Point;
+  /** Fase 3 (RF3-15): hacia dónde se abre el abanico. */
+  abreHacia?: "arriba" | "abajo";
 };
 
 /**
@@ -293,6 +311,8 @@ export function layoutParaPantalla({
   deshacer = false,
   capa = false,
   teclado = false,
+  ancla,
+  abreHacia = "arriba",
 }: EntradaPantalla): {
   anchor: Point;
   layout: FanLayout;
@@ -310,8 +330,9 @@ export function layoutParaPantalla({
     if (ordered.length >= params.MAX_OPCIONES) ordered = ordered.slice(0, params.MAX_OPCIONES - 1);
     ordered = [...ordered, OCULTAR_TECLADO];
   }
-  const anchor = computeAnchorPosition({ viewport, safeArea, hand, params });
+  const anchor = ancla ?? computeAnchorPosition({ viewport, safeArea, hand, params });
   const layout = computeFanLayout({
+    abreHacia,
     anchor,
     viewport,
     safeArea,

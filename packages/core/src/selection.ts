@@ -1,4 +1,5 @@
-import { anguloDesde, anguloParaMano, distancia } from "./geometry";
+import { anguloDesde, distancia } from "./geometry";
+import { anguloBaseDe } from "./layout";
 import type { Slot } from "./layout";
 import type { Params } from "./params";
 import type { Hand, Point } from "./types";
@@ -24,9 +25,11 @@ type EntradaSeleccion = {
   previous?: string;
   hand: Hand;
   params: Params;
+  /** Fase 3 (RF3-15): el abanico abre hacia abajo (espejo vertical). */
+  abreHacia?: "arriba" | "abajo";
 };
 
-export function resolveSelection({ center, pointer, slots, previous, hand, params }: EntradaSeleccion): Seleccion {
+export function resolveSelection({ center, pointer, slots, previous, hand, params, abreHacia = "arriba" }: EntradaSeleccion): Seleccion {
   const r = distancia(center, pointer);
   const angulo = anguloDesde(center, pointer);
   const primero = slots[0];
@@ -40,7 +43,7 @@ export function resolveSelection({ center, pointer, slots, previous, hand, param
   if (!primero || !ultimo || r < params.R_MUERTA) return base;
 
   // 2. Fuera del arco, incluida la tolerancia de los extremos: nada (RF-05, C-08).
-  const a = anguloParaMano(angulo, hand);
+  const a = anguloBaseDe(angulo, hand, abreHacia);
   if (a < primero.sector.desde || a > ultimo.sector.hasta) return base;
 
   // 3. Histéresis: la anterior se mantiene hasta pasar HISTERESIS grados su borde (RF-04).

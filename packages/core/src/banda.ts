@@ -27,13 +27,19 @@ export function posicionBanda(input: {
   safeArea: Insets;
   hand: Hand;
   params: Params;
+  /** Fase 3 (RF3-15): con el abanico hacia abajo, la banda va debajo del abanico. */
+  abreHacia?: "arriba" | "abajo";
 }): PosicionBanda {
-  const { anchor, layout, viewport, safeArea, hand, params } = input;
+  const { anchor, layout, viewport, safeArea, hand, params, abreHacia = "arriba" } = input;
   // Centro del arco: a medio radio hacia el lado lateral (izquierda con la mano derecha).
   const lateral = hand === "right" ? -1 : 1;
   return {
     x: anchor.x + (lateral * layout.radio) / 2,
-    yBase: anchor.y - layout.radio - (params.D_OPCION * params.ESCALA_PRESEL) / 2 - params.BANDA_MARGEN,
+    // yBase es el borde de abajo de la banda (la banda ocupa de yBase − BANDA_ALTO a yBase).
+    yBase:
+      abreHacia === "abajo"
+        ? anchor.y + layout.radio + (params.D_OPCION * params.ESCALA_PRESEL) / 2 + params.BANDA_MARGEN + params.BANDA_ALTO
+        : anchor.y - layout.radio - (params.D_OPCION * params.ESCALA_PRESEL) / 2 - params.BANDA_MARGEN,
     izquierda: viewport.x + safeArea.left + params.MARGEN_LATERAL,
     derecha: viewport.x + viewport.width - safeArea.right - params.MARGEN_LATERAL,
   };

@@ -21,6 +21,8 @@ export type Geometry = {
   modoDesplazar?: ModoDesplazar;
   /** HM-12b (RF-23): la lista ofrece sus elementos para apuntar (y el interruptor está activado). */
   apuntarLista?: boolean;
+  /** Fase 3 (RF3-15): hacia dónde se abre el abanico. Con "abajo", el joystick entra hacia arriba. */
+  abreHacia?: "arriba" | "abajo";
 };
 
 export type ModoDesplazar = "vertical" | "libre";
@@ -40,11 +42,15 @@ export function crearGeometria(input: {
   modoDesplazar?: ModoDesplazar;
   /** HM-12b: la lista ofrece sus elementos para apuntar. */
   apuntarLista?: boolean;
+  /** Fase 3: centro del ancla ya resuelto (resolverColocacion). */
+  ancla?: Point;
+  /** Fase 3 (RF3-15). */
+  abreHacia?: "arriba" | "abajo";
 }): Geometry {
   const { anchor, ordered, slots } = layoutParaPantalla(input);
   // La prioridad 1 es la primera acción propia (no "Atrás") de orderActions.
   const prioridad1 = ordered.find((a) => ![ID_ATRAS, ID_CERRAR, ID_OCULTAR_TECLADO].includes(a.id))?.id;
-  return { centro: anchor, slots, params: input.params, hand: input.hand, prioridad1, desplazable: input.desplazable ?? false, modoDesplazar: input.modoDesplazar ?? "vertical", apuntarLista: input.apuntarLista ?? false };
+  return { centro: anchor, slots, params: input.params, hand: input.hand, prioridad1, desplazable: input.desplazable ?? false, modoDesplazar: input.modoDesplazar ?? "vertical", apuntarLista: input.apuntarLista ?? false, abreHacia: input.abreHacia ?? "arriba" };
 }
 
 /** Datos de un dedo apoyado desde que tocó el ancla. */

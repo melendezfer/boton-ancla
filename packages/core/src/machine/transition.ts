@@ -1,4 +1,5 @@
-import { anguloDesde, anguloParaMano, distancia } from "../geometry";
+import { anguloDesde, distancia } from "../geometry";
+import { anguloBaseDe } from "../layout";
 import { resolveSelection } from "../selection";
 import type { Point } from "../types";
 import { ESTADOS_TRANSITORIOS, REPOSO, type AnchorEvent, type AnchorState, type Apuntado, type Geometry } from "./states";
@@ -200,6 +201,7 @@ function moverGesto(estado: EstadoGesto, punto: Point, t: number): EstadoGesto {
     previous: estado.presel,
     hand: geo.hand,
     params: geo.params,
+    abreHacia: geo.abreHacia,
   });
   const slot = geo.slots.find((s) => s.id === sel.id);
   // RF-20 (HM-17): la espera cuenta solo con el pulgar QUIETO sobre la opción: cambiar de opción
@@ -215,7 +217,7 @@ function moverGesto(estado: EstadoGesto, punto: Point, t: number): EstadoGesto {
   return { ...estado, tipo: "abierto_gesto", presel: sel.id, tPresel, puntoPresel };
 }
 
-/** RF-20: ¿ya esperó lo suficiente sobre un deslizador? */
+/** RF-20: ¿ya esperó lo suficiente, quieto, sobre un deslizador? */
 function esperoDeslizador(estado: EstadoGesto, t: number): boolean {
   if (estado.tipo !== "abierto_gesto" || estado.tPresel === undefined) return false;
   const slot = estado.geo.slots.find((s) => s.id === estado.presel);
@@ -494,7 +496,8 @@ function desdeTeclado(estado: Estado<"abierto_teclado">, evento: AnchorEvent): A
 function haciaDesplazamiento(geo: Geometry, desde: Point, hasta: Point): boolean {
   if (!geo.desplazable) return false;
   const P = geo.params;
-  const a = anguloParaMano(anguloDesde(desde, hasta), geo.hand);
+  // RF3-15: con el abanico hacia abajo, el joystick entra hacia ARRIBA (espejo vertical).
+  const a = anguloBaseDe(anguloDesde(desde, hasta), geo.hand, geo.abreHacia);
   return a >= P.ARCO_DESPLAZAR_DESDE && a <= P.ARCO_DESPLAZAR_HASTA;
 }
 
