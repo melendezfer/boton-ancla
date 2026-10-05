@@ -8,10 +8,11 @@
 
 | Etiqueta | Fecha | Qué |
 |---|---|---|
-| **`v0.3.1`** (la vigente) | 27-09-2026 | Igual que `v0.3.0`, con la versión de los `package.json` de `core` y `react` igualada a **0.3.1** (antes decían 0.1.0). |
+| **`v0.3.2`** (la vigente) | 05-10-2026 | `v0.3.1` + **HM-16 (imán fuerte, RF-24)**. La copia RUTEANDO para la etapa I2 (`iman="fuerte"`). Pruebas: 630 del núcleo, 58 de la demo y 415 E2E en verde. |
+| `v0.3.1` | 27-09-2026 | Igual que `v0.3.0`, con la versión de los `package.json` de `core` y `react` igualada a **0.3.1** (antes decían 0.1.0). |
 | `v0.3.0` | 27-09-2026 | Commit `7185ecd`: **Fases 1 y 3 terminadas**. Los `package.json` todavía decían 0.1.0. |
 
-- Ver qué cambió desde la vigente: `git log --oneline v0.3.1..main`.
+- Ver qué cambió desde la vigente: `git log --oneline v0.3.2..main`.
 - Al crear una etiqueta nueva, igualar antes el `"version"` de `packages/core/package.json` y `packages/react/package.json` (y `package-lock.json` con `npm install --package-lock-only`).
 
 ## ✅ Fase 3 (adaptación al espacio) terminada
