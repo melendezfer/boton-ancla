@@ -45,7 +45,7 @@ export function ProveedorAncla({ children }: { children: React.ReactNode }) {
       onPlacementChange={guardar}
       theme={TEMA}
       icons={ICONOS}
-      params={{ T_ESPERA_CENTRADO: prefs.tEsperaCentrado, T_CENTRADO: prefs.tCentrado }}
+      params={{ T_ESPERA_CENTRADO: prefs.tEsperaCentrado, T_CENTRADO: prefs.tCentrado, T_RECOGER: prefs.tRecoger }}
       onEvent={registrarMetrica}
       desplazar={prefs.desplazar}
       desplazarLibre={prefs.moverMapa}

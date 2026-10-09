@@ -13,6 +13,16 @@ export type Params = {
   ESCALA_PRESEL: number;
   /** Opacidad del fondo del ancla en reposo (0–1); el ícono siempre al 100 %. */
   OPACIDAD_REPOSO: number;
+  /** Desenfoque del fondo en reposo, en px (aspecto RA-02: deja ver lo que hay debajo). */
+  DESENFOQUE_REPOSO: number;
+  /** Tras usarla, sigue encendida este tiempo antes de volver a translúcida (aspecto RA-04). */
+  T_ENCENDIDA: number;
+  /** Translúcida sin usarla este tiempo más, se recoge al borde (aspecto RA-05). */
+  T_RECOGER: number;
+  /** Ciclo del latido en reposo (aspecto RA-03). */
+  T_LATIDO: number;
+  /** Si se recoge al borde (aspecto RA-08). */
+  RECOGER: boolean;
   /** Distancia al borde lateral, además del área segura (L-02). */
   MARGEN_LATERAL: number;
   /** Distancia MÍNIMA al borde inferior, además del área segura (piso del ancla). */
@@ -124,7 +134,12 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   D_ACTIVO: 64,
   D_OPCION: 44,
   ESCALA_PRESEL: 1.25,
-  OPACIDAD_REPOSO: 0.6,
+  OPACIDAD_REPOSO: 0.45,
+  DESENFOQUE_REPOSO: 2,
+  T_ENCENDIDA: 3000,
+  T_RECOGER: 15000,
+  T_LATIDO: 4000,
+  RECOGER: true,
   MARGEN_LATERAL: 24,
   MARGEN_INFERIOR: 16,
   ANCLA_ALTURA: 0.44,

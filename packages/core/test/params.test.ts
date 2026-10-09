@@ -54,6 +54,11 @@ describe("DEFAULT_PARAMS (spec §6)", () => {
       const valorSpec = derivar ? derivar(filas) : filas.get(nombre);
       expect(valorSpec, `${nombre} no aparece en la tabla de §6`).toBeDefined();
       const actual = DEFAULT_PARAMS[nombre];
+      if (typeof actual === "boolean") {
+        // Parámetros de sí/no (RECOGER, aspecto v0.4): la celda dice "sí" o "no".
+        expect(actual).toBe(String(valorSpec).trim().startsWith("sí"));
+        return;
+      }
       if (typeof actual === "string") {
         // Parámetros de texto (DESEMPATE): la primera palabra de la celda.
         expect(actual).toBe(String(valorSpec).split(/\s/)[0]);

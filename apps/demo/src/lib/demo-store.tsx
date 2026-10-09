@@ -14,6 +14,8 @@ export type Fondo = "claro" | "foto" | "oscuro";
 
 /** HM-15: rangos de los deslizadores del centrado en Ajustes (ms). */
 export const ESPERA_CENTRADO_MAX = 500;
+/** Aspecto v0.4 (RA-05): tope del control de "recogerse al borde" en la demo. */
+export const RECOGER_MAX = 30000;
 export const DURACION_CENTRADO_MAX = 600;
 
 function leerColocacion(v: unknown): Colocacion | null {
@@ -43,6 +45,8 @@ export type Preferencias = {
   tEsperaCentrado: number;
   /** HM-15: duración del centrado, en ms. */
   tCentrado: number;
+  /** Aspecto v0.4 (RA-05): tiempo translúcida antes de recogerse al borde, en ms. */
+  tRecoger: number;
   /** HM-09 (experimental): desplazar con el ancla. Activado por defecto en la demo. */
   desplazar: boolean;
   /** HM-11 (experimental): mover el mapa con el ancla (joystick libre). Activado por defecto en la demo. */
@@ -63,6 +67,7 @@ export const PREFERENCIAS_INICIALES: Preferencias = {
   horizontal: null,
   tEsperaCentrado: DEFAULT_PARAMS.T_ESPERA_CENTRADO,
   tCentrado: DEFAULT_PARAMS.T_CENTRADO,
+  tRecoger: DEFAULT_PARAMS.T_RECOGER,
   desplazar: true,
   moverMapa: true,
   apuntar: true,
@@ -165,6 +170,7 @@ function leerPrefs(): Preferencias {
       horizontal: leerColocacion(d.horizontal),
       tEsperaCentrado: numeroEntre(d.tEsperaCentrado, 0, ESPERA_CENTRADO_MAX, PREFERENCIAS_INICIALES.tEsperaCentrado),
       tCentrado: numeroEntre(d.tCentrado, 0, DURACION_CENTRADO_MAX, PREFERENCIAS_INICIALES.tCentrado),
+      tRecoger: numeroEntre(d.tRecoger, 0, RECOGER_MAX, PREFERENCIAS_INICIALES.tRecoger),
       desplazar: d.desplazar !== false,
       moverMapa: d.moverMapa !== false,
       apuntar: d.apuntar !== false,
