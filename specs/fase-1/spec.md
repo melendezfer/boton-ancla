@@ -340,7 +340,12 @@ Entonces el ancla no se activa
 | `D_ACTIVO` | 64 px | Diámetro cuando está activo |
 | `D_OPCION` | 44 px | Mínimo táctil |
 | `ESCALA_PRESEL` | 1.25 | Escala de la opción preseleccionada |
-| `OPACIDAD_REPOSO` | fondo 60% + desenfoque | El ícono siempre al 100% |
+| `OPACIDAD_REPOSO` | fondo 45% + desenfoque | El ícono siempre al 100%. Antes 60 %; bajó con el aspecto v0.4 (`specs/aspecto`, RA-02) |
+| `DESENFOQUE_REPOSO` | 2 px | Desenfoque del fondo en reposo; deja ver lo que hay debajo (aspecto RA-02; antes 12 px fijo) |
+| `T_ENCENDIDA` | 3 s | Tras usarla sigue encendida antes de volver a translúcida (aspecto RA-04) |
+| `T_RECOGER` | 15 s | Translúcida sin usarla, se recoge medio escondida al borde (aspecto RA-05) |
+| `T_LATIDO` | 4 s | Ciclo del latido sutil en reposo; sin latido con movimiento reducido (aspecto RA-03) |
+| `RECOGER` | sí | La app puede apagarlo (aspecto RA-08) |
 | `MARGEN_LATERAL` | 24 px + área segura | Aleja el ancla del gesto "atrás" de Android (~24 dp) |
 | `MARGEN_INFERIOR` | 16 px + área segura | Distancia **mínima** al borde inferior (piso del ancla) |
 | `ANCLA_ALTURA` | 0.44 del alto útil | Altura del centro del ancla sobre el borde inferior útil. Limitada entre el piso (`MARGEN_INFERIOR`) y el techo que deja caber el abanico de 5 opciones y la banda de etiqueta (HM-01, HM-02) |

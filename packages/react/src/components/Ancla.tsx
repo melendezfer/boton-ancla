@@ -1,6 +1,11 @@
 "use client";
 
 import {
+  aspectoEnReposo,
+  dentroDelCirculo,
+  desplazamientoRecogida,
+  proximoCambioDeAspecto,
+  type AspectoReposo,
   createAnchorMachine,
   crearGeometria,
   distancia,
@@ -145,6 +150,36 @@ export function Ancla({
     }, Math.max(0, aviso.hasta - performance.now()));
     return () => clearTimeout(t);
   }, [aviso]);
+
+  // --- Aspecto en reposo (specs/aspecto, RA-03…RA-05, DA-01, DA-06) ---
+  // Al montar arranca translúcida; al volver a reposo tras usarla, encendida
+  // T_ENCENDIDA; después translúcida y, pasado T_RECOGER, recogida al borde.
+  /** La persona la usó (tocó, deslizó o tecleó) desde el último reposo. */
+  const usada = useRef(false);
+  const [aspecto, setAspecto] = useState<AspectoReposo>(() => aspectoEnReposo(null, params));
+  const enReposo = estado.tipo === "reposo";
+  const paramsRef = useRef(params);
+  useEffect(() => {
+    paramsRef.current = params;
+  }, [params]);
+  useEffect(() => {
+    if (!enReposo) return;
+    // Recién usada: la cuenta empieza ahora (RA-04, encendida). Sin usarla (al
+    // montar o tras un cambio de pantalla), como si ya hubiera pasado T_ENCENDIDA (DA-06).
+    const inicio = usada.current ? performance.now() : performance.now() - paramsRef.current.T_ENCENDIDA;
+    usada.current = false;
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const actualizar = () => {
+      const desde = performance.now() - inicio;
+      setAspecto(aspectoEnReposo(desde, paramsRef.current));
+      const falta = proximoCambioDeAspecto(desde, paramsRef.current);
+      if (falta !== null) t = setTimeout(actualizar, falta + 1);
+    };
+    actualizar();
+    return () => clearTimeout(t);
+  }, [enReposo]);
+  /** RA-06: un toque que empezó fuera del círculo visible no abre el menú por el click que le sigue. */
+  const ignorarClic = useRef(false);
 
   // --- Bienvenida (HU-12, T-23) ---
   const bienvenida = useBienvenida();
@@ -798,7 +833,8 @@ export function Ancla({
       <button
         ref={refBoton}
         type="button"
-        className={`ba-ancla${claseAncla(estado)}${apuntadoVisible ? " ba-ancla--apuntando" : ""}`}
+        className={`ba-ancla${claseAncla(estado)}${enReposo ? claseAspecto(aspecto) : ""}${apuntadoVisible ? " ba-ancla--apuntando" : ""}`}
+        data-aspecto={enReposo ? aspecto : undefined}
         data-testid="ancla"
         data-apuntado={apuntadoVisible ? (apuntadoVisible.apuntado.tipo === "uno" ? apuntadoVisible.apuntado.id : "grupo") : undefined}
         data-geometria={JSON.stringify(resumenGeometria(geo))}
@@ -806,10 +842,37 @@ export function Ancla({
         aria-expanded={abierto}
         aria-controls={abierto ? "ba-menu" : undefined}
         aria-label={hayCapa ? `Menú, ${vista.sectionLabel}` : `Menú, sección ${vista.sectionLabel}`}
-        style={{ left: geoDibujo.centro.x, top: geoDibujo.centro.y }}
-        onPointerDown={(e) => controlador.bajarEnAncla(e.nativeEvent, e.currentTarget)}
-        onKeyDown={(e) => controlador.teclaEnAncla(e.nativeEvent)}
-        onClick={() => controlador.clicEnAncla()}
+        style={
+          {
+            left: geoDibujo.centro.x,
+            top: geoDibujo.centro.y,
+            "--ba-recoger-x": `${desplazamientoRecogida(geoDibujo.centro.x, medidas.viewport.width)}px`,
+          } as CSSProperties
+        }
+        onPointerDown={(e) => {
+          // RA-06 (DA-04): solo el círculo visible; recogida, el círculo está corrido.
+          const corrido = enReposo && aspecto === "recogida" ? desplazamientoRecogida(geoDibujo.centro.x, medidas.viewport.width) : 0;
+          const centroVisible = { x: geoDibujo.centro.x + corrido, y: geoDibujo.centro.y };
+          if (enReposo && !dentroDelCirculo({ x: e.clientX, y: e.clientY }, centroVisible, params)) {
+            ignorarClic.current = true;
+            return;
+          }
+          ignorarClic.current = false;
+          usada.current = true;
+          controlador.bajarEnAncla(e.nativeEvent, e.currentTarget);
+        }}
+        onKeyDown={(e) => {
+          usada.current = true;
+          controlador.teclaEnAncla(e.nativeEvent);
+        }}
+        onClick={() => {
+          if (ignorarClic.current) {
+            ignorarClic.current = false;
+            return;
+          }
+          usada.current = true;
+          controlador.clicEnAncla();
+        }}
         onContextMenu={(e) => e.preventDefault()}
       >
         {apuntadoVisible ? (
@@ -1063,6 +1126,13 @@ function useVelo(estado: AnchorState) {
  * descanso sigue translúcida y solo muestra un anillo sutil (HU-04): el pulgar está
  * apoyado para leer, no para actuar.
  */
+/** Aspecto en reposo (specs/aspecto): encendida tras usarla; latido en reposo; recogida al borde. */
+function claseAspecto(aspecto: AspectoReposo): string {
+  if (aspecto === "encendida") return " ba-ancla--encendida";
+  if (aspecto === "recogida") return " ba-ancla--recogida ba-ancla--latido";
+  return " ba-ancla--latido";
+}
+
 function claseAncla(estado: AnchorState): string {
   if (estado.tipo === "reposo") return "";
   if (estado.tipo === "descanso") return " ba-ancla--descanso";
@@ -1162,6 +1232,8 @@ function variablesCss(theme: AnchorTheme, params: Params): CSSProperties {
     "--ba-escala-presel": String(params.ESCALA_PRESEL),
     "--ba-escala-activo": String(params.D_ACTIVO / params.D_REPOSO),
     "--ba-opacidad-reposo": `${Math.round(params.OPACIDAD_REPOSO * 100)}%`,
+    "--ba-desenfoque-reposo": `${params.DESENFOQUE_REPOSO}px`,
+    "--ba-t-latido": `${params.T_LATIDO}ms`,
     "--ba-t-anim": `${params.T_ANIM}ms`,
     "--ba-banda-alto": `${params.BANDA_ALTO}px`,
   } as CSSProperties;

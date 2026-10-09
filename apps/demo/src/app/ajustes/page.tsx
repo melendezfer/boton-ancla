@@ -5,7 +5,7 @@ import { reiniciarBienvenida, useAnchorMove, useMedidas } from "@boton-ancla/rea
 import { EspacioBarra } from "@/components/barra-demo";
 import { usePantallaAjustes } from "@/components/pantallas-conectadas";
 import { useOrientacionVentana } from "@/lib/orientacion";
-import { DURACION_CENTRADO_MAX, ESPERA_CENTRADO_MAX, useDemo, type Fondo, type Preferencias, type Rol } from "@/lib/demo-store";
+import { DURACION_CENTRADO_MAX, ESPERA_CENTRADO_MAX, RECOGER_MAX, useDemo, type Fondo, type Preferencias, type Rol } from "@/lib/demo-store";
 
 const ALTURA_MIN = 0;
 const ALTURA_MAX = 0.6;
@@ -121,6 +121,22 @@ export default function PaginaAjustes() {
           </span>
         </span>
       </label>
+
+      <section className="flex flex-col gap-3 rounded-card border border-terracota/40 bg-surface p-4">
+        <h2 className="font-heading text-title-2 font-semibold text-text">Recogerse al borde</h2>
+        <p className="font-sans text-body-sm text-text-muted">
+          Aspecto v0.4 (RA-05). Sin usarla, el ancla queda translúcida y después se recoge medio escondida al borde; el gesto
+          sigue funcionando. Bájalo para verlo sin esperar.
+        </p>
+        <Milisegundos
+          id="tiempo-recoger"
+          titulo="Translúcida antes de recogerse"
+          valor={prefs.tRecoger}
+          max={RECOGER_MAX}
+          inicial={DEFAULT_PARAMS.T_RECOGER}
+          alCambiar={(v) => setPref("tRecoger", v)}
+        />
+      </section>
 
       <section className="flex flex-col gap-3 rounded-card border border-terracota/40 bg-surface p-4">
         <h2 className="font-heading text-title-2 font-semibold text-text">Centrado al apuntar</h2>
