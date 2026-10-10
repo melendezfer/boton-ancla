@@ -346,6 +346,8 @@ Entonces el ancla no se activa
 | `T_RECOGER` | 15 s | Translúcida sin usarla, se recoge medio escondida al borde (aspecto RA-05) |
 | `T_LATIDO` | 4 s | Ciclo del latido sutil en reposo; sin latido con movimiento reducido (aspecto RA-03) |
 | `RECOGER` | sí | La app puede apagarlo (aspecto RA-08) |
+| `D_GUARDAR` | 40 px | Deslizar al menos esto hacia el borde guarda el ancla (aspecto RA-09) |
+| `T_GUARDAR` | 800 ms | El gesto de guardar debe durar menos que esto (aspecto RA-09) |
 | `MARGEN_LATERAL` | 24 px + área segura | Aleja el ancla del gesto "atrás" de Android (~24 dp) |
 | `MARGEN_INFERIOR` | 16 px + área segura | Distancia **mínima** al borde inferior (piso del ancla) |
 | `ANCLA_ALTURA` | 0.44 del alto útil | Altura del centro del ancla sobre el borde inferior útil. Limitada entre el piso (`MARGEN_INFERIOR`) y el techo que deja caber el abanico de 5 opciones y la banda de etiqueta (HM-01, HM-02) |

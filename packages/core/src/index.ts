@@ -12,7 +12,7 @@ export type {
   Rect,
 } from "./types";
 export { DEFAULT_PARAMS, type Desempate, type Params } from "./params";
-export { aspectoEnReposo, dentroDelCirculo, desplazamientoRecogida, proximoCambioDeAspecto, type AspectoReposo } from "./aspecto";
+export { aspectoEnReposo, dentroDelCirculo, desplazamientoRecogida, esGestoGuardar, proximoCambioDeAspecto, type AspectoReposo } from "./aspecto";
 export { ID_ATRAS, ID_CERRAR, ID_DESHACER, ID_OCULTAR_TECLADO, validateScreen } from "./validate";
 export {
   anguloDesde,

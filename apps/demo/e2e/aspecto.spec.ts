@@ -102,3 +102,32 @@ test("RA-06: un toque en la esquina de la caja, fuera del círculo, no la activa
   expect(await estadoAncla(page)).toBe("reposo");
   await expect(page.getByTestId("ancla")).toHaveAttribute("aria-expanded", "false");
 });
+
+test("RA-09: deslizarla hacia el borde la guarda (sin abrir ni ejecutar nada); tocarla la saca", async ({ page }) => {
+  const g = await leerGeometria(page);
+  const vp = page.viewportSize()!;
+  const gestos = await crearGestos(page);
+  await gestos.deslizar(g.centro, { x: vp.width - 2, y: g.centro.y }, { pasos: 6, ms: 120 });
+  await expect.poll(() => estadoAncla(page)).toBe("reposo");
+  await expect.poll(() => aspecto(page)).toBe("recogida");
+  await expect(page.getByTestId("ancla")).toHaveAttribute("aria-expanded", "false");
+  // Sacarla: tocar la mitad visible abre el menú.
+  await expect
+    .poll(async () => {
+      const c = (await page.getByTestId("ancla").boundingBox())!;
+      return Math.round(c.x + c.width / 2);
+    })
+    .toBeGreaterThanOrEqual(vp.width - 2);
+  const caja = (await page.getByTestId("ancla").boundingBox())!;
+  await tocar(gestos, { x: caja.x + caja.width / 4 + 2, y: g.centro.y });
+  await expect.poll(() => estadoAncla(page)).toBe("abierto_toque");
+});
+
+test("RA-09: un deslizamiento hacia adentro no la guarda", async ({ page }) => {
+  const g = await leerGeometria(page);
+  const gestos = await crearGestos(page);
+  await gestos.deslizar(g.centro, { x: g.centro.x - 60, y: g.centro.y }, { pasos: 6, ms: 120 });
+  await page.keyboard.press("Escape");
+  await expect.poll(() => estadoAncla(page)).toBe("reposo");
+  expect(await aspecto(page)).not.toBe("recogida");
+});

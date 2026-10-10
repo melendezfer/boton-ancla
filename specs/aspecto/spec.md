@@ -1,6 +1,6 @@
 # Botón-ancla — Especificación: aspecto en reposo (v0.4)
 
-Versión 0.1 · 09-10-2026 · Pedido por el usuario tras probar RUTEANDO en el celular
+Versión 0.2 · 10-10-2026 (RA-09: gesto para guardarla) · antes 0.1 del 09-10-2026 · Pedido por el usuario tras probar RUTEANDO en el celular
 (spec de RUTEANDO `docs/specs/ajustes-e1-e4.md` §F, aprobada). Continúa la Fase 1 y la
 Fase 3: lo que no cambia aquí sigue igual.
 
@@ -23,6 +23,7 @@ que invite a tocarlo sin estorbar.
 | RA-06 | **Solo su círculo**: un toque o un deslizamiento que empieza fuera del círculo visible (aunque caiga en la caja del botón) no la activa. |
 | RA-07 | Se mantiene lo que ya funciona: abanico con sexta opción, tocar un lado o el otro, deslizar y soltar, descanso, edición (Fase 3). |
 | RA-08 | La app puede apagar el recogido (`RECOGER: false`), por ejemplo en una pantalla donde el borde ya está ocupado. |
+| RA-09 | **Gesto para guardarla** (v0.5): el mismo de sacarla, al revés. Un deslizamiento rápido que empieza en el ancla y va hacia el borde de su lado (al menos `D_GUARDAR`, más horizontal que vertical y en menos de `T_GUARDAR`) la recoge al borde de inmediato, sin abrir ni ejecutar nada. Para sacarla: tocarla o deslizar desde la mitad visible hacia adentro (RA-05). |
 
 ## 3. Fuera de alcance
 

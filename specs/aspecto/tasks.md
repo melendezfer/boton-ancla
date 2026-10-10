@@ -7,3 +7,9 @@
 - [x] TA-5 CSS: semitransparencia, latido con movimiento reducido, recogida animada.
 - [x] TA-6 E2E en la demo: encendida → translúcida → recogida con el reloj de Playwright; el gesto funciona recogida; un toque en la esquina de la caja no la activa.
 - [x] TA-7 Demo: control para ver el recogido sin esperar (y versión 0.4.0 con su etiqueta).
+
+## v0.5 (RA-09)
+
+- [x] TA-8 Parámetros `D_GUARDAR` y `T_GUARDAR` (spec §6) y `esGestoGuardar` en el núcleo con pruebas.
+- [x] TA-9 Adaptador: medir el gesto y recoger al volver a reposo.
+- [x] TA-10 E2E: guardar con el gesto (sin abrir ni ejecutar nada) y sacarla después; un deslizamiento hacia adentro no la guarda.

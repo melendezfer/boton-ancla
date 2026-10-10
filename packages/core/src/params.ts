@@ -23,6 +23,10 @@ export type Params = {
   T_LATIDO: number;
   /** Si se recoge al borde (aspecto RA-08). */
   RECOGER: boolean;
+  /** Distancia mínima hacia el borde del gesto de guardarla (aspecto RA-09). */
+  D_GUARDAR: number;
+  /** Duración máxima del gesto de guardarla (aspecto RA-09). */
+  T_GUARDAR: number;
   /** Distancia al borde lateral, además del área segura (L-02). */
   MARGEN_LATERAL: number;
   /** Distancia MÍNIMA al borde inferior, además del área segura (piso del ancla). */
@@ -140,6 +144,8 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   T_RECOGER: 15000,
   T_LATIDO: 4000,
   RECOGER: true,
+  D_GUARDAR: 40,
+  T_GUARDAR: 800,
   MARGEN_LATERAL: 24,
   MARGEN_INFERIOR: 16,
   ANCLA_ALTURA: 0.44,
