@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PARAMS, aspectoEnReposo, dentroDelCirculo, desplazamientoRecogida, proximoCambioDeAspecto } from "../src";
+import { DEFAULT_PARAMS, aspectoEnReposo, dentroDelCirculo, desplazamientoRecogida, esGestoGuardar, proximoCambioDeAspecto } from "../src";
 
 // specs/aspecto: encendida → translúcida → recogida (RA-04, RA-05, RA-08) y el círculo (RA-06).
 const p = DEFAULT_PARAMS;
@@ -46,5 +46,23 @@ describe("dentroDelCirculo", () => {
     expect(dentroDelCirculo({ x: 100 + p.D_REPOSO / 2, y: 100 }, c, p)).toBe(true);
     const esquina = { x: 100 + p.D_REPOSO / 2 - 1, y: 100 + p.D_REPOSO / 2 - 1 };
     expect(dentroDelCirculo(esquina, c, p)).toBe(false);
+  });
+});
+
+describe("esGestoGuardar (RA-09)", () => {
+  const ancho = 390;
+  const derecha = 340; // ancla del lado derecho
+  it("hacia el borde de su lado, corto y rápido: guarda", () => {
+    expect(esGestoGuardar({ x: 340, y: 500 }, { x: 385, y: 505 }, 300, derecha, ancho, p)).toBe(true);
+  });
+  it("hacia adentro, muy vertical, muy corto o muy lento: no", () => {
+    expect(esGestoGuardar({ x: 340, y: 500 }, { x: 290, y: 500 }, 300, derecha, ancho, p)).toBe(false);
+    expect(esGestoGuardar({ x: 340, y: 500 }, { x: 385, y: 440 }, 300, derecha, ancho, p)).toBe(false);
+    expect(esGestoGuardar({ x: 340, y: 500 }, { x: 370, y: 500 }, 300, derecha, ancho, p)).toBe(false);
+    expect(esGestoGuardar({ x: 340, y: 500 }, { x: 385, y: 500 }, p.T_GUARDAR + 1, derecha, ancho, p)).toBe(false);
+  });
+  it("del lado izquierdo, hacia la izquierda", () => {
+    expect(esGestoGuardar({ x: 50, y: 500 }, { x: 5, y: 500 }, 300, 50, ancho, p)).toBe(true);
+    expect(esGestoGuardar({ x: 50, y: 500 }, { x: 95, y: 500 }, 300, 50, ancho, p)).toBe(false);
   });
 });

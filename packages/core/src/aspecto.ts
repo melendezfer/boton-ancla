@@ -35,3 +35,22 @@ export function desplazamientoRecogida(centroX: number, anchoVista: number): num
 export function dentroDelCirculo(punto: { x: number; y: number }, centro: { x: number; y: number }, params: Params, tolerancia = 2): boolean {
   return Math.hypot(punto.x - centro.x, punto.y - centro.y) <= params.D_REPOSO / 2 + tolerancia;
 }
+
+/**
+ * RA-09 (DA-07, DA-08): ¿el deslizamiento que empezó en el ancla es el de
+ * guardarla? Hacia el borde de su lado, al menos D_GUARDAR, más horizontal que
+ * vertical y en menos de T_GUARDAR.
+ */
+export function esGestoGuardar(
+  inicio: { x: number; y: number },
+  fin: { x: number; y: number },
+  ms: number,
+  centroX: number,
+  anchoVista: number,
+  params: Params,
+): boolean {
+  const haciaElBorde = centroX >= anchoVista / 2 ? 1 : -1;
+  const dx = (fin.x - inicio.x) * haciaElBorde;
+  const dy = Math.abs(fin.y - inicio.y);
+  return ms <= params.T_GUARDAR && dx >= params.D_GUARDAR && dy <= 0.75 * dx;
+}

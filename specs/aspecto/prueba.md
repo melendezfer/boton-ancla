@@ -12,3 +12,5 @@ En el celular (`npm run lan`, `https://<IP>:3002`) y en el PC. Para no esperar 1
 | 5 | Cierra el menú | Queda encendida (sólida) unos 3 s y vuelve a translúcida |
 | 6 | Toca justo fuera del círculo (en diagonal, cerca del borde) | No pasa nada |
 | 7 | Sexta opción, tocar un lado u otro, deslizar y soltar | Igual que antes |
+| 8 | (v0.5) Desliza rápido el ancla hacia el borde de su lado | Se guarda medio escondida al instante, sin abrir el menú |
+| 9 | Tócala o desliza desde la mitad visible | Sale y abre el abanico |

@@ -4,6 +4,7 @@ import {
   aspectoEnReposo,
   dentroDelCirculo,
   desplazamientoRecogida,
+  esGestoGuardar,
   proximoCambioDeAspecto,
   type AspectoReposo,
   createAnchorMachine,
@@ -156,6 +157,8 @@ export function Ancla({
   // T_ENCENDIDA; después translúcida y, pasado T_RECOGER, recogida al borde.
   /** La persona la usó (tocó, deslizó o tecleó) desde el último reposo. */
   const usada = useRef(false);
+  /** RA-09: el último gesto fue el de guardarla; al volver a reposo, recogida de inmediato. */
+  const guardar = useRef(false);
   const [aspecto, setAspecto] = useState<AspectoReposo>(() => aspectoEnReposo(null, params));
   const enReposo = estado.tipo === "reposo";
   const paramsRef = useRef(params);
@@ -166,8 +169,15 @@ export function Ancla({
     if (!enReposo) return;
     // Recién usada: la cuenta empieza ahora (RA-04, encendida). Sin usarla (al
     // montar o tras un cambio de pantalla), como si ya hubiera pasado T_ENCENDIDA (DA-06).
-    const inicio = usada.current ? performance.now() : performance.now() - paramsRef.current.T_ENCENDIDA;
+    // Guardada con el gesto (RA-09): como si ya hubiera pasado también T_RECOGER.
+    const p = paramsRef.current;
+    const inicio = guardar.current && p.RECOGER
+      ? performance.now() - p.T_ENCENDIDA - p.T_RECOGER
+      : usada.current
+        ? performance.now()
+        : performance.now() - p.T_ENCENDIDA;
     usada.current = false;
+    guardar.current = false;
     let t: ReturnType<typeof setTimeout> | undefined;
     const actualizar = () => {
       const desde = performance.now() - inicio;
@@ -859,6 +869,19 @@ export function Ancla({
           }
           ignorarClic.current = false;
           usada.current = true;
+          // RA-09 (DA-07): se mide el deslizamiento hasta que se suelta; hacia el borde, la guarda.
+          if (enReposo) {
+            const inicioGesto = { x: e.clientX, y: e.clientY, t: performance.now() };
+            const centroX = geoDibujo.centro.x;
+            const ancho = medidas.viewport.width;
+            window.addEventListener(
+              "pointerup",
+              (fin) => {
+                guardar.current = esGestoGuardar(inicioGesto, { x: fin.clientX, y: fin.clientY }, performance.now() - inicioGesto.t, centroX, ancho, params);
+              },
+              { once: true, capture: true },
+            );
+          }
           controlador.bajarEnAncla(e.nativeEvent, e.currentTarget);
         }}
         onKeyDown={(e) => {

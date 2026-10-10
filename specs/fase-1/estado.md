@@ -8,7 +8,8 @@
 
 | Etiqueta | Fecha | Qué |
 |---|---|---|
-| **`v0.4.0`** (la vigente) | 09-10-2026 | **Aspecto en reposo** (`specs/aspecto`): semitransparente, latido, encendida tras usarla, translúcida y recogida al borde sin perder el gesto, solo su círculo. Pedido por el usuario tras probar RUTEANDO (spec de RUTEANDO `ajustes-e1-e4.md` §F). Pruebas: 641 del núcleo, 58 de la demo y 438 E2E en verde. **Falta la prueba manual en el celular** (`specs/aspecto/prueba.md`). |
+| **`v0.5.0`** (la vigente) | 10-10-2026 | `v0.4.0` + **gesto para guardarla** (RA-09): deslizarla rápido hacia el borde la recoge sin abrir nada. Pruebas: 646 del núcleo, 58 de la demo y 431 E2E (una intermitente en iPhone bajo carga, pasa aislada). Falta la prueba manual (`specs/aspecto/prueba.md`, pasos 8–9). |
+| `v0.4.0` | 09-10-2026 | **Aspecto en reposo** (`specs/aspecto`): semitransparente, latido, encendida tras usarla, translúcida y recogida al borde sin perder el gesto, solo su círculo. Pedido por el usuario tras probar RUTEANDO (spec de RUTEANDO `ajustes-e1-e4.md` §F). Pruebas: 641 del núcleo, 58 de la demo y 438 E2E en verde. **Falta la prueba manual en el celular** (`specs/aspecto/prueba.md`). |
 | `v0.3.2` | 05-10-2026 | `v0.3.1` + **HM-16 (imán fuerte, RF-24)**. La copia RUTEANDO para la etapa I2 (`iman="fuerte"`). Pruebas: 630 del núcleo, 58 de la demo y 415 E2E en verde. |
 | `v0.3.1` | 27-09-2026 | Igual que `v0.3.0`, con la versión de los `package.json` de `core` y `react` igualada a **0.3.1** (antes decían 0.1.0). |
 | `v0.3.0` | 27-09-2026 | Commit `7185ecd`: **Fases 1 y 3 terminadas**. Los `package.json` todavía decían 0.1.0. |
