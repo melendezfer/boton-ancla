@@ -13,9 +13,11 @@ import {
   type Params,
   type PrefsAncla,
 } from "@boton-ancla/core";
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { Ancla } from "./components/Ancla";
+// RC-01 (v0.5.1): el componente del ancla (lo más pesado del paquete) se descarga solo cuando
+// alguna pantalla se registra. Una app con el ancla apagada no lo descarga nunca.
+const Ancla = lazy(() => import("./components/Ancla").then((m) => ({ default: m.Ancla })));
 import { useCapas, type CapaReact, type ControlCapas } from "./dom/capas";
 import { useOrientacion } from "./dom/entorno";
 import { useZonas, type FuenteZona, type RegistroZonas } from "./dom/zonas";
@@ -117,6 +119,11 @@ export function AnchorProvider({
     onEventRef.current = onEvent;
   });
 
+  // RC-01: se monta con la primera pantalla registrada y ya no se desmonta (así no pierde su
+  // estado —recogida, edición— cuando una pantalla se va y llega otra).
+  const [usado, setUsado] = useState(false);
+  if (pantalla && !usado) setUsado(true); // ajuste en el render (sin efecto): una sola vez
+
   // El portal necesita document: solo después de montar en el navegador.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- esperar al navegador para usar document.body
@@ -169,7 +176,9 @@ export function AnchorProvider({
       <ContextoMover.Provider value={mover}>
         {children}
         {montado &&
+          usado &&
           createPortal(
+            <Suspense fallback={null}>
             <Ancla
               pantalla={pantalla}
               pantallaRef={pantallaRef}
@@ -192,7 +201,8 @@ export function AnchorProvider({
               objetivoDesplazar={objetivoDesplazar}
               apuntarPrincipal={apuntarPrincipal}
               versionObjetivo={versionObjetivo}
-            />,
+            />
+            </Suspense>,
             document.body,
           )}
       </ContextoMover.Provider>

@@ -1,6 +1,6 @@
 {
   "name": "@boton-ancla/core",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Núcleo headless del botón-ancla: TypeScript puro, sin React ni DOM.",
   "type": "module",
