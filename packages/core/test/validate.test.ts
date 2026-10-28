@@ -15,7 +15,7 @@ describe("validateScreen", () => {
     }
   });
 
-  describe("máximo de opciones (MAX_OPCIONES = 5, contando Atrás)", () => {
+  describe("máximo de opciones (MAX_OPCIONES = 6 desde v0.6.0, contando Atrás)", () => {
     it("5 acciones sin Atrás es válido", () => {
       const pantalla = { ...mapa, actions: [...mapa.actions, accion("quinta", "Quinta")] };
       expect(validateScreen(pantalla, P)).toEqual([]);
@@ -25,15 +25,20 @@ describe("validateScreen", () => {
       expect(validateScreen(perfilVisitante, P)).toEqual([]);
     });
 
-    it("5 acciones + Atrás son 6 y se rechaza", () => {
+    it("5 acciones + Atrás son 6 y es válido (AB-01)", () => {
       const pantalla = { ...perfilVisitante, actions: [...perfilVisitante.actions, accion("quinta", "Quinta")] };
-      const errores = validateScreen(pantalla, P);
-      expect(errores).toHaveLength(1);
-      expect(errores[0]).toContain('6 opciones contando "Atrás"');
+      expect(validateScreen(pantalla, P)).toEqual([]);
     });
 
-    it("6 acciones sin Atrás se rechaza", () => {
-      const acciones = ["a", "b", "c", "d", "e", "f"].map((id) => accion(id, id.toUpperCase(), { atTop: id === "a" }));
+    it("6 acciones + Atrás son 7 y se rechaza", () => {
+      const pantalla = { ...perfilVisitante, actions: [...perfilVisitante.actions, accion("quinta", "Quinta"), accion("sexta", "Sexta")] };
+      const errores = validateScreen(pantalla, P);
+      expect(errores).toHaveLength(1);
+      expect(errores[0]).toContain('7 opciones contando "Atrás"');
+    });
+
+    it("7 acciones sin Atrás se rechaza", () => {
+      const acciones = ["a", "b", "c", "d", "e", "f", "g"].map((id) => accion(id, id.toUpperCase(), { atTop: id === "a" }));
       expect(validateScreen({ ...mapa, actions: acciones }, P)).toHaveLength(1);
     });
 
@@ -114,9 +119,10 @@ describe("validateScreen", () => {
         accion("r", "R", { kind: "reversible" }),
         accion("d", "D"),
         accion("e", "E"),
+        accion("f", "F"),
       ],
     };
-    // 6 con Atrás + id repetido + label vacío + reversible sin onUndo
+    // 7 con Atrás + id repetido + label vacío + reversible sin onUndo
     expect(validateScreen(pantalla, P)).toHaveLength(4);
   });
 });

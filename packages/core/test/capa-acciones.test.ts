@@ -56,11 +56,11 @@ describe("pantallaDeCapa (HM-08)", () => {
     expect(angulos(lay(pantallaDeCapa(productoDueno, {}), { capa: true, deshacer: true }))).toEqual({ [ID_CERRAR]: 90, [ID_DESHACER]: 180 });
   });
 
-  it("valida el tope: 'Cerrar' + 4 acciones de capa está bien; 5 no", () => {
-    const cuatro = pantallaDeCapa(mapa, { actions: ["a", "b", "c", "d"].map((id) => accion(id, id)) });
-    expect(validateScreen(cuatro, P)).toEqual([]);
+  it("valida el tope: 'Cerrar' + 5 acciones de capa está bien; 6 no (AB-01)", () => {
     const cinco = pantallaDeCapa(mapa, { actions: ["a", "b", "c", "d", "e"].map((id) => accion(id, id)) });
-    expect(validateScreen(cinco, P)[0]).toContain('6 opciones contando "Atrás"');
+    expect(validateScreen(cinco, P)).toEqual([]);
+    const seis = pantallaDeCapa(mapa, { actions: ["a", "b", "c", "d", "e", "f"].map((id) => accion(id, id)) });
+    expect(validateScreen(seis, P)[0]).toContain('7 opciones contando "Atrás"');
   });
 });
 
@@ -86,11 +86,12 @@ describe("'Ocultar teclado' fijo a 180° (RF-17, HM-06 3-A)", () => {
     expect(Object.keys(s)).toHaveLength(5);
   });
 
-  it("con 5 opciones ya, sale la de menor prioridad y el total sigue en 5", () => {
-    const s = angulos(lay(perfilVisitante, { teclado: true })); // Atrás + 4
-    expect(Object.keys(s)).toHaveLength(5);
+  it("con 6 opciones ya, sale la de menor prioridad y el total sigue en 6", () => {
+    const lleno = { ...perfilVisitante, actions: [...perfilVisitante.actions, accion("extra", "Extra", { priority: 9 })] };
+    const s = angulos(lay(lleno, { teclado: true })); // Atrás + 5
+    expect(Object.keys(s)).toHaveLength(6);
     expect(s[ID_OCULTAR_TECLADO]).toBe(180);
-    expect(s.compartir).toBeUndefined(); // prioridad 4, la menor
+    expect(s.extra).toBeUndefined(); // prioridad 9, la menor
     expect(s[ID_ATRAS]).toBe(90);
   });
 

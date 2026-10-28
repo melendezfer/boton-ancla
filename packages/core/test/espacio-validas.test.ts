@@ -69,13 +69,13 @@ describe("posiciones válidas con zonas (RF3-10, RF3-13)", () => {
   const rango = rangoAlturas(entorno, P, "arriba")!;
 
   it("una zona en la columna del ancla, abajo, recorta el tramo por abajo (crédito de OpenStreetMap)", () => {
-    const credito = zona(412 - 200, 915 - 20, 200, 20, "obligatoria");
+    const credito = zona(412 - 150, 915 - 20, 150, 20, "obligatoria");
     const [t] = posicionesValidas(entorno, [credito], P).right;
     expect(t!.desde).toBeCloseTo(rango.desde, 6);
     expect(t!.hasta).toBeLessThan(rango.hasta);
     // El ancla en el borde del tramo deja MARGEN_ZONA libre con el crédito.
     expect(t!.hasta + P.D_ACTIVO / 2 + P.MARGEN_ZONA).toBeLessThanOrEqual(915 - 20 + 2);
-    // Del otro costado no molesta (salvo que el abanico llegue: aquí no llega a 200 px del otro borde).
+    // Del otro costado no molesta (salvo que el abanico llegue: aquí no llega a 150 px del otro borde).
     expect(posicionesValidas(entorno, [credito], P).left).toEqual([{ desde: rango.desde, hasta: rango.hasta }]);
   });
 

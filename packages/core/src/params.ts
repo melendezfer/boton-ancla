@@ -73,7 +73,7 @@ export type Params = {
   VIB_MS: number;
   /** Usos en los que cada opción muestra su etiqueta (bienvenida). */
   USOS_ETIQUETA: number;
-  /** Máximo de opciones, contando "Atrás". */
+  /** Máximo de opciones, contando "Atrás" (6 desde v0.6.0, AB-01). */
   MAX_OPCIONES: number;
   /** Si dos posiciones quedan igual de cerca de la diagonal, cuál gana (C-10). */
   DESEMPATE: Desempate;
@@ -137,7 +137,8 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   D_REPOSO: 52,
   D_ACTIVO: 64,
   D_OPCION: 44,
-  ESCALA_PRESEL: 1.25,
+  // Abanico de 6 (AB-03): de 44 px en reposo a 56 px bajo el pulgar.
+  ESCALA_PRESEL: 1.27,
   OPACIDAD_REPOSO: 0.45,
   DESENFOQUE_REPOSO: 2,
   T_ENCENDIDA: 3000,
@@ -153,7 +154,8 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   BANDA_MARGEN: 8,
   R_MUERTA: 24,
   R_ARCO: 100,
-  SEPARACION_MIN: 0,
+  // AB-05: con 6 opciones, vecinas sin encimarse aunque una crezca a 56 px.
+  SEPARACION_MIN: 6,
   EXTRA_EXTERIOR: 48,
   ARCO_DESDE: 90,
   ARCO_HASTA: 180,
@@ -167,7 +169,7 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   T_ANIM: 140,
   VIB_MS: 10,
   USOS_ETIQUETA: 5,
-  MAX_OPCIONES: 5,
+  MAX_OPCIONES: 6,
   DESEMPATE: "horizontal",
   ARCO_DESPLAZAR_DESDE: 210,
   ARCO_DESPLAZAR_HASTA: 330,

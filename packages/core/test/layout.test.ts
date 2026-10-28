@@ -55,7 +55,7 @@ describe("altura del ancla (HM-01)", () => {
   const y = (params: Params, h = 667, area: Insets = SIN_AREA) =>
     computeAnchorPosition({ viewport: viewport(375, h), safeArea: area, hand: "right", params }).y;
   const techo = (area: Insets = SIN_AREA) =>
-    area.top + P.BANDA_ALTO + P.BANDA_MARGEN + radioAdaptativo(5, P) + (P.D_OPCION * P.ESCALA_PRESEL) / 2;
+    area.top + P.BANDA_ALTO + P.BANDA_MARGEN + radioAdaptativo(P.MAX_OPCIONES, P) + (P.D_OPCION * P.ESCALA_PRESEL) / 2;
 
   it("por defecto (0,44, segunda prueba manual de HM-01) el centro queda a 44 % del alto útil sobre el borde inferior", () => {
     expect(P.ANCLA_ALTURA).toBe(0.44);
@@ -83,7 +83,7 @@ describe("altura del ancla (HM-01)", () => {
     expect(y({ ...P, ANCLA_ALTURA: -1 })).toBe(667 - 48);
   });
 
-  it("techo: nunca tan arriba que el abanico de 5 y la banda (HM-02) se salgan, aunque la fracción sea 1", () => {
+  it("techo: nunca tan arriba que el abanico de 6 (AB-06) y la banda (HM-02) se salgan, aunque la fracción sea 1", () => {
     expect(y({ ...P, ANCLA_ALTURA: 1 })).toBeCloseTo(techo(), 9);
     expect(y({ ...P, ANCLA_ALTURA: 1 }, 812, IPHONE_AREA)).toBeCloseTo(techo(IPHONE_AREA), 9);
   });
@@ -98,13 +98,20 @@ describe("radioAdaptativo (C-01)", () => {
     expect(radioAdaptativo(n, P)).toBe(100);
   });
 
-  it("con 5 opciones sube a ~113 px para que no se encimen", () => {
-    expect(radioAdaptativo(5, P)).toBeCloseTo(112.77, 1);
+  it("abanico de 6 (AB-05): ~128 px con 5 y ~160 px con 6, con 6 px entre vecinas", () => {
+    expect(radioAdaptativo(5, P)).toBeCloseTo(50 / (2 * Math.sin((22.5 * Math.PI) / 360)), 9);
+    expect(radioAdaptativo(6, P)).toBeCloseTo(50 / (2 * Math.sin((18 * Math.PI) / 360)), 9);
+    expect(radioAdaptativo(6, P)).toBeCloseTo(159.8, 1);
+  });
+
+  it("con 6 opciones, la preseleccionada a 56 px no se encima con su vecina (cuerda ≥ (56 + 44)/2)", () => {
+    const cuerda = 2 * radioAdaptativo(6, P) * Math.sin((18 * Math.PI) / 360);
+    expect(cuerda).toBeGreaterThanOrEqual((P.D_OPCION * P.ESCALA_PRESEL + P.D_OPCION) / 2);
   });
 
   it("crece al subir SEPARACION_MIN", () => {
     const conEspacio = { ...P, SEPARACION_MIN: 6 };
-    expect(radioAdaptativo(5, conEspacio)).toBeGreaterThan(radioAdaptativo(5, P));
+    expect(radioAdaptativo(5, { ...P, SEPARACION_MIN: 10 })).toBeGreaterThan(radioAdaptativo(5, P));
     expect(radioAdaptativo(5, conEspacio)).toBeCloseTo(50 / (2 * Math.sin((22.5 * Math.PI) / 360)), 9); // ~128 px
     // Con 4 opciones (30° entre vecinas) 50 px piden ~96,6 px: todavía manda R_ARCO…
     expect(radioAdaptativo(4, conEspacio)).toBe(100);
@@ -147,9 +154,10 @@ describe("computeFanLayout", () => {
     expect(tres.slots.map((s) => s.anguloBase)).toEqual([90, 135, 180]);
   });
 
-  it("R_EXTERIOR = radio + 48 (161 px con 5)", () => {
+  it("R_EXTERIOR = radio + 48 (176 px con 5, 208 con 6)", () => {
     expect(abanico({ count: 3 }).rExterior).toBe(148);
-    expect(abanico({ count: 5 }).rExterior).toBeCloseTo(160.77, 1);
+    expect(abanico({ count: 5 }).rExterior).toBeCloseTo(176.15, 1);
+    expect(abanico({ count: 6 }).rExterior).toBeCloseTo(207.8, 1);
   });
 
   it("cada opción queda a la distancia del radio y en su ángulo", () => {

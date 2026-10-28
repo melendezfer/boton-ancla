@@ -133,12 +133,12 @@ describe("resolveSelection", () => {
     });
   }
 
-  it("con 5 opciones el anillo sigue al radio adaptativo (113 + 48 ≈ 161 px)", () => {
+  it("con 5 opciones el anillo sigue al radio adaptativo (128 + 48 ≈ 176 px)", () => {
     const cinco = { ...mapa, actions: [...mapa.actions, { ...mapa.actions[0]!, id: "quinta", priority: 5 }] };
     const { en, layout } = preparar(cinco);
-    expect(layout.rExterior).toBeCloseTo(160.77, 1);
-    expect(en(135, 160).beyondOuter).toBe(false);
-    expect(en(135, 161).beyondOuter).toBe(true);
+    expect(layout.rExterior).toBeCloseTo(176.15, 1);
+    expect(en(135, 176).beyondOuter).toBe(false);
+    expect(en(135, 177).beyondOuter).toBe(true);
   });
 
   it("devuelve la distancia y el ángulo real del dedo", () => {

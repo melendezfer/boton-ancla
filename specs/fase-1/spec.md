@@ -56,7 +56,7 @@ Versión 0.19 · Primera app base: RUTEANDO · Destino: componente integrable en
 ### Incluye (Fase 1 = Fases 1 y 2 del Documento 7)
 - Ancla en reposo (translúcida), armado, descanso, abierta y ejecución.
 - Tres formas de uso que conviven sin configurar nada: **gesto**, **toque** y **experto**.
-- Abanico de hasta **5 opciones** en la esquina inferior derecha o izquierda.
+- Abanico de hasta **6 opciones** (5 hasta v0.5.1) en la esquina inferior derecha o izquierda.
 - Selección por ángulo, zona muerta central y cancelación por gesto inverso.
 - Acciones sensibles sin retraso: deshacer y deslizar más allá.
 - Ícono central que muestra la sección actual y anticipa la opción preseleccionada.
@@ -339,7 +339,7 @@ Entonces el ancla no se activa
 | `D_REPOSO` | 52 px | Diámetro en reposo |
 | `D_ACTIVO` | 64 px | Diámetro cuando está activo |
 | `D_OPCION` | 44 px | Mínimo táctil |
-| `ESCALA_PRESEL` | 1.25 | Escala de la opción preseleccionada |
+| `ESCALA_PRESEL` | 1.27 | Escala de la opción preseleccionada: de 44 a ~56 px (v0.6.0, AB-03) |
 | `OPACIDAD_REPOSO` | fondo 45% + desenfoque | El ícono siempre al 100%. Antes 60 %; bajó con el aspecto v0.4 (`specs/aspecto`, RA-02) |
 | `DESENFOQUE_REPOSO` | 2 px | Desenfoque del fondo en reposo; deja ver lo que hay debajo (aspecto RA-02; antes 12 px fijo) |
 | `T_ENCENDIDA` | 3 s | Tras usarla sigue encendida antes de volver a translúcida (aspecto RA-04) |
@@ -355,8 +355,8 @@ Entonces el ancla no se activa
 | `BANDA_MARGEN` | 8 px | Espacio entre la opción de más arriba y la banda (HM-02) |
 | `R_MUERTA` | 24 px | Radio de la zona muerta |
 | `R_ARCO` | 100 px | Radio **mínimo** del centro a las opciones |
-| `SEPARACION_MIN` | 0 px | Espacio mínimo entre opciones vecinas (a tamaño normal) |
-| Radio adaptativo | `max(R_ARCO, (D_OPCION + SEPARACION_MIN) / (2·sin(Δ/2)))`, Δ = 90°/(n−1) | 100 px con 2–4 opciones, 113 px con 5 |
+| `SEPARACION_MIN` | 6 px | Espacio mínimo entre opciones vecinas (a tamaño normal; v0.6.0, AB-05) |
+| Radio adaptativo | `max(R_ARCO, (D_OPCION + SEPARACION_MIN) / (2·sin(Δ/2)))`, Δ = 90°/(n−1) | 100 px con 2–4 opciones, 128 px con 5, 160 px con 6 |
 | `R_EXTERIOR` | radio adaptativo + 48 px | Confirmación de irreversibles (161 px con 5) |
 | `ARCO` | 90° → 180° (derecha); espejo para izquierda | De "arriba" a "izquierda" |
 | `EXT_EXTREMOS` | 20° | Tolerancia de los sectores extremos |
@@ -369,7 +369,7 @@ Entonces el ancla no se activa
 | `T_ANIM` | 140 ms | Apertura y cierre |
 | `VIB_MS` | 10 ms | Solo Android |
 | `USOS_ETIQUETA` | 5 por opción | Bienvenida |
-| `MAX_OPCIONES` | 5 | Fase 1 |
+| `MAX_OPCIONES` | 6 | Desde v0.6.0 (AB-01; antes 5) |
 | `ARCO_DESPLAZAR_DESDE` | 210° | Inicio de las direcciones que activan el desplazamiento (HM-09) |
 | `ARCO_DESPLAZAR_HASTA` | 330° | Fin de esas direcciones (10° de margen con el arco del menú y su tolerancia) |
 | `R_MUERTA_DESPLAZAR` | 8 px | Zona muerta vertical alrededor del punto donde empezó el modo |

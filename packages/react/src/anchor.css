@@ -190,8 +190,9 @@
   .ba-opcion {
     animation: ba-salir var(--ba-t-anim) ease-out both;
   }
+  /* AB-04: crecer de 44 a 56 px al pasar el pulgar, suave. Con movimiento reducido, inmediato. */
   .ba-opcion-cuerpo {
-    transition: transform 90ms ease-out;
+    transition: transform 140ms ease-out;
   }
 }
 
