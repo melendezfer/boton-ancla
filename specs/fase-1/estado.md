@@ -202,3 +202,11 @@ Si Playwright dice que faltan librerías (pasa en un equipo nuevo): `cd apps/dem
 - **Autonomía:** Claude decide lo técnico y los detalles de producto según la spec y registra cada decisión; se detiene solo para la prueba manual, riesgos legales/seguridad/datos o historial.
 - Toda decisión se registra a la vez en `spec.md` y `design.md`; lo que no está decidido va a `decisiones-pendientes.md`.
 - La prueba manual en PC y celular es obligatoria además de las automáticas.
+
+
+## 2026-10-28 · v0.6.0 (abanico de 6) y dos pruebas inestables
+
+- v0.6.0 (`specs/abanico-6/`): 6 opciones, 44→56 px, arco más abierto. Etiquetada en `feature/abanico-6` para
+  RUTEANDO (recorrido 23); **sin fusionar a `main`**.
+- RA-05 y RA-09 (`aspecto.spec.ts`, iPhone 14) fallan a ratos también en `main` (4 de 32 repitiendo 4 veces):
+  tiempos del gesto de guardar y de sacar la recogida bajo carga. Pendiente antes de fusionar.

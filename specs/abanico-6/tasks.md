@@ -1,7 +1,7 @@
 # Tareas — abanico de 6 (v0.6.0)
 
-- [ ] TA-1 Parámetros: `MAX_OPCIONES` 6, `ESCALA_PRESEL` 56/44, `SEPARACION_MIN` 6 (AB-01, AB-03, AB-05).
-- [ ] TA-2 Adaptador: transición de 140 ms al preseleccionar; inmediata con movimiento reducido (AB-04).
-- [ ] TA-3 Pruebas del núcleo: tope de 6, radio sin encimarse con 6 y techo con 6 (AB-01, AB-05, AB-06).
-- [ ] TA-4 Spec de fase 1 al día (§3 y tabla de parámetros); versión 0.6.0; E2E de la demo en verde.
+- [x] TA-1 Parámetros: `MAX_OPCIONES` 6, `ESCALA_PRESEL` 56/44, `SEPARACION_MIN` 6 (AB-01, AB-03, AB-05).
+- [x] TA-2 Adaptador: transición de 140 ms al preseleccionar; inmediata con movimiento reducido (AB-04).
+- [x] TA-3 Pruebas del núcleo: tope de 6, radio sin encimarse con 6 y techo con 6 (AB-01, AB-05, AB-06).
+- [x] TA-4 Spec de fase 1 al día (§3 y tabla de parámetros); versión 0.6.0. E2E de la demo: 429–430 de 431; fallan a ratos RA-05 y RA-09 en iPhone 14, **igual en `main`** (4 de 32 en `main`, 3 de 32 en la rama, 2026-10-28). Por eso v0.6.0 se etiqueta en la rama y no se fusiona a `main` hasta estabilizar esas dos.
 - [ ] TA-5 RUTEANDO: copia v0.6.0 y "Más" en sus abanicos (AB-07).
