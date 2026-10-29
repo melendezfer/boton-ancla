@@ -34,6 +34,11 @@ export type AnchorAction = {
   undoMessage?: string;
   disabled?: boolean;
   /**
+   * SL-01 (submenú en el lugar, v0.7.0): `onSelect` abre una capa con opciones propias ("Más", "Zoom"). Al
+   * ejecutarla, en cuanto la capa aparece el abanico se abre solo en modo toque con sus opciones.
+   */
+  abreSubmenu?: boolean;
+  /**
    * RF-20 (HM-12a): la opción es un deslizador (p. ej. Zoom). Quedarse sobre ella
    * T_ESPERA_DESLIZADOR la ajusta: se llama cuadro a cuadro con `paso` (px/s × s de la curva
    * de RF-18; positivo = pulgar arriba = más). Soltar sin esperar llama `onSelect`, como

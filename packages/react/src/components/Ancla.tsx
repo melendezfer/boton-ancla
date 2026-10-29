@@ -525,6 +525,9 @@ export function Ancla({
     if (seccionAnterior.current !== idSeccion) {
       seccionAnterior.current = idSeccion;
       controlador.enviar({ tipo: "CAMBIO_SECCION" });
+      // SL-02: si la abrió una acción con `abreSubmenu`, su abanico se abre solo (geoRef ya es el de la capa:
+      // se actualiza en un efecto de diseño, antes que este).
+      controlador.vistaCambio();
     }
   }, [idSeccion, controlador]);
 

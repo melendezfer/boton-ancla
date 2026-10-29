@@ -84,6 +84,8 @@ test("HM-17: soltar sobre Zoom abre la capa Zoom (también rápido y en relámpa
       if (abrio) break;
     }
     await expect(capa).toBeVisible();
+    // Submenú en el lugar (SL-02, v0.7.0): Zoom abre su abanico solo; el primer Escape lo cierra y el segundo, la capa.
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
     await expect(capa).toHaveCount(0);
   }

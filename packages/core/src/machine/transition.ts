@@ -67,6 +67,18 @@ function desdeReposo(estado: Estado<"reposo">, evento: AnchorEvent): AnchorState
       sinCierrePorTiempo: true,
     };
   }
+  // SL-07 (submenú en el lugar): la capa que abrió una acción con `abreSubmenu` ya está; su abanico se abre en
+  // modo toque, con el cierre por inactividad de siempre (SL-04).
+  if (evento.tipo === "ABRIR_SUBMENU") {
+    return {
+      tipo: "abierto_toque",
+      geo: evento.geo,
+      t0: evento.t,
+      tApertura: evento.t,
+      ultimaActividad: evento.t,
+      sinCierrePorTiempo: false,
+    };
+  }
   // Fila 3 (C-12): Enter, Espacio o ↑ con el foco en el ancla → navegación con teclado.
   if (evento.tipo === "TECLA" && evento.geo && ["Enter", " ", "ArrowUp"].includes(evento.tecla)) {
     return abrirTeclado(evento.geo, evento.t);

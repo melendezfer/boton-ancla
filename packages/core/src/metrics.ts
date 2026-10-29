@@ -5,7 +5,8 @@ import { ID_DESHACER } from "./validate";
 // son los de la spec porque terminan en el JSON que se exporta.
 
 export type MetricEvent =
-  | { type: "open"; mode: "gesto" | "toque" | "teclado" }
+  /** SL-06: `via: "submenu"` cuando se abrió solo tras elegir una acción con `abreSubmenu`. */
+  | { type: "open"; mode: "gesto" | "toque" | "teclado"; via?: "submenu" }
   | { type: "preselect"; id: string }
   | { type: "execute"; id: string; ms: number; pathPx: number; expert: boolean; mode: ModoEjecucion }
   | { type: "cancel"; reason: CancelReason }
@@ -61,7 +62,7 @@ export function derivarMetricas(prev: AnchorState, next: AnchorState, evento: An
   const gestoRelampago = prev.tipo === "armado" && evento.tipo === "POINTER_UP" && FINALES.includes(next.tipo);
   if (abreGesto || gestoRelampago) metricas.push({ type: "open", mode: "gesto" });
   if (next.tipo === "abierto_toque" && (prev.tipo === "armado" || prev.tipo === "reposo")) {
-    metricas.push({ type: "open", mode: "toque" });
+    metricas.push(evento.tipo === "ABRIR_SUBMENU" ? { type: "open", mode: "toque", via: "submenu" } : { type: "open", mode: "toque" });
   }
   if (next.tipo === "abierto_teclado" && prev.tipo !== "abierto_teclado") metricas.push({ type: "open", mode: "teclado" });
 

@@ -37,7 +37,8 @@ export function pantallaMapa(a: AccionesMapa): AnchorScreen {
       accion("ofertas-cerca", "Ofertas cerca", SEMANTIC_ICONS.offer, a.ofertasCerca, { priority: 3 }),
       accion("favoritos", "Favoritos", ANCHOR_ICONS.favoritesList, a.favoritos, { priority: 4 }),
       // RF-20 / HM-17: soltar abre la capa Zoom; quedarse encima es el deslizador (atajo de expertos).
-      accion("zoom", "Zoom", ANCHOR_ICONS.zoom, a.zoomAbrir, { priority: 5, onSlide: a.zoomDeslizar }),
+      // SL-01 (v0.7.0): la capa abre su abanico sola (Acercar, Alejar), sin volver a tocar el ancla.
+      accion("zoom", "Zoom", ANCHOR_ICONS.zoom, a.zoomAbrir, { priority: 5, onSlide: a.zoomDeslizar, abreSubmenu: true }),
     ],
   };
 }

@@ -202,6 +202,8 @@ export type AnchorEvent =
   | { tipo: "COMPLETADO" }
   /** Fase 3 (DF3-01): entrar al modo edición sin dedo (el botón "Mover el ancla" de Ajustes). */
   | { tipo: "EDITAR"; t: number; geo: Geometry }
+  /** SL-07: apareció la capa que pidió una acción con `abreSubmenu`; se abre su abanico en modo toque. */
+  | { tipo: "ABRIR_SUBMENU"; t: number; geo: Geometry }
   /** RF-21: el adaptador avisa qué hay en la mira (hit-test en pantalla). */
   | { tipo: "APUNTAR"; apuntado: Apuntado | null };
 

@@ -210,3 +210,12 @@ Si Playwright dice que faltan librerías (pasa en un equipo nuevo): `cd apps/dem
   RUTEANDO (recorrido 23); **sin fusionar a `main`**.
 - RA-05 y RA-09 (`aspecto.spec.ts`, iPhone 14) fallan a ratos también en `main` (4 de 32 repitiendo 4 veces):
   tiempos del gesto de guardar y de sacar la recogida bajo carga. Pendiente antes de fusionar.
+
+## 2026-10-29 · v0.7.0 (submenú en el lugar, N24-31 de RUTEANDO)
+
+- `specs/submenu-en-el-lugar/`: una acción con `abreSubmenu` ("Más", "Zoom") abre solo el abanico de su capa en modo
+  toque, sin volver a tocar el ancla (ahorra dos toques). Núcleo: evento `ABRIR_SUBMENU`; métrica `open` con
+  `via: "submenu"`. Demo: Zoom del mapa. Pruebas: 5 del núcleo y 3 E2E (`sl-submenu-en-el-lugar.spec.ts`).
+- Con el submenú abierto, el primer `Escape` cierra el abanico y el segundo la capa (ajustada `hm12a`).
+- Rama `feature/submenu-en-el-lugar`, sobre `feature/abanico-6` (que sigue sin fusionar a `main` por RA-05/RA-09).
+- RUTEANDO pasa `D_OPCION: 36` (N24-30): decisión de la app posterior a AB-02, registrada en la spec nueva.

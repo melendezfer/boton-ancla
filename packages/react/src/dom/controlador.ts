@@ -70,6 +70,8 @@ export class Controlador {
   private escuchando = false;
   /** Último pointerdown/up en el ancla: sirve para distinguir un click de puntero de uno de lector de pantalla. */
   ultimoPunteroMs = -Infinity;
+  /** SL-02/SL-03: cuándo se ejecutó una acción con `abreSubmenu` (su capa se espera hasta 1 s). */
+  private submenuPedidoMs = -Infinity;
 
   constructor(opciones: Opciones) {
     this.o = opciones;
@@ -132,6 +134,19 @@ export class Controlador {
     const geo = this.o.obtenerGeo();
     if (this.o.machine.getState().tipo !== "reposo" || !geo) return;
     this.enviar({ tipo: "ACTIVAR", t: ahora, geo });
+  }
+
+  /**
+   * SL-02 a SL-05: la vista del ancla cambió (se abrió una capa). Si fue la de una acción con `abreSubmenu`
+   * ejecutada hace menos de 1 s y el ancla está en reposo, abre el abanico de la capa en modo toque.
+   */
+  vistaCambio() {
+    const ahora = performance.now();
+    const pedido = ahora - this.submenuPedidoMs <= 1000;
+    this.submenuPedidoMs = -Infinity;
+    const geo = this.o.obtenerGeo();
+    if (!pedido || !geo || this.o.machine.getState().tipo !== "reposo") return;
+    this.enviar({ tipo: "ABRIR_SUBMENU", t: ahora, geo });
   }
 
   private readonly alTeclado = (e: KeyboardEvent) => {
@@ -257,6 +272,7 @@ export class Controlador {
       else {
         const accion = pantalla.actions.find((a) => a.id === id);
         if (!accion || accion.disabled) return;
+        if (accion.abreSubmenu) this.submenuPedidoMs = performance.now();
         resultado = accion.onSelect();
       }
       this.o.efectos.alEjecutar?.(id, pantalla, resultado);
