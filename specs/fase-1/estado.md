@@ -221,3 +221,10 @@ Si Playwright dice que faltan librerías (pasa en un equipo nuevo): `cd apps/dem
 - RUTEANDO pasa `D_OPCION: 36` (N24-30): decisión de la app posterior a AB-02, registrada en la spec nueva.
 - E2E completa de la demo con v0.7.0: **437 pasaron, ninguna falló** (2026-10-29), con RA-05 y RA-09 en verde esta vez.
   Una sola corrida no basta para darlas por estables: sigue sin fusionar a `main`.
+
+## 2026-10-29 · v0.7.1 (área de toque invisible, decisión final de Jose)
+
+- `specs/area-de-toque/`: `D_TOQUE` 48 px (mínimo 44), las áreas de vecinas no se enciman y el arco se abre lo
+  necesario. AB-02 queda como decisión final.
+- E2E completa: 439 de 441. Fallan solo RA-09 (y a ratos RA-05) en iPhone 14, **igual con v0.7.0** (3 de 3 en las
+  dos versiones, repitiendo): no es este cambio. `hm15-centrado` falló una vez y pasó 3 de 3 al repetir.
