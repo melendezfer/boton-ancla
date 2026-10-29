@@ -1,5 +1,6 @@
 import { type Apuntado,
   derivarMetricas,
+  diametroToque,
   distancia,
   ID_ATRAS,
   ID_CERRAR,
@@ -210,7 +211,8 @@ export class Controlador {
     if (!geo) return "fuera";
     const P = geo.params;
     if (distancia(geo.centro, p) <= P.D_ACTIVO / 2) return "ancla";
-    const radioOpcion = (P.D_OPCION * P.ESCALA_PRESEL) / 2;
+    // AT-01: se toca en el área invisible (≥ 44 px), no en el círculo dibujado; las de vecinas no se enciman.
+    const radioOpcion = diametroToque(P) / 2;
     const slot = geo.slots.find((s) => distancia(s.punto, p) <= radioOpcion);
     return slot ? { id: slot.id } : "fuera";
   }

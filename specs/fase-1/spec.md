@@ -338,7 +338,8 @@ Entonces el ancla no se activa
 |---|---|---|
 | `D_REPOSO` | 52 px | Diámetro en reposo |
 | `D_ACTIVO` | 64 px | Diámetro cuando está activo |
-| `D_OPCION` | 44 px | Mínimo táctil |
+| `D_OPCION` | 44 px | Diámetro **visible** de la opción; quien la usa puede dibujarla más pequeña (RUTEANDO: 36 px) |
+| `D_TOQUE` | 48 px | Área de toque **invisible** de cada opción (AT-01, v0.7.1): nunca menos de 44 px; las de vecinas no se enciman |
 | `ESCALA_PRESEL` | 1.27 | Escala de la opción preseleccionada: de 44 a ~56 px (v0.6.0, AB-03) |
 | `OPACIDAD_REPOSO` | fondo 45% + desenfoque | El ícono siempre al 100%. Antes 60 %; bajó con el aspecto v0.4 (`specs/aspecto`, RA-02) |
 | `DESENFOQUE_REPOSO` | 2 px | Desenfoque del fondo en reposo; deja ver lo que hay debajo (aspecto RA-02; antes 12 px fijo) |
@@ -356,7 +357,7 @@ Entonces el ancla no se activa
 | `R_MUERTA` | 24 px | Radio de la zona muerta |
 | `R_ARCO` | 100 px | Radio **mínimo** del centro a las opciones |
 | `SEPARACION_MIN` | 6 px | Espacio mínimo entre opciones vecinas (a tamaño normal; v0.6.0, AB-05) |
-| Radio adaptativo | `max(R_ARCO, (D_OPCION + SEPARACION_MIN) / (2·sin(Δ/2)))`, Δ = 90°/(n−1) | 100 px con 2–4 opciones, 128 px con 5, 160 px con 6 |
+| Radio adaptativo | `max(R_ARCO, max(D_OPCION + SEPARACION_MIN, D_TOQUE) / (2·sin(Δ/2)))`, Δ = 90°/(n−1) (AT-02) | 100 px con 2–4 opciones, 128 px con 5, 160 px con 6 |
 | `R_EXTERIOR` | radio adaptativo + 48 px | Confirmación de irreversibles (161 px con 5) |
 | `ARCO` | 90° → 180° (derecha); espejo para izquierda | De "arriba" a "izquierda" |
 | `EXT_EXTREMOS` | 20° | Tolerancia de los sectores extremos |

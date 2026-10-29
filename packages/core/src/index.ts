@@ -11,7 +11,7 @@ export type {
   Point,
   Rect,
 } from "./types";
-export { DEFAULT_PARAMS, type Desempate, type Params } from "./params";
+export { DEFAULT_PARAMS, diametroToque, TOQUE_MINIMO, type Desempate, type Params } from "./params";
 export { aspectoEnReposo, dentroDelCirculo, desplazamientoRecogida, esGestoGuardar, proximoCambioDeAspecto, type AspectoReposo } from "./aspecto";
 export { ID_ATRAS, ID_CERRAR, ID_DESHACER, ID_OCULTAR_TECLADO, validateScreen } from "./validate";
 export {

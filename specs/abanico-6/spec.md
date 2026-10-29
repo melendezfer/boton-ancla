@@ -9,7 +9,9 @@ movimiento» del sistema."
 ## Requisitos
 
 - **AB-01** `MAX_OPCIONES` pasa de 5 a **6**, contando "Atrás". `validateScreen` sigue rechazando más.
-- **AB-02** Cada opción mide `D_OPCION` = **44 px** en reposo (mínimo táctil, no se reduce).
+- **AB-02** Cada opción mide `D_OPCION` = **44 px** en reposo por defecto. **Decisión final (Jose, 2026-10-29,
+  v0.7.1):** el tamaño visible puede ser menor (RUTEANDO dibuja 36 px), porque el mínimo táctil lo garantiza
+  aparte el área de toque invisible `D_TOQUE` (≥ 44 px, 48 por defecto) — ver `specs/area-de-toque/`.
 - **AB-03** La preseleccionada (bajo el pulgar) crece a **56 px**: `ESCALA_PRESEL` = 1.27 (≈56 px).
 - **AB-04** El crecimiento es una transición suave de **140 ms**; con `prefers-reduced-motion: reduce` el cambio
   es inmediato (RNF-04 ya lo exige para las animaciones de movimiento).

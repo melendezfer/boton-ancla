@@ -25,12 +25,7 @@ sus opciones hay que soltar, volver a tocar el ancla y abrir el abanico (dos toq
   cualquier otro estado no hace nada. El temporizador de 1 s y la detección de la capa viven en el adaptador.
 
 ## Relación con otras decisiones
-- **AB-02 (abanico de 6):** el mínimo de 44 px es el valor por defecto de la biblioteca. RUTEANDO pasa
-  `D_OPCION: 36` con `ESCALA_PRESEL: 1.5` (54 px bajo el pulgar) por su N24-30 (Jose, 2026-10-29: "opciones más
-  pequeñas, igual crecen al pasar el pulgar"). Es una decisión de la app, posterior a AB-02, y queda registrada aquí.
-
-- **SL-08** Con el abanico del submenú abierto, `Escape` cierra primero el abanico y después la capa (como
-  cualquier modo toque sobre una capa).
+- Tamaño de las opciones: decidido en `specs/area-de-toque/` (v0.7.1).
 
 ## Fuera de alcance
 Submenús anidados más de un nivel (una capa dentro de un submenú abre su abanico solo si su acción también lleva

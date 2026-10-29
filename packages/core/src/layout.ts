@@ -1,3 +1,4 @@
+import { diametroToque } from "./params";
 import { normalizarAngulo, anguloParaMano, puntoEnDireccion, radioParaCuerda } from "./geometry";
 import type { Params } from "./params";
 import type { ActionKind, AnchorAction, AnchorIcon, AnchorScreen, Hand, Insets, Point, Rect } from "./types";
@@ -69,11 +70,14 @@ function paso(count: number, params: Params): number {
 
 /**
  * Radio adaptativo (C-01): el mínimo R_ARCO, o más si hace falta para que
- * opciones vecinas no se encimen: max(R_ARCO, (D_OPCION + SEPARACION_MIN) / (2·sin(Δ/2))).
+ * opciones vecinas no se encimen: max(R_ARCO, cuerda / (2·sin(Δ/2))), con la cuerda
+ * = max(D_OPCION + SEPARACION_MIN, área de toque). AT-02 (v0.7.1): las áreas de toque
+ * invisibles de vecinas tampoco se enciman.
  */
 export function radioAdaptativo(count: number, params: Params): number {
   if (count < 2) return params.R_ARCO;
-  return Math.max(params.R_ARCO, radioParaCuerda(params.D_OPCION + params.SEPARACION_MIN, paso(count, params)));
+  const cuerda = Math.max(params.D_OPCION + params.SEPARACION_MIN, diametroToque(params));
+  return Math.max(params.R_ARCO, radioParaCuerda(cuerda, paso(count, params)));
 }
 
 /**

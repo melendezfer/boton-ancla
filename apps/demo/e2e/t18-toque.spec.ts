@@ -37,6 +37,19 @@ test("HU-05: un toque rápido deja el menú abierto", async ({ page }) => {
   await expect(page.getByTestId("banda")).toHaveText("Mapa"); // sin dedo: la sección (HM-02)
 });
 
+test("AT-03: un toque dentro del área invisible (48 px) elige la opción aunque caiga fuera del círculo dibujado", async ({ page }) => {
+  const { g, gestos } = await abrirEnToque(page);
+  // 23 px hacia afuera del centro de la opción: fuera del círculo de 44 px, dentro del área de 48 px.
+  await tocar(gestos, haciaOpcion(g, "ofertas-cerca", g.radio + 23));
+  await expect(page.getByRole("dialog", { name: "Ofertas cerca" })).toBeVisible();
+});
+
+test("AT-03: fuera del área de toque no elige nada", async ({ page }) => {
+  const { g, gestos } = await abrirEnToque(page);
+  await tocar(gestos, haciaOpcion(g, "ofertas-cerca", g.radio + 30));
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("HU-05: tocar una opción la ejecuta", async ({ page }) => {
   const { g, gestos } = await abrirEnToque(page);
   await tocar(gestos, haciaOpcion(g, "ofertas-cerca"));

@@ -7,8 +7,13 @@ export type Params = {
   D_REPOSO: number;
   /** Diámetro del ancla activa. */
   D_ACTIVO: number;
-  /** Diámetro de cada opción (mínimo táctil). */
+  /** Diámetro VISIBLE de cada opción. Puede ser menor que el área de toque (`D_TOQUE`). */
   D_OPCION: number;
+  /**
+   * AT-01 (área de toque, v0.7.1): diámetro del área de toque invisible de cada opción, nunca menor a 44 px
+   * (`TOQUE_MINIMO`). Las áreas de vecinas no se enciman: el radio del arco se abre lo necesario.
+   */
+  D_TOQUE: number;
   /** Escala de la opción preseleccionada. */
   ESCALA_PRESEL: number;
   /** Opacidad del fondo del ancla en reposo (0–1); el ícono siempre al 100 %. */
@@ -133,10 +138,20 @@ export type Params = {
 /** "horizontal" = gana la más cercana al extremo lateral; "vertical" = la más cercana a "arriba". */
 export type Desempate = "horizontal" | "vertical";
 
+/** AT-01: el área de toque nunca baja de aquí, aunque se pase un `D_TOQUE` menor. */
+export const TOQUE_MINIMO = 44;
+
+/** Diámetro del área de toque efectiva de cada opción (AT-01). */
+export function diametroToque(params: Pick<Params, "D_TOQUE" | "D_OPCION">): number {
+  return Math.max(TOQUE_MINIMO, params.D_TOQUE, params.D_OPCION);
+}
+
 export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   D_REPOSO: 52,
   D_ACTIVO: 64,
   D_OPCION: 44,
+  // AT-01: 48 px de área de toque (lo ideal; mínimo 44), aunque la opción se dibuje más pequeña.
+  D_TOQUE: 48,
   // Abanico de 6 (AB-03): de 44 px en reposo a 56 px bajo el pulgar.
   ESCALA_PRESEL: 1.27,
   OPACIDAD_REPOSO: 0.45,
