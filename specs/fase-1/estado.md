@@ -219,3 +219,5 @@ Si Playwright dice que faltan librerías (pasa en un equipo nuevo): `cd apps/dem
 - Con el submenú abierto, el primer `Escape` cierra el abanico y el segundo la capa (ajustada `hm12a`).
 - Rama `feature/submenu-en-el-lugar`, sobre `feature/abanico-6` (que sigue sin fusionar a `main` por RA-05/RA-09).
 - RUTEANDO pasa `D_OPCION: 36` (N24-30): decisión de la app posterior a AB-02, registrada en la spec nueva.
+- E2E completa de la demo con v0.7.0: **437 pasaron, ninguna falló** (2026-10-29), con RA-05 y RA-09 en verde esta vez.
+  Una sola corrida no basta para darlas por estables: sigue sin fusionar a `main`.
