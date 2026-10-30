@@ -354,6 +354,8 @@ Entonces el ancla no se activa
 | `ANCLA_ALTURA` | 0.44 del alto útil | Altura del centro del ancla sobre el borde inferior útil. Limitada entre el piso (`MARGEN_INFERIOR`) y el techo que deja caber el abanico de 5 opciones y la banda de etiqueta (HM-01, HM-02) |
 | `BANDA_ALTO` | 28 px | Alto de la banda de etiqueta (HM-02) |
 | `BANDA_MARGEN` | 8 px | Espacio entre la opción de más arriba y la banda (HM-02) |
+| `BANDA_PISTA_ALTO` | 24 px | Alto de la pista de bienvenida, que va junto al ancla (PJ-02, v0.8.0) |
+| `T_PISTA` | 1800 ms | La pista de bienvenida se desvanece sola a este tiempo (PJ-03, v0.8.0) |
 | `R_MUERTA` | 24 px | Radio de la zona muerta |
 | `R_ARCO` | 100 px | Radio **mínimo** del centro a las opciones |
 | `SEPARACION_MIN` | 6 px | Espacio mínimo entre opciones vecinas (a tamaño normal; v0.6.0, AB-05) |

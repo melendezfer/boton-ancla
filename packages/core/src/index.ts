@@ -73,6 +73,7 @@ export {
   etiquetaOpcion,
   PISTA_BIENVENIDA,
   posicionBanda,
+  posicionPista,
   radioDe,
   textoBanda,
   type PosicionBanda,

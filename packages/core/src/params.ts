@@ -46,6 +46,10 @@ export type Params = {
   BANDA_ALTO: number;
   /** Espacio entre la opción de más arriba y la banda de etiqueta (HM-02). */
   BANDA_MARGEN: number;
+  /** PJ-02: alto de la pista de bienvenida, que va junto al ancla. */
+  BANDA_PISTA_ALTO: number;
+  /** PJ-03: ms hasta que la pista de bienvenida se desvanece sola. */
+  T_PISTA: number;
   /** Radio de la zona muerta. */
   R_MUERTA: number;
   /** Radio MÍNIMO del arco; el real se adapta al número de opciones (C-01). */
@@ -167,6 +171,8 @@ export const DEFAULT_PARAMS: Readonly<Params> = Object.freeze({
   ANCLA_ALTURA: 0.44,
   BANDA_ALTO: 28,
   BANDA_MARGEN: 8,
+  BANDA_PISTA_ALTO: 24,
+  T_PISTA: 1800,
   R_MUERTA: 24,
   R_ARCO: 100,
   // AB-05: con 6 opciones, vecinas sin encimarse aunque una crezca a 56 px.

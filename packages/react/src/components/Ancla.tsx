@@ -32,6 +32,7 @@ import {
   necesitaDemostracion,
   necesitaPreguntarMano,
   posicionBanda,
+  posicionPista,
   radioDe,
   textoBanda,
   type AnchorPrefs,
@@ -1095,7 +1096,12 @@ function Banda({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const contenido = textoBanda({ estado, screen: pantalla, bienvenida });
-  const pos = posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params, abreHacia: geo.abreHacia });
+  // PJ-01 (v0.8.0): la pista de bienvenida va junto al ancla; las demás bandas, encima del abanico.
+  const esPista = contenido?.tipo === "pista";
+  const pos = esPista
+    ? posicionPista({ anchor: geo.centro, viewport: medidas.viewport, safeArea: medidas.safeArea, params: geo.params, abreHacia: geo.abreHacia })
+    : posicionBanda({ anchor: geo.centro, layout: { radio }, viewport: medidas.viewport, safeArea: medidas.safeArea, hand: geo.hand, params: geo.params, abreHacia: geo.abreHacia });
+  const alto = esPista ? geo.params.BANDA_PISTA_ALTO : geo.params.BANDA_ALTO;
 
   // Se mide el texto y se corre la banda para que no se salga por los costados.
   useLayoutEffect(() => {
@@ -1110,12 +1116,21 @@ function Banda({
   return (
     <div
       ref={ref}
+      // PJ-03: la pista es otro elemento (vuelve a desvanecerse cada vez que aparece).
+      key={contenido.tipo}
       className={`ba-banda ba-banda--${contenido.tipo}`}
       data-testid="banda"
       data-tipo={contenido.tipo}
       role="status"
       aria-live="polite"
-      style={{ top: pos.yBase - geo.params.BANDA_ALTO, left: pos.x, maxWidth: pos.derecha - pos.izquierda }}
+      style={
+        {
+          top: pos.yBase - alto,
+          left: pos.x,
+          maxWidth: pos.derecha - pos.izquierda,
+          ...(esPista ? { height: alto, "--ba-t-pista": `${geo.params.T_PISTA}ms` } : {}),
+        } as CSSProperties
+      }
     >
       {contenido.texto}
     </div>

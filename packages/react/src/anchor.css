@@ -180,6 +180,26 @@
   font-weight: 500;
 }
 
+/* PJ-02, PJ-03 (v0.8.0): la pista de bienvenida, pequeña y junto al ancla, se desvanece sola. Solo la del abanico
+   (`data-tipo`): la pregunta "¿Con qué mano?" usa la misma clase y se queda. */
+.ba-banda--pista[data-tipo="pista"] {
+  padding: 0 10px;
+  font-size: 12px;
+  animation: ba-pista-se-va var(--ba-t-pista, 1800ms) linear forwards;
+}
+@keyframes ba-pista-se-va {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ba-banda--pista[data-tipo="pista"] {
+    animation: ba-pista-se-oculta var(--ba-t-pista, 1800ms) steps(1, end) forwards;
+  }
+  @keyframes ba-pista-se-oculta {
+    to { visibility: hidden; opacity: 0; }
+  }
+}
+
 /* --- Animaciones: solo transform y opacity (RNF-03). Con movimiento reducido, solo opacidad (RNF-04). --- */
 @media (prefers-reduced-motion: no-preference) {
   .ba-ancla {

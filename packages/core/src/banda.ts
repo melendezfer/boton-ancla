@@ -45,6 +45,33 @@ export function posicionBanda(input: {
   };
 }
 
+/**
+ * PJ-01 (v0.8.0): la pista de bienvenida va junto al ancla, del lado donde NO están las opciones (debajo, con el
+ * abanico hacia arriba; encima, con el abanico hacia abajo): así no tapa ninguna, por ancha que sea. Si de ese lado no
+ * cabe (el ancla pegada al borde), va del otro lado, pegada al ancla.
+ */
+export function posicionPista(input: {
+  anchor: Point;
+  viewport: Rect;
+  safeArea: Insets;
+  params: Params;
+  abreHacia?: "arriba" | "abajo";
+}): PosicionBanda {
+  const { anchor, viewport, safeArea, params, abreHacia = "arriba" } = input;
+  const medio = params.D_ACTIVO / 2;
+  const debajo = anchor.y + medio + params.BANDA_MARGEN + params.BANDA_PISTA_ALTO;
+  const encima = anchor.y - medio - params.BANDA_MARGEN;
+  const piso = viewport.y + viewport.height - safeArea.bottom;
+  const techo = viewport.y + safeArea.top + params.BANDA_PISTA_ALTO;
+  const yBase = abreHacia === "arriba" ? (debajo <= piso ? debajo : encima) : encima >= techo ? encima : debajo;
+  return {
+    x: anchor.x,
+    yBase,
+    izquierda: viewport.x + safeArea.left + params.MARGEN_LATERAL,
+    derecha: viewport.x + viewport.width - safeArea.right - params.MARGEN_LATERAL,
+  };
+}
+
 export type TextoBanda = {
   texto: string;
   /** opcion = nombre de una opción; seccion = dónde estás (D-09); pista = bienvenida (HU-12). */
