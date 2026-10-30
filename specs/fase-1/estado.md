@@ -228,3 +228,12 @@ Si Playwright dice que faltan librerías (pasa en un equipo nuevo): `cd apps/dem
   necesario. AB-02 queda como decisión final.
 - E2E completa: 439 de 441. Fallan solo RA-09 (y a ratos RA-05) en iPhone 14, **igual con v0.7.0** (3 de 3 en las
   dos versiones, repitiendo): no es este cambio. `hm15-centrado` falló una vez y pasó 3 de 3 al repetir.
+
+## 2026-10-30 · v0.8.0 (pista de bienvenida junto al ancla, pedido de RUTEANDO N25-10)
+
+- `specs/pista-junto-al-ancla/`: la pista "Desliza hacia una opción" va junto al ancla, del lado donde no hay
+  opciones (debajo con el abanico hacia arriba; encima si no cabe o si el abanico abre hacia abajo), de 24 px y letra
+  de 12 px, y se desvanece sola a los 1,8 s (`T_PISTA`). La pregunta "¿Con qué mano?" no cambia.
+- Primera versión encima del ancla: la e2e `pj-pista` mostró que una pista de ~150 px tapaba la opción de ~160°;
+  por eso va del otro lado.
+- Unitarias: 663 + 58. E2E completa: 445 de 447; fallan RA-09 y `hm15-centrado` en iPhone 14, las mismas de v0.7.x.
